@@ -30,10 +30,10 @@ describe("Button", () => {
 
 	it("applies variant styles", () => {
 		const { rerender } = render(<Button variant="primary">Primary</Button>);
-		expect(screen.getByRole("button")).toHaveClass("bg-blue-600");
+		expect(screen.getByRole("button")).toHaveClass("bg-[var(--gb-accent)]");
 
 		rerender(<Button variant="secondary">Secondary</Button>);
-		expect(screen.getByRole("button")).toHaveClass("bg-gray-200");
+		expect(screen.getByRole("button")).toHaveClass("bg-[var(--gb-bg-panel)]");
 
 		rerender(<Button variant="ghost">Ghost</Button>);
 		expect(screen.getByRole("button")).toHaveClass("bg-transparent");
@@ -41,10 +41,10 @@ describe("Button", () => {
 
 	it("applies size styles", () => {
 		const { rerender } = render(<Button size="sm">Small</Button>);
-		expect(screen.getByRole("button")).toHaveClass("px-3", "py-1.5");
+		expect(screen.getByRole("button")).toHaveClass("px-3.5", "py-1.5");
 
 		rerender(<Button size="md">Medium</Button>);
-		expect(screen.getByRole("button")).toHaveClass("px-4", "py-2");
+		expect(screen.getByRole("button")).toHaveClass("px-4.5", "py-2");
 
 		rerender(<Button size="lg">Large</Button>);
 		expect(screen.getByRole("button")).toHaveClass("px-6", "py-3");
@@ -52,7 +52,7 @@ describe("Button", () => {
 
 	it("applies disabled styles", () => {
 		render(<Button disabled>Disabled</Button>);
-		expect(screen.getByRole("button")).toHaveClass("opacity-50", "cursor-not-allowed");
+		expect(screen.getByRole("button")).toHaveClass("opacity-55", "cursor-not-allowed");
 	});
 
 	it("supports custom className", () => {

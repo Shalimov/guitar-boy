@@ -1,115 +1,125 @@
-# Feature Specification: [FEATURE NAME]
+# Feature Specification: Fretboard Learning App
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
-**Input**: User description: "$ARGUMENTS"
+**Feature Branch**: `001-fretboard-learning-app`  
+**Created**: 2026-03-04  
+**Updated**: 2026-03-05  
+**Status**: Active (Partially Implemented)
 
-## User Scenarios & Testing *(mandatory)*
+**Input**: Single-page guitar learning app with dashboard, whiteboard diagram editing, guided learning, quiz modes, and local SRS progress tracking.
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+## User Scenarios & Testing
 
-### User Story 1 - [Brief Title] (Priority: P1)
+### User Story 1 - Navigate And Track Progress (Priority: P1)
 
-[Describe this user journey in plain language]
+As a learner, I can open the dashboard, see my learning metrics, and navigate to main app modes.
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: This is the app entry point and minimum usable workflow.
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: Open app, verify dashboard summary cards render, and navigate to Whiteboard/Learn/Quiz from the UI.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** no prior history, **When** I open the app, **Then** I see an empty-state dashboard with clear next actions.
+2. **Given** stored session history, **When** I open the app, **Then** dashboard cards show derived progress metrics.
+3. **Given** I click a mode action, **When** navigation occurs, **Then** the correct route loads.
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+### User Story 2 - Create And Save Whiteboard Diagrams (Priority: P1)
 
-[Describe this user journey in plain language]
+As a learner, I can create, edit, save, clone, and delete custom fretboard diagrams locally.
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: Whiteboard is the core exploratory experience available today.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Create a diagram, place markers, save it, reopen it from "My Diagrams", and delete it.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** an empty diagram list, **When** I create and save a diagram, **Then** it appears in "My Diagrams".
+2. **Given** a built-in pattern, **When** I select it, **Then** a user-editable copy is created.
+3. **Given** an existing user diagram, **When** I delete it, **Then** it is removed from local storage.
 
 ---
 
-### User Story 3 - [Brief Title] (Priority: P3)
+### User Story 3 - Learn Concepts In Guided And Explorer Modes (Priority: P2)
 
-[Describe this user journey in plain language]
+As a learner, I can use guided lessons and an explorer mode to understand notes, intervals, and triads.
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: Structured learning is core product value, but current code only has placeholders.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Start a lesson, complete lesson steps, and use explorer controls to change fretboard visualization.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** I open Learn mode, **When** I select a lesson, **Then** I can move through explain/verify steps.
+2. **Given** I use Explorer controls, **When** I change root/display mode, **Then** fretboard visualization updates.
 
 ---
 
-[Add more user stories as needed, each with an assigned priority]
+### User Story 4 - Run Quizzes And Review Due Cards (Priority: P2)
 
-### Edge Cases
+As a learner, I can run quiz sessions and review due SRS cards.
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
+**Why this priority**: Quiz + SRS is key to retention, but current quiz page is still a placeholder.
 
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+**Independent Test**: Start a quiz, answer questions, see feedback, and verify SRS/session updates are persisted.
 
-## Requirements *(mandatory)*
+**Acceptance Scenarios**:
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
+1. **Given** I start a quiz session, **When** I answer a question, **Then** I receive correctness feedback.
+2. **Given** I finish a session, **When** summary is shown, **Then** card scheduling and session history are updated.
+
+## Edge Cases
+
+- Invalid `fretRange` input should not crash rendering; values must be normalized.
+- Built-in diagrams must remain immutable and non-deletable.
+- localStorage parse or write failures must fall back safely without app crash.
+- Whiteboard unsaved changes must be handled before destructive navigation.
+- Fretboard overlays (correct/missed/incorrect) must not hide core interaction affordances.
+
+## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-001**: System MUST provide top-level routes for dashboard, whiteboard, learn, and quiz.
+- **FR-002**: System MUST persist diagram and progress state in browser localStorage.
+- **FR-003**: Users MUST be able to create, edit, save, and delete user diagrams.
+- **FR-004**: System MUST provide built-in pattern templates that can be cloned into editable user diagrams.
+- **FR-005**: Fretboard component MUST support `view`, `click-select`, and `draw` modes.
+- **FR-006**: Fretboard component MUST render dots and connection lines from `FretboardState`.
+- **FR-007**: In draw workflows, users MUST be able to create/remove dots and create lines between dots.
+- **FR-008**: System MUST provide accessibility semantics and keyboard interaction for fretboard interactions.
+- **FR-009**: Learning mode MUST provide lesson and explorer workflows (currently not implemented).
+- **FR-010**: Quiz mode MUST provide note/interval/chord quiz workflows and review sessions (currently not implemented).
+- **FR-011**: Dashboard MUST summarize progress and due-card counts.
+- **FR-012**: App MUST remain usable offline without backend dependencies.
 
-*Example of marking unclear requirements:*
+### Key Entities
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FretPosition**: Guitar coordinate (`string`, `fret`) used across rendering and quiz logic.
+- **FretboardState**: Diagram state containing `dots`, `lines`, and optional highlights.
+- **Diagram**: Saved whiteboard artifact with metadata and `FretboardState`.
+- **SRSCard**: Spaced-repetition card with scheduling values.
+- **ProgressStore / DiagramStore**: Versioned local storage roots for progress and diagrams.
 
-### Key Entities *(include if feature involves data)*
+## Current Implementation Status (2026-03-05)
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+| Area | Status | Notes |
+|---|---|---|
+| Dashboard route and summary cards | Implemented | Basic metrics and navigation exist. |
+| Whiteboard list/editor/pattern library | Partial | CRUD flow exists, but connect-mode behavior is incomplete. |
+| Fretboard rendering engine | Partial | Implemented as DOM grid; canvas renderer not started. |
+| Fretboard connection lines | Missing/Incomplete | Type exists, visible line rendering is not complete. |
+| Learning mode | Missing | `LearningPage` is currently placeholder text only. |
+| Quiz mode | Missing | `QuizPage` is currently placeholder text only. |
+| SRS utility functions | Implemented | Core date/SRS helpers exist in `src/lib`. |
 
-## Success Criteria *(mandatory)*
-
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
+## Success Criteria
 
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: Users can create and reopen a saved whiteboard diagram without data loss.
+- **SC-002**: Dashboard and Whiteboard routes load without runtime errors in fresh and populated localStorage states.
+- **SC-003**: Fretboard line rendering and connect interactions work correctly after migration tasks in `specs/cdx_tasks/`.
+- **SC-004**: Learn and Quiz routes move from placeholder pages to functional flows.
+- **SC-005**: Lint, typecheck, test, and build scripts pass before release.

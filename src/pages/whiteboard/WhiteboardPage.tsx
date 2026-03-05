@@ -59,36 +59,44 @@ export function WhiteboardPage() {
 
 	if (view === "edit") {
 		return (
-			<div className="space-y-4">
-				<div className="flex items-center justify-between">
-					<h1 className="text-2xl font-bold text-gray-900">
-						{editingDiagram?.id ? "Edit Diagram" : "New Diagram"}
-					</h1>
-				</div>
-				<DiagramEditor
-					diagram={editingDiagram}
-					onSave={handleSaveDiagram}
-					onCancel={handleCancelEdit}
-				/>
+			<div className="space-y-5">
+				<header className="space-y-2">
+					<p className="gb-page-kicker">Diagram Editor</p>
+					<h1 className="gb-page-title">{editingDiagram?.id ? "Edit Diagram" : "New Diagram"}</h1>
+				</header>
+
+				<section className="gb-panel p-4 md:p-5">
+					<DiagramEditor
+						diagram={editingDiagram}
+						onSave={handleSaveDiagram}
+						onCancel={handleCancelEdit}
+					/>
+				</section>
 			</div>
 		);
 	}
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold text-gray-900">Whiteboard</h1>
+			<header className="flex flex-wrap items-start justify-between gap-4">
+				<div className="space-y-2">
+					<p className="gb-page-kicker">Creative Workspace</p>
+					<h1 className="gb-page-title">Whiteboard</h1>
+					<p className="max-w-2xl text-sm text-[var(--gb-text-muted)]">
+						Build custom shapes, duplicate built-in patterns, and keep your own fretboard notes.
+					</p>
+				</div>
 				<Button onClick={handleNewDiagram}>New Diagram</Button>
-			</div>
+			</header>
 
-			<div className="flex gap-4 border-b border-gray-200">
+			<div className="flex flex-wrap gap-2 border-b border-[var(--gb-border)] pb-1">
 				<button
 					type="button"
 					onClick={() => setView("list")}
-					className={`px-4 py-2 font-medium ${
+					className={`rounded-t-[14px] border px-4 py-2 text-sm font-semibold transition ${
 						view === "list"
-							? "text-blue-600 border-b-2 border-blue-600"
-							: "text-gray-600 hover:text-gray-900"
+							? "border-[var(--gb-border)] border-b-[var(--gb-bg)] bg-[var(--gb-bg-elev)] text-[var(--gb-text)]"
+							: "border-transparent text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-tab)] hover:text-[var(--gb-text)]"
 					}`}
 				>
 					My Diagrams ({userDiagrams.length})
@@ -96,10 +104,10 @@ export function WhiteboardPage() {
 				<button
 					type="button"
 					onClick={() => setView("patterns")}
-					className={`px-4 py-2 font-medium ${
+					className={`rounded-t-[14px] border px-4 py-2 text-sm font-semibold transition ${
 						view === "patterns"
-							? "text-blue-600 border-b-2 border-blue-600"
-							: "text-gray-600 hover:text-gray-900"
+							? "border-[var(--gb-border)] border-b-[var(--gb-bg)] bg-[var(--gb-bg-elev)] text-[var(--gb-text)]"
+							: "border-transparent text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-tab)] hover:text-[var(--gb-text)]"
 					}`}
 				>
 					Pattern Library
@@ -109,20 +117,24 @@ export function WhiteboardPage() {
 			{view === "list" && (
 				<div>
 					{userDiagrams.length === 0 ? (
-						<div className="text-center py-12">
-							<p className="text-gray-600 mb-4">No diagrams yet. Create your first diagram!</p>
+						<section className="gb-panel py-12 text-center">
+							<p className="mb-4 text-[var(--gb-text-muted)]">
+								No diagrams yet. Create your first diagram!
+							</p>
 							<Button onClick={handleNewDiagram}>Create Diagram</Button>
-						</div>
+						</section>
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 							{userDiagrams.map((diagram) => (
 								<div
 									key={diagram.id}
-									className="border border-gray-300 rounded-lg p-4 hover:shadow-md transition-shadow"
+									className="gb-panel p-4 transition-shadow hover:shadow-[var(--gb-shadow)]"
 								>
-									<h3 className="font-medium text-gray-900 mb-1">{diagram.name}</h3>
+									<h3 className="text-lg font-semibold text-[var(--gb-text)]">{diagram.name}</h3>
 									{diagram.description && (
-										<p className="text-sm text-gray-600 mb-3">{diagram.description}</p>
+										<p className="mb-3 text-sm text-[var(--gb-text-muted)]">
+											{diagram.description}
+										</p>
 									)}
 									<div className="flex gap-2">
 										<Button size="sm" onClick={() => handleEditDiagram(diagram)}>

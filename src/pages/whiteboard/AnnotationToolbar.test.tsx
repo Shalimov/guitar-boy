@@ -1,15 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 
 describe("AnnotationToolbar", () => {
 	const defaultProps = {
 		dotColor: "#3B82F6",
+		dotLabel: "",
 		dotShape: "circle" as const,
+		lineColor: "#4A3A2C",
 		lineStyle: "solid" as const,
 		connectMode: false,
 		onDotColorChange: jest.fn(),
+		onDotLabelChange: jest.fn(),
 		onDotShapeChange: jest.fn(),
+		onLineColorChange: jest.fn(),
 		onLineStyleChange: jest.fn(),
 		onConnectModeChange: jest.fn(),
 	};
@@ -17,7 +21,9 @@ describe("AnnotationToolbar", () => {
 	it("renders all toolbar controls", () => {
 		render(<AnnotationToolbar {...defaultProps} />);
 		expect(screen.getByLabelText(/dot color/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/dot label/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/dot shape/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/line color/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/line style/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/connect mode/i)).toBeInTheDocument();
 	});
@@ -26,6 +32,26 @@ describe("AnnotationToolbar", () => {
 		render(<AnnotationToolbar {...defaultProps} dotColor="#ff0000" />);
 		const colorInput = screen.getByLabelText(/dot color/i);
 		expect(colorInput).toHaveValue("#ff0000");
+	});
+
+	it("calls onDotLabelChange when label changes", async () => {
+		const onDotLabelChange = jest.fn();
+		render(<AnnotationToolbar {...defaultProps} onDotLabelChange={onDotLabelChange} />);
+
+		const labelInput = screen.getByLabelText(/dot label/i);
+		await userEvent.type(labelInput, "R");
+
+		expect(onDotLabelChange).toHaveBeenCalledWith("R");
+	});
+
+	it("calls onLineColorChange when line color changes", async () => {
+		const onLineColorChange = jest.fn();
+		render(<AnnotationToolbar {...defaultProps} onLineColorChange={onLineColorChange} />);
+
+		const colorInput = screen.getByLabelText(/line color/i);
+		fireEvent.change(colorInput, { target: { value: "#ff0000" } });
+
+		expect(onLineColorChange).toHaveBeenCalledWith("#ff0000");
 	});
 
 	it("calls onDotShapeChange when shape changes", async () => {
@@ -61,6 +87,6 @@ describe("AnnotationToolbar", () => {
 	it("shows active state for connect mode", () => {
 		render(<AnnotationToolbar {...defaultProps} connectMode={true} />);
 		const connectButton = screen.getByLabelText(/connect mode/i);
-		expect(connectButton).toHaveClass("bg-blue-600");
+		expect(connectButton).toHaveClass("bg-[var(--gb-accent)]");
 	});
 });

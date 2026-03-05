@@ -33,7 +33,7 @@ describe("Card", () => {
 
 	it("applies clickable styles when onClick provided", () => {
 		render(<Card onClick={() => {}}>Clickable</Card>);
-		expect(screen.getByRole("button")).toHaveClass("cursor-pointer", "hover:shadow-lg");
+		expect(screen.getByRole("button")).toHaveClass("cursor-pointer", "hover:-translate-y-0.5");
 	});
 
 	it("does not apply clickable styles without onClick", () => {

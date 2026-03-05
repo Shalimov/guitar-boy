@@ -1,4 +1,5 @@
 import type { FretboardState } from "./fretboard";
+import type { FretPosition } from "./music";
 
 /** Saved fretboard annotation created by user */
 export interface Diagram {
@@ -18,17 +19,17 @@ export interface Diagram {
 }
 
 /** Fretboard interaction modes */
-export type FretboardMode = "view" | "click-select" | "draw";
+export type FretboardMode = "view" | "click-select" | "draw" | "test" | "patterns";
 
 /** Props for Fretboard component */
 export interface FretboardProps {
-	/** Fret range [min, max], default [0, 12] */
+	/** Fret range [min, max], default [1, 15] */
 	fretRange?: [number, number];
 	/** String notes, default ['E','A','D','G','B','e'] */
 	strings?: string[];
 	/** Show fret numbers, default true */
 	showFretNumbers?: boolean;
-	/** Show note names on dots, default false */
+	/** Show note names on dots, default true */
 	showNoteNames?: boolean;
 	/** Show interval labels on dots, default false */
 	showIntervalLabels?: boolean;
@@ -36,12 +37,14 @@ export interface FretboardProps {
 	state?: FretboardState;
 	/** Interaction mode */
 	mode: FretboardMode;
-	/** Callback when fret clicked (click-select mode) */
+	/** Callback when fret clicked in interactive modes */
 	onFretClick?: (pos: FretPosition) => void;
-	/** Callback when line drawn between dots (draw mode) */
+	/** Callback when a connection line is formed (draw/patterns modes) */
 	onLineDrawn?: (from: FretPosition, to: FretPosition) => void;
-	/** Controlled selection */
+	/** Controlled selection (also used as ordered pattern points in patterns mode) */
 	selectedPositions?: FretPosition[];
+	/** Target positions shown as empty circles in test mode */
+	targetPositions?: FretPosition[];
 	/** Feedback overlay - green */
 	correctPositions?: FretPosition[];
 	/** Feedback overlay - yellow */
@@ -51,5 +54,3 @@ export interface FretboardProps {
 	/** Accessibility label */
 	ariaLabel?: string;
 }
-
-import type { FretPosition } from "./music";

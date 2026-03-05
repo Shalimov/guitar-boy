@@ -9,18 +9,30 @@ const navItems = [
 
 export function Layout() {
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<nav className="border-b border-gray-200 bg-white">
-				<div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3">
-					<span className="text-lg font-bold text-gray-900">Guitar Boy</span>
-					<div className="flex gap-4">
+		<div className="relative min-h-screen overflow-x-hidden text-[var(--gb-text)]">
+			<div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+				<div className="absolute -left-16 top-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(179,93,42,0.24),_transparent_70%)] blur-3xl" />
+				<div className="absolute -right-20 -top-10 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(91,62,43,0.24),_transparent_70%)] blur-3xl" />
+				<div className="absolute bottom-[-8rem] left-1/3 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(232,180,141,0.33),_transparent_70%)] blur-3xl" />
+			</div>
+
+			<nav className="sticky top-0 z-20 border-b border-[var(--gb-border)]/80 bg-[color:var(--gb-bg-elev)]/85 backdrop-blur-md">
+				<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-3 md:px-6">
+					<span className="text-xl font-bold tracking-[0.01em] text-[var(--gb-text)]">
+						Guitar Boy
+					</span>
+					<div className="flex flex-wrap gap-2">
 						{navItems.map((item) => (
 							<NavLink
 								key={item.to}
 								to={item.to}
 								end={item.to === "/"}
 								className={({ isActive }) =>
-									`text-sm font-medium ${isActive ? "text-blue-600" : "text-gray-600 hover:text-gray-900"}`
+									`rounded-[var(--gb-radius-pill)] px-4 py-2 text-sm font-semibold transition ${
+										isActive
+											? "bg-[var(--gb-accent)] text-[#fff7ef] shadow-[0_9px_20px_rgba(179,93,42,0.35)]"
+											: "text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-panel)] hover:text-[var(--gb-text)]"
+									}`
 								}
 							>
 								{item.label}
@@ -29,7 +41,7 @@ export function Layout() {
 					</div>
 				</div>
 			</nav>
-			<main className="mx-auto max-w-7xl px-4 py-6">
+			<main className="mx-auto max-w-7xl px-4 pb-10 pt-8 md:px-6">
 				<Outlet />
 			</main>
 		</div>

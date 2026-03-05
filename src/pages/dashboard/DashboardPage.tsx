@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { Card, CardContent, CardHeader } from "@/components/ui";
+import { Button, Card, CardContent, CardHeader } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
 import { getDueCards } from "@/lib/srs";
 
@@ -49,49 +49,58 @@ export function DashboardPage() {
 	];
 
 	return (
-		<div>
-			<h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+		<div className="space-y-8">
+			<header className="space-y-2">
+				<p className="gb-page-kicker">Practice Radar</p>
+				<h1 className="gb-page-title">Dashboard</h1>
+				<p className="max-w-2xl text-sm text-[var(--gb-text-muted)]">
+					Track momentum across notes, intervals, and chords, then jump straight into your next
+					focused session.
+				</p>
+			</header>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 				{cards.map((card) => (
 					<Card
 						key={card.title}
 						onClick={card.action}
-						className={card.action ? "" : "cursor-default"}
+						className={card.action ? "group relative overflow-hidden" : "opacity-90"}
 					>
-						<CardHeader>{card.title}</CardHeader>
+						<div
+							aria-hidden
+							className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-[radial-gradient(circle,_rgba(232,180,141,0.42),_transparent_70%)]"
+						/>
+						<CardHeader className="relative text-base tracking-[0.01em]">{card.title}</CardHeader>
 						<CardContent>
 							{card.accuracy !== null ? (
-								<div className="text-3xl font-bold text-blue-600">{card.accuracy}%</div>
+								<div className="text-4xl font-extrabold text-[var(--gb-accent)]">
+									{card.accuracy}%
+								</div>
 							) : (
-								<div className="text-3xl font-bold text-blue-600">{dueCards.length}</div>
+								<div className="text-4xl font-extrabold text-[var(--gb-accent)]">
+									{dueCards.length}
+								</div>
 							)}
-							<p className="text-sm text-gray-600 mt-1">{card.description}</p>
+							<p className="mt-1 text-sm text-[var(--gb-text-muted)]">{card.description}</p>
 						</CardContent>
 					</Card>
 				))}
 			</div>
 
 			{sessionHistory.length === 0 && (
-				<div className="mt-8 text-center">
-					<p className="text-gray-600 mb-4">Welcome to Guitar Boy! Choose a mode to get started.</p>
-					<div className="space-x-4">
-						<button
-							type="button"
-							onClick={() => navigate("/learn")}
-							className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-						>
-							Start Learning
-						</button>
-						<button
-							type="button"
-							onClick={() => navigate("/whiteboard")}
-							className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300"
-						>
+				<section className="gb-panel px-6 py-8 text-center">
+					<h2 className="text-2xl font-semibold text-[var(--gb-text)]">New Here? Start A Warmup</h2>
+					<p className="mx-auto mt-2 max-w-xl text-sm text-[var(--gb-text-muted)]">
+						Pick a guided lesson to build confidence, or sketch on the whiteboard to explore note
+						shapes freely.
+					</p>
+					<div className="mt-5 flex flex-wrap justify-center gap-3">
+						<Button onClick={() => navigate("/learn")}>Start Learning</Button>
+						<Button variant="secondary" onClick={() => navigate("/whiteboard")}>
 							Explore Whiteboard
-						</button>
+						</Button>
 					</div>
-				</div>
+				</section>
 			)}
 		</div>
 	);

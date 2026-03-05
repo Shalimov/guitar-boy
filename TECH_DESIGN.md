@@ -15,8 +15,17 @@
 | Component Testing | React Testing Library | ^16.3.2 |
 | Package Manager | Yarn 4 (Berry) | 4.13.0 |
 | Node.js | Node.js | v25.x |
-| State Management | React Context + useReducer (no external lib) | — |
+| State Management | Custom hooks + localStorage (no global Context yet) | — |
 | Persistence | localStorage | — |
+| Fretboard Rendering | DOM grid/buttons (canvas migration planned) | — |
+
+## Current Implementation Status (2026-03-05)
+
+- Implemented: Dashboard route, Whiteboard route shell, diagram CRUD hooks, core utility libraries (`music`, `srs`, `date`, `validation`).
+- Partially implemented: Fretboard component supports basic click/select/draw interactions but still uses DOM grid rendering.
+- Missing: Canvas fretboard renderer, full connection-line rendering flow, guided learning workflows, and quiz workflows.
+- Placeholder pages: `src/pages/learning/LearningPage.tsx` and `src/pages/quiz/QuizPage.tsx`.
+- Active delivery plan for these gaps: `specs/cdx_tasks/`.
 
 ## Packages
 
@@ -136,8 +145,11 @@ SWC transforms are ~5x faster than ts-jest. Type-checking is handled separately 
 ### Linting: Biome over ESLint + Prettier
 Biome is a single tool that replaces both ESLint and Prettier. It's written in Rust and checks/formats in milliseconds.
 
-### State: React Context + useReducer
-No external state library needed for v1. App-wide state (progress, settings) lives in Context. Per-mode state (active quiz, whiteboard dots) lives in component state. Persistence is handled by a `useLocalStorage` hook.
+### State: Custom Hooks + localStorage
+Current code uses dedicated hooks (`useProgressStore`, `useDiagramStore`, `useLocalStorage`) rather than a global React Context. App-wide data is persisted directly through these hooks.
+
+### Fretboard Rendering: DOM Grid Today, Canvas Planned
+The current `Fretboard` implementation renders a table-like button grid in the DOM. A canvas migration is planned to improve visual quality, support richer drawing semantics, and improve long-term performance.
 
 ### Routing: React Router v7
 Standard route-based navigation with a shared layout shell. Four top-level routes: Dashboard, Whiteboard, Learn, Quiz.
@@ -153,5 +165,5 @@ Standard route-based navigation with a shared layout shell. Four top-level route
 | Unit — SRS algorithm | Jest | SM-2 update logic, 100% target |
 | Unit — hooks | Jest + RTL | `useLocalStorage`, schema migrations |
 | Component — Fretboard | React Testing Library | Rendering, click interaction, feedback overlays |
-| Component — Quiz flow | React Testing Library | Happy path + edge cases |
+| Component — Quiz flow | React Testing Library | Planned (quiz page is currently a placeholder) |
 | E2E (future v2) | Playwright | Full quiz sessions |

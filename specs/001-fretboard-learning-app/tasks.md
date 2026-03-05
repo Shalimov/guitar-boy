@@ -3,7 +3,7 @@
 **Feature**: Fretboard Learning App  
 **Branch**: `001-fretboard-learning-app`  
 **Date**: 2026-03-04  
-**Status**: Ready for Implementation
+**Status**: In Progress (Implementation Diverges From Plan)
 
 ---
 
@@ -11,9 +11,17 @@
 
 This document provides a comprehensive, task-by-task implementation plan for the Fretboard Learning App, Tasks are organized by user story to enable independent development, testing, and delivery of incremental value.
 
-**Total Tasks**: 124  
+**Total Tasks**: 146  
 **User Stories**: 4 (P1, P2, P3, P4)  
 **Approach**: TDD (Test-Driven Development) - Constitution requires tests before implementation
+
+## Known Gaps (2026-03-05)
+
+- `spec.md` and code were previously out of sync; this task file is now treated as a historical plan plus current status tracker.
+- Whiteboard connect-mode and line rendering are still incomplete in production code even though earlier checklist items were marked complete.
+- Fretboard is still DOM-grid based and has not yet migrated to canvas.
+- Learn and Quiz routes are still placeholder pages.
+- Active remediation and execution-ready steps live in `specs/cdx_tasks/`.
 
 ---
 
@@ -338,23 +346,6 @@ This document provides a comprehensive, task-by-task implementation plan for the
   - Test: create new diagram → add dots → save → appears in list
   - Test: load pattern → view only → clone → edit
   - Test: load existing diagram → edit → save
-
-#### Implementation
-
-- [ ] T081 [US2] Create src/pages/whiteboard/index.ts barrel file
-- [ ] T082 [US2] Implement WhiteboardPage in src/pages/whiteboard/WhiteboardPage.tsx
-  - Tab: My Diagrams (list of user diagrams)
-  - Tab: Pattern Library (list of built-in patterns)
-  - New Diagram button
-  - Diagram list with edit/delete actions
-  - Route to DiagramEditor on diagram select
-
-**Verification**:
-- Run `yarn test` - verify all whiteboard tests pass
-- Manual test: Create 50+ diagrams, verify no lag
-- Manual test: Unsaved changes → navigate away → confirmation dialog
-
-**Checkpoint**: User Story 2 complete. Whiteboard mode is functional and can be demonstrated independently.
 
 ---
 

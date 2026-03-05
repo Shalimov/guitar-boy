@@ -48,9 +48,9 @@ describe("DashboardPage", () => {
 		expect(screen.getByText("Due for Review")).toBeInTheDocument();
 	});
 
-	it("displays welcome message when no sessions", () => {
+	it("displays onboarding panel when no sessions", () => {
 		renderWithRouter(<DashboardPage />);
-		expect(screen.getByText(/welcome to guitar boy/i)).toBeInTheDocument();
+		expect(screen.getByText(/new here\? start a warmup/i)).toBeInTheDocument();
 	});
 
 	it("has Start Learning button", () => {

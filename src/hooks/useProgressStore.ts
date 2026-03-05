@@ -8,7 +8,7 @@ const INITIAL_STORE: ProgressStore = {
 	sessionHistory: [],
 	settings: {
 		accidentalPreference: "sharp",
-		fretRange: { min: 0, max: 12 },
+		fretRange: { min: 1, max: 15 },
 	},
 };
 
@@ -78,7 +78,7 @@ function migrateProgressStore(data: unknown, fromVersion: number): ProgressStore
 			sessionHistory: [],
 			settings: {
 				accidentalPreference: "sharp",
-				fretRange: { min: 0, max: 12 },
+				fretRange: { min: 1, max: 15 },
 			},
 		};
 	}

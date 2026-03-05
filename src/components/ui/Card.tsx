@@ -7,21 +7,25 @@ interface CardProps {
 }
 
 export function Card({ children, onClick, className = "" }: CardProps) {
-	const clickableStyles = onClick ? "cursor-pointer hover:shadow-lg transition-shadow" : "";
+	const baseStyles =
+		"rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-6 shadow-[var(--gb-shadow-soft)]";
+	const clickableStyles = onClick
+		? "cursor-pointer text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--gb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gb-accent)]"
+		: "";
 
 	if (onClick) {
 		return (
 			<button
 				type="button"
 				onClick={onClick}
-				className={`bg-white rounded-lg shadow-md p-6 text-left ${clickableStyles} ${className}`}
+				className={`${baseStyles} ${clickableStyles} ${className}`}
 			>
 				{children}
 			</button>
 		);
 	}
 
-	return <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>{children}</div>;
+	return <div className={`${baseStyles} ${className}`}>{children}</div>;
 }
 
 interface CardHeaderProps {
@@ -30,7 +34,7 @@ interface CardHeaderProps {
 }
 
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
-	return <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>{children}</h3>;
+	return <h3 className={`text-xl font-semibold text-[var(--gb-text)] ${className}`}>{children}</h3>;
 }
 
 interface CardContentProps {
@@ -39,5 +43,5 @@ interface CardContentProps {
 }
 
 export function CardContent({ children, className = "" }: CardContentProps) {
-	return <div className={`mt-2 ${className}`}>{children}</div>;
+	return <div className={`mt-2 text-[var(--gb-text-muted)] ${className}`}>{children}</div>;
 }

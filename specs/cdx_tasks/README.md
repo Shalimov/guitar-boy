@@ -22,6 +22,7 @@ Each task is independent, but there is a required execution order because later 
 6. `T06-whiteboard-integration.md`
 7. `T07-test-contract-hardening.md`
 8. `T08-performance-release-gates.md`
+9. `T09-remaining-delivery-backlog.md` (active remaining scope)
 
 ## Agent Operating Rules
 - Run one task file at a time.
@@ -47,3 +48,4 @@ Optional file-scoped Biome commands for large refactors:
 - All task markdown files are present.
 - Tasks are executable by a less capable coding agent without extra context.
 - Each task includes file targets, implementation steps, acceptance criteria, and verification commands.
+- `T09-remaining-delivery-backlog.md` reflects the current active remaining work and dependency order.

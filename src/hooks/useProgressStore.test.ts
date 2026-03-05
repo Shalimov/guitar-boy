@@ -60,7 +60,7 @@ describe("useProgressStore", () => {
 		});
 
 		expect(result.current.store.settings.accidentalPreference).toBe("flat");
-		expect(result.current.store.settings.fretRange).toEqual({ min: 0, max: 12 });
+		expect(result.current.store.settings.fretRange).toEqual({ min: 1, max: 15 });
 	});
 
 	it("gets a card by ID", () => {

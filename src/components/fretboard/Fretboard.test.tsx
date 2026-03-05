@@ -1,115 +1,140 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { FretboardState } from "@/types";
 import { Fretboard } from "./Fretboard";
 
-describe("Fretboard - View Mode", () => {
-	const defaultState: FretboardState = {
-		dots: [],
-		lines: [],
-	};
+function createMockContext(): CanvasRenderingContext2D {
+	return {
+		clearRect: jest.fn(),
+		fillRect: jest.fn(),
+		beginPath: jest.fn(),
+		moveTo: jest.fn(),
+		lineTo: jest.fn(),
+		stroke: jest.fn(),
+		fill: jest.fn(),
+		arc: jest.fn(),
+		rect: jest.fn(),
+		setLineDash: jest.fn(),
+		save: jest.fn(),
+		restore: jest.fn(),
+		translate: jest.fn(),
+		rotate: jest.fn(),
+		fillText: jest.fn(),
+		setTransform: jest.fn(),
+		strokeStyle: "",
+		fillStyle: "",
+		lineWidth: 1,
+		font: "",
+		textAlign: "left",
+		textBaseline: "alphabetic",
+	} as unknown as CanvasRenderingContext2D;
+}
 
-	it("renders without errors", () => {
-		render(<Fretboard mode="view" state={defaultState} />);
-		expect(screen.getByText("E")).toBeInTheDocument();
+describe("Fretboard", () => {
+	beforeEach(() => {
+		jest.clearAllMocks();
+		jest
+			.spyOn(HTMLCanvasElement.prototype, "getContext")
+			.mockImplementation(() => createMockContext());
 	});
 
-	it("renders fret numbers by default", () => {
-		render(<Fretboard mode="view" state={defaultState} fretRange={[0, 5]} />);
-		expect(screen.getByText("0")).toBeInTheDocument();
-		expect(screen.getByText("5")).toBeInTheDocument();
+	it("renders canvas plus an accessible grid", () => {
+		render(<Fretboard mode="view" fretRange={[1, 3]} />);
+
+		expect(screen.getByRole("img", { name: /guitar fretboard/i })).toBeInTheDocument();
+		expect(screen.getByRole("table", { name: /guitar fretboard grid/i })).toBeInTheDocument();
 	});
 
-	it("renders dots from state", () => {
+	it("uses a default range that includes fret 15", () => {
+		render(<Fretboard mode="view" />);
+
+		expect(screen.getByRole("button", { name: /string 1 \(E\), fret 15/i })).toBeInTheDocument();
+	});
+
+	it("calls onFretClick with exact position in click-select mode", async () => {
+		const onFretClick = jest.fn();
+		render(<Fretboard mode="click-select" onFretClick={onFretClick} fretRange={[1, 3]} />);
+
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1/i }));
+
+		expect(onFretClick).toHaveBeenCalledWith({ string: 0, fret: 1 });
+	});
+
+	it("supports arrow-key navigation followed by activation", () => {
+		const onFretClick = jest.fn();
+		render(<Fretboard mode="click-select" onFretClick={onFretClick} fretRange={[1, 3]} />);
+
+		const firstCell = screen.getByRole("button", { name: /string 1 \(E\), fret 1/i });
+		const secondCell = screen.getByRole("button", { name: /string 1 \(E\), fret 2/i });
+
+		fireEvent.focus(firstCell);
+		fireEvent.keyDown(firstCell, { key: "ArrowRight" });
+		expect(secondCell).toHaveAttribute("tabindex", "0");
+
+		fireEvent.keyDown(secondCell, { key: "Enter" });
+		expect(onFretClick).toHaveBeenCalledWith({ string: 0, fret: 2 });
+	});
+
+	it("maps vertical keyboard movement to inverted string layout", () => {
+		const onFretClick = jest.fn();
+		render(<Fretboard mode="click-select" onFretClick={onFretClick} fretRange={[1, 3]} />);
+
+		const lowE = screen.getByRole("button", { name: /string 1 \(E\), fret 1/i });
+		const aString = screen.getByRole("button", { name: /string 2 \(A\), fret 1/i });
+
+		fireEvent.focus(lowE);
+		fireEvent.keyDown(lowE, { key: "ArrowUp" });
+		expect(aString).toHaveAttribute("tabindex", "0");
+
+		fireEvent.keyDown(aString, { key: "Enter" });
+		expect(onFretClick).toHaveBeenCalledWith({ string: 1, fret: 1 });
+	});
+
+	it("fires onLineDrawn when dragging between two existing dots in draw mode", () => {
+		const onLineDrawn = jest.fn();
 		const state: FretboardState = {
 			dots: [
-				{ position: { string: 0, fret: 0 }, label: "Root" },
-				{ position: { string: 1, fret: 2 }, label: "3rd" },
+				{ position: { string: 0, fret: 1 }, label: "A" },
+				{ position: { string: 0, fret: 3 }, label: "B" },
 			],
 			lines: [],
 		};
-		render(<Fretboard mode="view" state={state} />);
-		expect(screen.getByText("Root")).toBeInTheDocument();
-		expect(screen.getByText("3rd")).toBeInTheDocument();
+
+		render(<Fretboard mode="draw" state={state} onLineDrawn={onLineDrawn} fretRange={[1, 3]} />);
+
+		const startCell = screen.getByRole("button", { name: /string 1 \(E\), fret 1/i });
+		const endCell = screen.getByRole("button", { name: /string 1 \(E\), fret 3/i });
+
+		fireEvent.pointerDown(startCell);
+		fireEvent.pointerUp(endCell);
+
+		expect(onLineDrawn).toHaveBeenCalledWith({ string: 0, fret: 1 }, { string: 0, fret: 3 });
 	});
 
-	it("renders lines from state", () => {
-		const state: FretboardState = {
-			dots: [],
-			lines: [{ from: { string: 0, fret: 0 }, to: { string: 0, fret: 2 } }],
-		};
-		render(<Fretboard mode="view" state={state} />);
-		expect(screen.getByText("E")).toBeInTheDocument();
-	});
+	it("reflects parent state updates after initial mount", () => {
+		const { rerender } = render(<Fretboard mode="view" state={{ dots: [], lines: [] }} />);
 
-	it("displays correct/missed/incorrect overlays when provided", () => {
-		render(
+		rerender(
 			<Fretboard
 				mode="view"
-				state={defaultState}
-				correctPositions={[{ string: 0, fret: 0 }]}
-				missedPositions={[{ string: 1, fret: 2 }]}
-				incorrectPositions={[{ string: 2, fret: 3 }]}
+				state={{ dots: [{ position: { string: 0, fret: 1 }, label: "R" }], lines: [] }}
 			/>,
 		);
+
+		expect(screen.getByRole("button", { name: /fret 1, note F, marker R/i })).toBeInTheDocument();
+	});
+
+	it("normalizes reversed fret ranges safely", () => {
+		render(<Fretboard mode="view" fretRange={[5, 2]} />);
+
+		expect(screen.getByRole("button", { name: /string 1 \(E\), fret 2/i })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /string 1 \(E\), fret 5/i })).toBeInTheDocument();
+	});
+
+	it("falls back to standard 6-string labels when invalid strings are provided", () => {
+		render(<Fretboard mode="view" strings={["E"]} fretRange={[1, 1]} />);
+
 		expect(screen.getByText("E")).toBeInTheDocument();
-	});
-});
-
-describe("Fretboard - Click-Select Mode", () => {
-	it("renders clickable fret cells", () => {
-		const onFretClick = jest.fn();
-		render(<Fretboard mode="click-select" onFretClick={onFretClick} fretRange={[0, 2]} />);
-
-		const buttons = screen.getAllByRole("button");
-		expect(buttons.length).toBeGreaterThan(0);
-	});
-
-	it("calls onFretClick when fret is clicked", async () => {
-		const onFretClick = jest.fn();
-		render(<Fretboard mode="click-select" onFretClick={onFretClick} fretRange={[0, 2]} />);
-
-		const firstButton = screen.getAllByRole("button")[0];
-		await userEvent.click(firstButton);
-
-		expect(onFretClick).toHaveBeenCalled();
-		expect(onFretClick.mock.calls[0][0]).toHaveProperty("string");
-		expect(onFretClick.mock.calls[0][0]).toHaveProperty("fret");
-	});
-
-	it("highlights selected positions", () => {
-		render(
-			<Fretboard
-				mode="click-select"
-				selectedPositions={[{ string: 0, fret: 0 }]}
-				fretRange={[0, 2]}
-			/>,
-		);
-		expect(screen.getByText("E")).toBeInTheDocument();
-	});
-});
-
-describe("Fretboard - Draw Mode", () => {
-	it("renders interactive fretboard", () => {
-		render(<Fretboard mode="draw" fretRange={[0, 5]} />);
-		expect(screen.getByText("E")).toBeInTheDocument();
-	});
-
-	it("calls onFretClick when fret is clicked in draw mode", async () => {
-		const onFretClick = jest.fn();
-		render(<Fretboard mode="draw" onFretClick={onFretClick} fretRange={[0, 2]} />);
-
-		const buttons = screen.getAllByRole("button");
-		await userEvent.click(buttons[0]);
-
-		expect(onFretClick).toHaveBeenCalled();
-	});
-});
-
-describe("Fretboard - Accessibility", () => {
-	it("renders fretboard container", () => {
-		render(<Fretboard mode="view" fretRange={[0, 2]} />);
-		const fretboard = screen.getByText("E").closest("div");
-		expect(fretboard).toBeInTheDocument();
+		expect(screen.getByText("e")).toBeInTheDocument();
 	});
 });

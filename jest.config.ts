@@ -24,6 +24,7 @@ const config: Config = {
 	},
 	moduleNameMapper: {
 		"^@/(.*)$": "<rootDir>/src/$1",
+		"^react-konva$": "<rootDir>/src/__mocks__/reactKonvaMock.tsx",
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy",
 		"\\.(jpg|jpeg|png|gif|svg)$": "<rootDir>/src/__mocks__/fileMock.ts",
 	},

@@ -5,6 +5,7 @@ export interface MarkedDot {
 	label?: string;
 	color?: string;
 	shape?: "circle" | "square" | "diamond";
+	order?: number;
 }
 
 export interface ConnectionLine {
