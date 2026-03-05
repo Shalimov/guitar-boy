@@ -1,0 +1,55 @@
+import type { FretboardState } from "./fretboard";
+
+/** Saved fretboard annotation created by user */
+export interface Diagram {
+	/** UUID v4 */
+	id: string;
+	/** User-defined name */
+	name: string;
+	/** Optional notes */
+	description?: string;
+	/** ISO timestamp */
+	createdAt: string;
+	/** ISO timestamp */
+	updatedAt: string;
+	fretboardState: FretboardState;
+	/** true = shipped with app, immutable */
+	isBuiltIn: boolean;
+}
+
+/** Fretboard interaction modes */
+export type FretboardMode = "view" | "click-select" | "draw";
+
+/** Props for Fretboard component */
+export interface FretboardProps {
+	/** Fret range [min, max], default [0, 12] */
+	fretRange?: [number, number];
+	/** String notes, default ['E','A','D','G','B','e'] */
+	strings?: string[];
+	/** Show fret numbers, default true */
+	showFretNumbers?: boolean;
+	/** Show note names on dots, default false */
+	showNoteNames?: boolean;
+	/** Show interval labels on dots, default false */
+	showIntervalLabels?: boolean;
+	/** Dots + lines to render */
+	state?: FretboardState;
+	/** Interaction mode */
+	mode: FretboardMode;
+	/** Callback when fret clicked (click-select mode) */
+	onFretClick?: (pos: FretPosition) => void;
+	/** Callback when line drawn between dots (draw mode) */
+	onLineDrawn?: (from: FretPosition, to: FretPosition) => void;
+	/** Controlled selection */
+	selectedPositions?: FretPosition[];
+	/** Feedback overlay - green */
+	correctPositions?: FretPosition[];
+	/** Feedback overlay - yellow */
+	missedPositions?: FretPosition[];
+	/** Feedback overlay - red */
+	incorrectPositions?: FretPosition[];
+	/** Accessibility label */
+	ariaLabel?: string;
+}
+
+import type { FretPosition } from "./music";

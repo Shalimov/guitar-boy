@@ -8,6 +8,15 @@ export default defineConfig({
 			"@": "./src",
 		},
 	},
+	source: {
+		entry: {
+			index: "./src/index.tsx",
+		},
+	},
+	server: {
+		port: 5168,
+		open: true,
+	},
 	html: {
 		title: "Guitar Boy — Fretboard Learning App",
 	},
