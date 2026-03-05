@@ -212,4 +212,261 @@ describe("CanvasFretboard", () => {
 		expect(screen.getByText("E")).toBeInTheDocument();
 		expect(screen.getByText("e")).toBeInTheDocument();
 	});
+
+	describe("label visibility in test mode", () => {
+		it("hides labels during test mode before answer submission", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3]; // 4th argument is options
+			expect(options.hideLabels).toBe(true);
+		});
+
+		it("shows labels in test mode after answer submission", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+					correctPositions={[{ string: 0, fret: 5 }]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels when correctPositions are present in test mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+					correctPositions={[{ string: 0, fret: 5 }]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels when missedPositions are present in test mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+					missedPositions={[{ string: 0, fret: 5 }]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels when incorrectPositions are present in test mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+					incorrectPositions={[{ string: 0, fret: 5 }]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels in view mode regardless of feedback", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="view"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels in draw mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="draw"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels in click-select mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="click-select"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("shows labels in patterns mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="patterns"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(false);
+		});
+
+		it("labels hidden when switching to new quiz question", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			const { rerender } = render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+					correctPositions={[{ string: 0, fret: 5 }]}
+				/>,
+			);
+
+			// First call with feedback - labels visible
+			let lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			expect(lastCall[3].hideLabels).toBe(false);
+
+			// Rerender without feedback (new question) - labels hidden
+			rerender(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 7 }, label: "B" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			expect(lastCall[3].hideLabels).toBe(true);
+		});
+
+		it("labels immediately visible when switching from test to view mode", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			const { rerender } = render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			// First call in test mode - labels hidden
+			let lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			expect(lastCall[3].hideLabels).toBe(true);
+
+			// Switch to view mode - labels visible
+			rerender(
+				<CanvasFretboard
+					mode="view"
+					state={{
+						dots: [{ position: { string: 0, fret: 5 }, label: "A" }],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			expect(lastCall[3].hideLabels).toBe(false);
+		});
+
+		it("labels hidden for multiple dots in chord building quiz", () => {
+			const drawDotsMock = renderModule.drawDots as jest.Mock;
+			render(
+				<CanvasFretboard
+					mode="test"
+					state={{
+						dots: [
+							{ position: { string: 0, fret: 5 }, label: "A" },
+							{ position: { string: 1, fret: 7 }, label: "B" },
+							{ position: { string: 2, fret: 9 }, label: "C#" },
+						],
+						lines: [],
+					}}
+					fretRange={[1, 12]}
+				/>,
+			);
+
+			const lastCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+			const options = lastCall[3];
+			expect(options.hideLabels).toBe(true);
+		});
+	});
 });

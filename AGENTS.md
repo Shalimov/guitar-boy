@@ -38,6 +38,8 @@ DO NOT GUESS if don't know the answer survey the user.
 ## Active Technologies
 - TypeScript 5.9.3 + React 19.2.4, React Router 7.13.1, Tailwind CSS 4.2.1 (001-fretboard-learning-app)
 - localStorage (browser storage, no backend) (001-fretboard-learning-app)
+- TypeScript 5.9.3 + React 19.2.4, React Router 7.13.1, Konva 10.2.0, react-konva 19.2.3 (002-fretboard-hide-notes)
+- Browser localStorage (via custom hooks) (002-fretboard-hide-notes)
 
 ## Recent Changes
 - 001-fretboard-learning-app: Added TypeScript 5.9.3 + React 19.2.4, React Router 7.13.1, Tailwind CSS 4.2.1

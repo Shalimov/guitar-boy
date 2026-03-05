@@ -44,6 +44,10 @@ function positionKey(position: FretPosition): string {
 	return `${position.string}:${position.fret}`;
 }
 
+function shouldHideLabels(mode: string, hasFeedback: boolean): boolean {
+	return mode === "test" && !hasFeedback;
+}
+
 function toVisualStringIndex(stringIndex: number, stringCount: number): number {
 	return stringCount - 1 - stringIndex;
 }
@@ -730,6 +734,14 @@ export function CanvasFretboard({
 
 		drawFretboardSurface(context, canvasMetrics);
 		drawConnectionLines(context, canvasMetrics, renderedLinesForCanvas);
+
+		const hasFeedback =
+			(correctPositions?.length ?? 0) > 0 ||
+			(missedPositions?.length ?? 0) > 0 ||
+			(incorrectPositions?.length ?? 0) > 0;
+
+		const hideLabels = shouldHideLabels(mode, hasFeedback);
+
 		drawDots(context, canvasMetrics, renderedDotsForCanvas, {
 			selectedPositions: selectedPositionsForCanvas,
 			targetPositions: targetPositionsForCanvas,
@@ -738,6 +750,7 @@ export function CanvasFretboard({
 			incorrectPositions: incorrectPositionsForCanvas,
 			labelMode: showNoteNames ? "note" : showIntervalLabels ? "dot" : "dot",
 			invertStringNotes: true,
+			hideLabels,
 		});
 	}, [
 		canvasWidth,
@@ -752,6 +765,10 @@ export function CanvasFretboard({
 		incorrectPositionsForCanvas,
 		showNoteNames,
 		showIntervalLabels,
+		mode,
+		correctPositions,
+		missedPositions,
+		incorrectPositions,
 	]);
 
 	const handleCellClick = useCallback(

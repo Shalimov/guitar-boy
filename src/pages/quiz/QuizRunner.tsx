@@ -67,7 +67,7 @@ export function QuizRunner({
 			if (category === "note") {
 				const string = Math.floor(Math.random() * 6);
 				const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
-				const fret = Math.floor(Math.random() * (maxFret + 1));
+				const fret = Math.floor(Math.random() * maxFret) + 1;
 				const targetNote = getNoteAtFret({ string, fret });
 
 				generated.push({
@@ -79,9 +79,9 @@ export function QuizRunner({
 			} else if (category === "interval") {
 				const string1 = Math.floor(Math.random() * 6);
 				const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
-				const fret1 = Math.floor(Math.random() * (maxFret + 1));
+				const fret1 = Math.floor(Math.random() * maxFret) + 1;
 				const string2 = Math.floor(Math.random() * 6);
-				const fret2 = Math.floor(Math.random() * (maxFret + 1));
+				const fret2 = Math.floor(Math.random() * maxFret) + 1;
 
 				const interval = getInterval(
 					{ string: string1, fret: fret1 },
@@ -107,7 +107,7 @@ export function QuizRunner({
 				// Simplified chord quiz - placeholder
 				const rootString = Math.floor(Math.random() * 6);
 				const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
-				const rootFret = Math.floor(Math.random() * (maxFret + 1));
+				const rootFret = Math.floor(Math.random() * maxFret) + 1;
 				const rootNote = getNoteAtFret({ string: rootString, fret: rootFret });
 
 				generated.push({
@@ -311,7 +311,7 @@ export function QuizRunner({
 					<Fretboard
 						mode={currentQuestion.type === "interval" ? "view" : "test"}
 						state={{ dots: [], lines: [] }}
-						fretRange={[0, difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24]}
+						fretRange={[1, difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24]}
 						targetPositions={
 							currentQuestion.type === "interval" ? currentQuestion.targetPositions : []
 						}

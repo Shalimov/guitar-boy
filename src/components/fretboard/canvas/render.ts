@@ -28,6 +28,11 @@ export interface DotRenderOptions {
 	 * When enabled, note-name labels are resolved from logical string indices.
 	 */
 	invertStringNotes?: boolean;
+	/**
+	 * Hide all note/dot labels. Used in test mode to prevent showing answers
+	 * before submission.
+	 */
+	hideLabels?: boolean;
 }
 
 function getShortNoteLabel(position: FretPosition): string {
@@ -202,7 +207,7 @@ export function drawDots(
 		const labelText =
 			options.labelMode === "note" ? getShortNoteLabel(logicalNotePosition) : dot.label;
 
-		if (labelText && !isTarget) {
+		if (labelText && !isTarget && !options.hideLabels) {
 			ctx.fillStyle = isCircle ? color : "#1f1209";
 			ctx.font = "600 11px Manrope";
 			ctx.textAlign = "center";
