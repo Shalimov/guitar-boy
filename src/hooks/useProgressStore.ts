@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { getDueCards as getDueCardsUtil } from "@/lib/srs";
 import type { ProgressStore, SessionRecord, SRSCard, UserSettings } from "@/types";
 import { useLocalStorage } from "./useLocalStorage";
 
@@ -59,12 +60,17 @@ export function useProgressStore() {
 		[store.cards],
 	);
 
+	const getDueCards = useCallback((): SRSCard[] => {
+		return getDueCardsUtil(store.cards);
+	}, [store.cards]);
+
 	return {
 		store,
 		updateCard,
 		addSession,
 		updateSettings,
 		getCard,
+		getDueCards,
 	};
 }
 

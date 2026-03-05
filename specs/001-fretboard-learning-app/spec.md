@@ -108,7 +108,7 @@ As a learner, I can run quiz sessions and review due SRS cards.
 |---|---|---|
 | Dashboard route and summary cards | Implemented | Basic metrics and navigation exist. |
 | Whiteboard list/editor/pattern library | Partial | CRUD flow exists, but connect-mode behavior is incomplete. |
-| Fretboard rendering engine | Partial | Implemented as DOM grid; canvas renderer not started. |
+| Fretboard rendering engine | Implemented | Canvas-based rendering with Konva-assisted pointer hotspots. |
 | Fretboard connection lines | Missing/Incomplete | Type exists, visible line rendering is not complete. |
 | Learning mode | Missing | `LearningPage` is currently placeholder text only. |
 | Quiz mode | Missing | `QuizPage` is currently placeholder text only. |

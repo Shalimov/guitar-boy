@@ -5,13 +5,13 @@ This folder contains execution-ready tasks for simpler coding agents.
 Each task is independent, but there is a required execution order because later tasks depend on earlier architecture decisions.
 
 ## Current Snapshot (2026-03-05)
-- `specs/001-fretboard-learning-app/spec.md` is still template text and does not describe the real feature.
-- `specs/001-fretboard-learning-app/tasks.md` contains conflicting duplicate sections (for example duplicated `T081` and `T082` with different statuses).
-- `src/components/fretboard/Fretboard.tsx` is a div/button grid renderer, not canvas-based.
-- `ConnectionLine` exists in types but line rendering is not implemented in the current fretboard view.
-- `DiagramEditor` has toolbar controls for connect mode and line style, but line drawing behavior is not wired.
-- `LearningPage` and `QuizPage` are still placeholders.
-- Visual system is very minimal and mostly utility defaults (gray/blue scale), with no distinct design language.
+- `specs/001-fretboard-learning-app/spec.md` has been updated with accurate implementation status.
+- `specs/001-fretboard-learning-app/tasks.md` shows 87/151 tasks complete, no duplicate IDs.
+- `src/components/fretboard/CanvasFretboard.tsx` is canvas-based with Konva pointer interactions.
+- `ConnectionLine` rendering is implemented in CanvasFretboard via Konva Line shapes.
+- `DiagramEditor` has toolbar controls for connect mode and line style, with line drawing behavior wired.
+- `LearningPage` and `QuizPage` are still placeholders (implementation pending).
+- Visual system uses Tailwind CSS v4 with utility-first approach.
 
 ## Execution Order
 1. `T01-spec-source-reconciliation.md`

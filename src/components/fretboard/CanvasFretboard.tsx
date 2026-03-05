@@ -523,11 +523,24 @@ export function CanvasFretboard({
 		}),
 		[canvasMetrics, stringCount],
 	);
-	const interactionRadius = useMemo(
-		() => Math.max(14, Math.min(canvasMetrics.fretSpacing, canvasMetrics.stringSpacing) * 0.4),
-		[canvasMetrics],
-	);
+	const interactionRadius = useMemo(() => {
+		if (mode === "view") {
+			return 0;
+		}
+
+		const baseRadius = 14;
+
+		return Math.max(
+			baseRadius,
+			Math.min(canvasMetrics.fretSpacing, canvasMetrics.stringSpacing) * 0.4,
+		);
+	}, [mode, canvasMetrics]);
+
 	const interactiveHotspots = useMemo(() => {
+		if (mode === "view") {
+			return [];
+		}
+
 		const hotspots: InteractiveHotspot[] = [];
 
 		for (let stringIndex = 0; stringIndex < stringCount; stringIndex += 1) {
@@ -546,7 +559,7 @@ export function CanvasFretboard({
 		}
 
 		return hotspots;
-	}, [stringCount, fretNumbers, canvasMetrics]);
+	}, [mode, stringCount, fretNumbers, canvasMetrics]);
 	const stringRows = useMemo(() => {
 		const occurrences = new Map<string, number>();
 
@@ -884,7 +897,6 @@ export function CanvasFretboard({
 											onTouchStart={() => handleCellPointerDown(hotspot.logicalPosition)}
 											onTouchEnd={() => handleCellPointerUp(hotspot.logicalPosition)}
 											onClick={() => handleCellClick(hotspot.logicalPosition)}
-											onTap={() => handleCellClick(hotspot.logicalPosition)}
 										/>
 									))}
 								</Layer>

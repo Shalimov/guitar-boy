@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import { Button } from "@/components/ui";
-import type { Diagram, FretPosition } from "@/types";
+import type { Diagram, FretboardState, FretPosition } from "@/types";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 import { useDiagramHistory } from "./useDiagramHistory";
 
@@ -60,7 +60,7 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	}, [hasUnsavedChanges]);
 
 	const hasDotAt = (position: FretPosition): boolean => {
-		return currentState.dots.some(
+		return fretboardState.dots.some(
 			(dot) => dot.position.string === position.string && dot.position.fret === position.fret,
 		);
 	};
@@ -70,7 +70,7 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	};
 
 	const hasLineBetween = (from: FretPosition, to: FretPosition): boolean => {
-		return currentState.lines.some(
+		return fretboardState.lines.some(
 			(line) =>
 				(isSamePosition(line.from, from) && isSamePosition(line.to, to)) ||
 				(isSamePosition(line.from, to) && isSamePosition(line.to, from)),
@@ -86,10 +86,10 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 			return;
 		}
 
-		updateState({
-			...currentState,
+		setFretboardState((previousState) => ({
+			...previousState,
 			lines: [
-				...currentState.lines,
+				...previousState.lines,
 				{
 					from,
 					to,
@@ -97,7 +97,7 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 					color: lineColor,
 				},
 			],
-		});
+		}));
 	};
 
 	const handleFretClick = (pos: FretPosition) => {
@@ -122,26 +122,26 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 			return;
 		}
 
-		const existingDotIndex = currentState.dots.findIndex(
+		const existingDotIndex = fretboardState.dots.findIndex(
 			(d) => d.position.string === pos.string && d.position.fret === pos.fret,
 		);
 
 		if (existingDotIndex >= 0) {
 			setPendingLineStart(null);
-			updateState({
-				...currentState,
-				dots: currentState.dots.filter((_, i) => i !== existingDotIndex),
-				lines: currentState.lines.filter(
+			setFretboardState({
+				...fretboardState,
+				dots: fretboardState.dots.filter((_, i) => i !== existingDotIndex),
+				lines: fretboardState.lines.filter(
 					(line) =>
 						!(line.from.string === pos.string && line.from.fret === pos.fret) &&
 						!(line.to.string === pos.string && line.to.fret === pos.fret),
 				),
 			});
 		} else {
-			updateState({
-				...currentState,
+			setFretboardState({
+				...fretboardState,
 				dots: [
-					...currentState.dots,
+					...fretboardState.dots,
 					{
 						position: pos,
 						label: dotLabel.trim() || undefined,
@@ -162,19 +162,6 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		setPendingLineStart(null);
 	};
 
-	const handleClearDiagram = () => {
-		if (!window.confirm("Clear all dots and lines from the diagram? This cannot be undone.")) {
-			return;
-		}
-
-		updateState({ dots: [], lines: [] });
-		setPendingLineStart(null);
-	};
-
-	const handleCancelPendingLine = () => {
-		setPendingLineStart(null);
-	};
-
 	const handleCancel = () => {
 		if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) {
 			return;
@@ -191,7 +178,7 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 			description,
 			createdAt: diagram?.createdAt || now,
 			updatedAt: now,
-			fretboardState: currentState,
+			fretboardState,
 			isBuiltIn: false,
 		};
 
@@ -250,27 +237,10 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				}}
 			/>
 
-			<div className="flex gap-2">
-				<Button variant="secondary" onClick={undo} disabled={!canUndo}>
-					Undo
-				</Button>
-				<Button variant="secondary" onClick={redo} disabled={!canRedo}>
-					Redo
-				</Button>
-				{connectMode && pendingLineStart && (
-					<Button variant="secondary" onClick={handleCancelPendingLine}>
-						Cancel Line
-					</Button>
-				)}
-				<Button variant="secondary" onClick={handleClearDiagram}>
-					Clear Diagram
-				</Button>
-			</div>
-
 			<div className="rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg)] p-4">
 				<Fretboard
 					mode="draw"
-					state={currentState}
+					state={fretboardState}
 					onFretClick={handleFretClick}
 					onLineDrawn={connectMode ? handleLineDrawn : undefined}
 					selectedPositions={pendingLineStart ? [pendingLineStart] : []}
