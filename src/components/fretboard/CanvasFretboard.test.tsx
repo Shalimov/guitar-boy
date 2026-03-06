@@ -123,19 +123,37 @@ describe("CanvasFretboard", () => {
 		expect(latestCall[3]).toMatchObject({ labelMode: "note" });
 	});
 
-	it("renders target positions as dedicated test-mode circles", () => {
+	it("does not render target dots before feedback in test mode", () => {
 		const drawDotsMock = renderModule.drawDots as jest.Mock;
 		render(
 			<CanvasFretboard mode="test" targetPositions={[{ string: 0, fret: 4 }]} fretRange={[1, 5]} />,
+		);
+
+		// Target positions should be in the options but NOT in the rendered dots array before feedback
+		const latestCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
+		expect(latestCall[2]).not.toEqual(
+			expect.arrayContaining([expect.objectContaining({ position: { string: 5, fret: 4 } })]),
+		);
+		expect(latestCall[3]).toMatchObject({
+			targetPositions: [{ string: 5, fret: 4 }],
+		});
+	});
+
+	it("reveals target dots in test mode when feedback is active", () => {
+		const drawDotsMock = renderModule.drawDots as jest.Mock;
+		render(
+			<CanvasFretboard
+				mode="test"
+				targetPositions={[{ string: 0, fret: 4 }]}
+				missedPositions={[{ string: 0, fret: 4 }]}
+				fretRange={[1, 5]}
+			/>,
 		);
 
 		const latestCall = drawDotsMock.mock.calls[drawDotsMock.mock.calls.length - 1];
 		expect(latestCall[2]).toEqual(
 			expect.arrayContaining([expect.objectContaining({ position: { string: 5, fret: 4 } })]),
 		);
-		expect(latestCall[3]).toMatchObject({
-			targetPositions: [{ string: 5, fret: 4 }],
-		});
 	});
 
 	it("toggles dots in uncontrolled draw mode", async () => {

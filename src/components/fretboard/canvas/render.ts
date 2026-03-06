@@ -1,5 +1,5 @@
 import { getNoteAtFret } from "@/lib/music";
-import type { ConnectionLine, FretPosition, MarkedDot } from "@/types";
+import type { ConnectionLine, FretPosition, MarkedDot, NoteGroup } from "@/types";
 import { positionToCanvasPoint } from "./geometry";
 import type { CanvasMetrics } from "./types";
 
@@ -170,17 +170,14 @@ export function drawDots(
 		const isTarget = hasPosition(options.targetPositions, dot.position);
 		const isCircle = dot.shape === undefined || dot.shape === "circle";
 
-		ctx.fillStyle = color;
-		ctx.strokeStyle = "#fff8ef";
-		ctx.lineWidth = 1.5;
+		ctx.fillStyle = "#ffffff";
+		ctx.strokeStyle = isTarget ? (options.targetOutlineColor ?? color) : color;
+		ctx.lineWidth = 2.5;
 
 		if (isCircle) {
 			ctx.beginPath();
 			ctx.arc(point.x, point.y, size / 2, 0, Math.PI * 2);
-			ctx.fillStyle = "#fffdf9";
 			ctx.fill();
-			ctx.lineWidth = 2.5;
-			ctx.strokeStyle = isTarget ? (options.targetOutlineColor ?? color) : color;
 			ctx.stroke();
 		} else if (dot.shape === "square") {
 			ctx.beginPath();
@@ -208,7 +205,7 @@ export function drawDots(
 			options.labelMode === "note" ? getShortNoteLabel(logicalNotePosition) : dot.label;
 
 		if (labelText && !isTarget && !options.hideLabels) {
-			ctx.fillStyle = isCircle ? color : "#1f1209";
+			ctx.fillStyle = color;
 			ctx.font = "600 11px Manrope";
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
@@ -234,5 +231,98 @@ export function drawDots(
 			ctx.textBaseline = "middle";
 			ctx.fillText(`${dot.order}`, badgeX, badgeY);
 		}
+	}
+}
+
+function getConvexHull(points: { x: number; y: number }[]): { x: number; y: number }[] {
+	if (points.length <= 2) return points;
+
+	const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+	const cross = (
+		o: { x: number; y: number },
+		a: { x: number; y: number },
+		b: { x: number; y: number },
+	) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+	const lower: { x: number; y: number }[] = [];
+	for (const p of sorted) {
+		while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+			lower.pop();
+		}
+		lower.push(p);
+	}
+
+	const upper: { x: number; y: number }[] = [];
+	for (let i = sorted.length - 1; i >= 0; i--) {
+		const p = sorted[i];
+		while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+			upper.pop();
+		}
+		upper.push(p);
+	}
+
+	upper.pop();
+	lower.pop();
+	return lower.concat(upper);
+}
+
+export function drawGroups(
+	ctx: CanvasRenderingContext2D,
+	metrics: CanvasMetrics,
+	groups: NoteGroup[],
+): void {
+	for (const group of groups) {
+		if (group.positions.length < 1) continue;
+
+		const maxSize = Math.min(metrics.stringSpacing, metrics.fretSpacing) - 4;
+		const dotSize = Math.max(20, Math.min(MEDIUM_DOT_DIAMETER, maxSize));
+		const radius = dotSize / 2 + 8; // Offset amount to safely encircle the outer rim of dots
+
+		const points = group.positions.map((pos) => {
+			const visualPos = { ...pos, string: metrics.stringCount - 1 - pos.string };
+			return positionToCanvasPoint(metrics, visualPos);
+		});
+
+		const hull = getConvexHull(points);
+
+		ctx.beginPath();
+
+		if (hull.length === 1) {
+			ctx.arc(hull[0].x, hull[0].y, radius, 0, Math.PI * 2);
+		} else {
+			for (let i = 0; i < hull.length; i++) {
+				const p = hull[i];
+				const next = hull[(i + 1) % hull.length];
+				const prev = hull[(i - 1 + hull.length) % hull.length];
+
+				const dx = next.x - p.x;
+				const dy = next.y - p.y;
+				const len = Math.hypot(dx, dy) || 1;
+				const nx = (dy / len) * radius;
+				const ny = (-dx / len) * radius;
+
+				const pdx = p.x - prev.x;
+				const pdy = p.y - prev.y;
+				const plen = Math.hypot(pdx, pdy) || 1;
+				const pnx = (pdy / plen) * radius;
+				const pny = (-pdx / plen) * radius;
+
+				const sa = Math.atan2(pny, pnx);
+				let ea = Math.atan2(ny, nx);
+				if (ea < sa) {
+					ea += Math.PI * 2;
+				}
+
+				ctx.arc(p.x, p.y, radius, sa, ea);
+			}
+			ctx.closePath();
+		}
+
+		ctx.lineJoin = "round";
+		ctx.lineCap = "round";
+		ctx.lineWidth = 3;
+
+		ctx.strokeStyle = group.color;
+		ctx.stroke();
 	}
 }

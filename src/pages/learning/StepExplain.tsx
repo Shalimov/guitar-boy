@@ -8,14 +8,19 @@ interface StepExplainProps {
 export function StepExplain({ step }: StepExplainProps) {
 	return (
 		<div className="space-y-4">
-			<h2 className="text-xl font-bold text-gray-900">{step.title}</h2>
-			<div className="prose prose-sm max-w-none text-gray-700">
+			<h2 className="text-xl font-semibold" style={{ color: "var(--gb-text)" }}>
+				{step.title}
+			</h2>
+			<div className="space-y-2 text-sm leading-relaxed" style={{ color: "var(--gb-text-muted)" }}>
 				{step.content.split("\n").map((paragraph) => (
 					<p key={paragraph.slice(0, 20)}>{paragraph}</p>
 				))}
 			</div>
 			{step.fretboardState && (
-				<div className="mt-4 p-4 bg-gray-50 rounded-lg">
+				<div
+					className="mt-4 p-4 rounded-xl"
+					style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
+				>
 					<Fretboard mode="view" state={step.fretboardState} fretRange={[0, 5]} showNoteNames />
 				</div>
 			)}

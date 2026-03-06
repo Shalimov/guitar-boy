@@ -34,50 +34,66 @@ export function LearningPage() {
 	}
 
 	return (
-		<div className="max-w-6xl mx-auto p-6">
-			<div className="mb-6">
-				<div className="flex gap-4 border-b border-gray-200">
+		<div className="max-w-4xl mx-auto p-6 space-y-6">
+			{/* Tab bar */}
+			<div
+				className="flex gap-1 p-1 rounded-xl"
+				style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
+			>
+				{[
+					{ label: "Lessons", active: !showExplorer, onClick: () => setShowExplorer(false) },
+					{ label: "Explorer", active: showExplorer, onClick: () => setShowExplorer(true) },
+				].map(({ label, active, onClick }) => (
 					<button
+						key={label}
 						type="button"
-						onClick={() => setShowExplorer(false)}
-						className={`px-6 py-3 font-medium transition-colors ${
-							!showExplorer
-								? "text-blue-600 border-b-2 border-blue-600"
-								: "text-gray-600 hover:text-gray-900"
-						}`}
+						onClick={onClick}
+						style={
+							active
+								? {
+										background: "var(--gb-accent)",
+										color: "#fff8ee",
+										boxShadow: "0 2px 8px rgba(179,93,42,0.3)",
+									}
+								: { color: "var(--gb-text-muted)" }
+						}
+						className="flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-all"
 					>
-						Lessons
+						{label}
 					</button>
-					<button
-						type="button"
-						onClick={() => setShowExplorer(true)}
-						className={`px-6 py-3 font-medium transition-colors ${
-							showExplorer
-								? "text-blue-600 border-b-2 border-blue-600"
-								: "text-gray-600 hover:text-gray-900"
-						}`}
-					>
-						Explorer
-					</button>
-				</div>
+				))}
 			</div>
 
+			{/* Content */}
 			{!showExplorer ? (
-				<div>
-					<h1 className="text-3xl font-bold text-gray-900 mb-2">Guided Lessons</h1>
-					<p className="text-gray-600 mb-6">
-						Structured lessons to help you learn note positions, intervals, and chords on the
-						fretboard.
-					</p>
+				<div className="gb-panel p-7 space-y-5">
+					<div>
+						<p className="gb-page-kicker mb-1">Learn</p>
+						<h1 className="gb-page-title">Guided Lessons</h1>
+						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
+							Structured lessons to help you learn note positions, intervals, and chords on the
+							fretboard.
+						</p>
+					</div>
 					<LessonList onSelectLesson={handleSelectLesson} />
 				</div>
 			) : (
-				<div>
-					<h1 className="text-3xl font-bold text-gray-900 mb-2">Fretboard Explorer</h1>
-					<p className="text-gray-600 mb-6">
-						Interactive reference view to explore notes, intervals, and patterns on the fretboard.
-					</p>
-					<div className="p-8 bg-gray-50 rounded-lg text-center text-gray-500">
+				<div className="gb-panel p-7 space-y-5">
+					<div>
+						<p className="gb-page-kicker mb-1">Explore</p>
+						<h1 className="gb-page-title">Fretboard Explorer</h1>
+						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
+							Interactive reference view to explore notes, intervals, and patterns on the fretboard.
+						</p>
+					</div>
+					<div
+						className="rounded-xl p-8 text-center text-sm"
+						style={{
+							background: "var(--gb-bg-panel)",
+							border: "1px dashed var(--gb-border)",
+							color: "var(--gb-text-muted)",
+						}}
+					>
 						Explorer mode coming soon! This will allow you to interactively explore the fretboard.
 					</div>
 				</div>

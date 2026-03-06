@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { Diagram } from "@/types";
 import { PatternLibrary } from "./PatternLibrary";
 
@@ -22,22 +23,42 @@ describe("PatternLibrary", () => {
 		},
 	];
 
-	it("renders pattern categories", () => {
-		render(<PatternLibrary patterns={mockPatterns} onSelectPattern={jest.fn()} />);
-		expect(screen.getByText("Built-in Patterns")).toBeInTheDocument();
+	it("renders pattern names and category headings", () => {
+		render(
+			<PatternLibrary patterns={mockPatterns} onViewPattern={jest.fn()} onEditCopy={jest.fn()} />,
+		);
 		expect(screen.getByText("C Shape (CAGED)")).toBeInTheDocument();
 		expect(screen.getByText("Pentatonic Box 1")).toBeInTheDocument();
+		// Category headings derived from id prefix
+		expect(screen.getByText("CAGED Shapes")).toBeInTheDocument();
+		expect(screen.getByText("Minor Pentatonic")).toBeInTheDocument();
 	});
 
-	it("calls onSelectPattern when pattern clicked", async () => {
-		const onSelectPattern = jest.fn();
-		render(<PatternLibrary patterns={mockPatterns} onSelectPattern={onSelectPattern} />);
+	it("calls onViewPattern when View button is clicked", async () => {
+		const onViewPattern = jest.fn();
+		render(
+			<PatternLibrary
+				patterns={mockPatterns}
+				onViewPattern={onViewPattern}
+				onEditCopy={jest.fn()}
+			/>,
+		);
 
-		const patternButton = screen.getByText("C Shape (CAGED)");
-		await userEvent.click(patternButton);
+		const viewButtons = screen.getAllByRole("button", { name: "View" });
+		await userEvent.click(viewButtons[0]);
 
-		expect(onSelectPattern).toHaveBeenCalledWith(mockPatterns[0]);
+		expect(onViewPattern).toHaveBeenCalledWith(mockPatterns[0]);
+	});
+
+	it("calls onEditCopy when Edit Copy button is clicked", async () => {
+		const onEditCopy = jest.fn();
+		render(
+			<PatternLibrary patterns={mockPatterns} onViewPattern={jest.fn()} onEditCopy={onEditCopy} />,
+		);
+
+		const editCopyButtons = screen.getAllByRole("button", { name: "Edit Copy" });
+		await userEvent.click(editCopyButtons[0]);
+
+		expect(onEditCopy).toHaveBeenCalledWith(mockPatterns[0]);
 	});
 });
-
-import userEvent from "@testing-library/user-event";

@@ -23,7 +23,10 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	const [lineColor, setLineColor] = useState("#4A3A2C");
 	const [lineStyle, setLineStyle] = useState<"solid" | "dashed">("solid");
 	const [connectMode, setConnectMode] = useState(false);
+	const [groupMode, setGroupMode] = useState(false);
 	const [pendingLineStart, setPendingLineStart] = useState<FretPosition | null>(null);
+	const [pendingGroupDots, setPendingGroupDots] = useState<FretPosition[]>([]);
+	const [groupColor, setGroupColor] = useState("#8B5CF6"); // dark purple
 
 	const initialSnapshot = useMemo(
 		() =>
@@ -97,6 +100,7 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 					color: lineColor,
 				},
 			],
+			groups: currentState.groups || [],
 		});
 	};
 
@@ -122,6 +126,21 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 			return;
 		}
 
+		if (groupMode) {
+			if (!hasDotAt(pos)) {
+				return;
+			}
+
+			setPendingGroupDots((prev) => {
+				const isAlreadySelected = prev.some((p) => isSamePosition(p, pos));
+				if (isAlreadySelected) {
+					return prev.filter((p) => !isSamePosition(p, pos));
+				}
+				return [...prev, pos];
+			});
+			return;
+		}
+
 		const existingDotIndex = currentState.dots.findIndex(
 			(d) => d.position.string === pos.string && d.position.fret === pos.fret,
 		);
@@ -136,6 +155,15 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 						!(line.from.string === pos.string && line.from.fret === pos.fret) &&
 						!(line.to.string === pos.string && line.to.fret === pos.fret),
 				),
+				groups:
+					currentState.groups
+						?.map((g) => ({
+							...g,
+							positions: g.positions.filter(
+								(p) => !(p.string === pos.string && p.fret === pos.fret),
+							),
+						}))
+						.filter((g) => g.positions.length > 0) || [],
 			});
 		} else {
 			updateState({
@@ -149,6 +177,7 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 						shape: dotShape,
 					},
 				],
+				groups: currentState.groups || [],
 			});
 		}
 	};
@@ -167,12 +196,35 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 			return;
 		}
 
-		updateState({ dots: [], lines: [] });
+		updateState({ dots: [], lines: [], groups: [] });
 		setPendingLineStart(null);
+		setPendingGroupDots([]);
 	};
 
 	const handleCancelPendingLine = () => {
 		setPendingLineStart(null);
+	};
+
+	const handleFinishGroup = () => {
+		if (pendingGroupDots.length < 2) {
+			setPendingGroupDots([]);
+			return;
+		}
+
+		updateState({
+			...currentState,
+			groups: [
+				...(currentState.groups || []),
+				{
+					id: crypto.randomUUID(),
+					positions: pendingGroupDots,
+					color: groupColor,
+					strokeWidth: 2,
+					fillOpacity: 0.2,
+				},
+			],
+		});
+		setPendingGroupDots([]);
 	};
 
 	const handleCancel = () => {
@@ -202,7 +254,11 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		<div className="space-y-4">
 			<div className="flex items-center gap-4">
 				<div className="flex-1">
-					<label htmlFor="diagram-name" className="block text-sm font-medium text-gray-700 mb-1">
+					<label
+						htmlFor="diagram-name"
+						className="block text-xs font-bold tracking-widest uppercase mb-1"
+						style={{ color: "var(--gb-text-muted)" }}
+					>
 						Name
 					</label>
 					<input
@@ -210,14 +266,20 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 						type="text"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
-						className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none transition-colors"
+						style={{
+							background: "var(--gb-bg-elev)",
+							border: "1px solid var(--gb-border)",
+							color: "var(--gb-text)",
+						}}
 						placeholder="Diagram name"
 					/>
 				</div>
 				<div className="flex-1">
 					<label
 						htmlFor="diagram-description"
-						className="block text-sm font-medium text-gray-700 mb-1"
+						className="block text-xs font-bold tracking-widest uppercase mb-1"
+						style={{ color: "var(--gb-text-muted)" }}
 					>
 						Description (optional)
 					</label>
@@ -226,7 +288,12 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 						type="text"
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
-						className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none transition-colors"
+						style={{
+							background: "var(--gb-bg-elev)",
+							border: "1px solid var(--gb-border)",
+							color: "var(--gb-text)",
+						}}
 						placeholder="Description"
 					/>
 				</div>
@@ -239,6 +306,8 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				lineColor={lineColor}
 				lineStyle={lineStyle}
 				connectMode={connectMode}
+				groupMode={groupMode}
+				groupColor={groupColor}
 				onDotColorChange={setDotColor}
 				onDotLabelChange={setDotLabel}
 				onDotShapeChange={setDotShape}
@@ -247,7 +316,16 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				onConnectModeChange={(enabled) => {
 					setConnectMode(enabled);
 					setPendingLineStart(null);
+					if (enabled) setPendingGroupDots([]);
 				}}
+				onGroupModeChange={(enabled) => {
+					setGroupMode(enabled);
+					if (enabled) {
+						setPendingGroupDots([]);
+						setPendingLineStart(null);
+					}
+				}}
+				onGroupColorChange={setGroupColor}
 			/>
 
 			<div className="flex gap-2">
@@ -262,6 +340,14 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 						Cancel Line
 					</Button>
 				)}
+				{groupMode && pendingGroupDots.length > 0 && (
+					<div className="flex gap-2">
+						<Button variant="secondary" onClick={() => setPendingGroupDots([])}>
+							Cancel Group
+						</Button>
+						<Button onClick={handleFinishGroup}>Finish Group ({pendingGroupDots.length})</Button>
+					</div>
+				)}
 				<Button variant="secondary" onClick={handleClearDiagram}>
 					Clear Diagram
 				</Button>
@@ -273,7 +359,9 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 					state={currentState}
 					onFretClick={handleFretClick}
 					onLineDrawn={connectMode ? handleLineDrawn : undefined}
-					selectedPositions={pendingLineStart ? [pendingLineStart] : []}
+					selectedPositions={
+						pendingLineStart ? [pendingLineStart] : groupMode ? pendingGroupDots : []
+					}
 					fretRange={[1, 15]}
 				/>
 			</div>

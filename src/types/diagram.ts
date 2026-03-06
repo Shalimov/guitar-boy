@@ -27,8 +27,10 @@ export interface FretboardProps {
 	fretRange?: [number, number];
 	/** String notes, default ['E','A','D','G','B','e'] */
 	strings?: string[];
-	/** Show fret numbers, default true */
+	/** Show fret numbers below the board, default true */
 	showFretNumbers?: boolean;
+	/** Show string name labels at the left side, default true */
+	showStringLabels?: boolean;
 	/** Show note names on dots, default true */
 	showNoteNames?: boolean;
 	/** Show interval labels on dots, default false */

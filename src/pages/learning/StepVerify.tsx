@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import type { VerifyStep as VerifyStepType } from "@/types/lesson";
 import type { FretPosition } from "@/types/music";
@@ -16,10 +16,19 @@ export function StepVerify({ step, onComplete }: StepVerifyProps) {
 		missed: FretPosition[];
 	}>({ correct: [], incorrect: [], missed: [] });
 	const [isVerified, setIsVerified] = useState(false);
+	const completeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Cancel any pending auto-advance timer when the component unmounts
+	useEffect(() => {
+		return () => {
+			if (completeTimerRef.current !== null) {
+				clearTimeout(completeTimerRef.current);
+			}
+		};
+	}, []);
 
 	const handleFretClick = (position: FretPosition) => {
 		if (isVerified) return;
-
 		setSelectedPositions((prev) => {
 			const isSelected = prev.some(
 				(pos) => pos.string === position.string && pos.fret === position.fret,
@@ -42,37 +51,37 @@ export function StepVerify({ step, onComplete }: StepVerifyProps) {
 			const wasSelected = selectedPositions.some(
 				(pos) => pos.string === target.string && pos.fret === target.fret,
 			);
-			if (wasSelected) {
-				correct.push(target);
-			} else {
-				missed.push(target);
-			}
+			if (wasSelected) correct.push(target);
+			else missed.push(target);
 		}
 
 		for (const selected of selectedPositions) {
 			const isTarget = step.targetPositions.some(
 				(target) => target.string === selected.string && target.fret === selected.fret,
 			);
-			if (!isTarget) {
-				incorrect.push(selected);
-			}
+			if (!isTarget) incorrect.push(selected);
 		}
 
 		setFeedback({ correct, incorrect, missed });
 		setIsVerified(true);
 
 		if (incorrect.length === 0 && missed.length === 0) {
-			setTimeout(() => {
-				onComplete();
-			}, 1500);
+			completeTimerRef.current = setTimeout(() => onComplete(), 1500);
 		}
 	};
 
+	const isPerfect = isVerified && feedback.incorrect.length === 0 && feedback.missed.length === 0;
+
 	return (
 		<div className="space-y-4">
-			<p className="text-lg font-medium text-gray-900">{step.instruction}</p>
+			<p className="text-base font-medium" style={{ color: "var(--gb-text)" }}>
+				{step.instruction}
+			</p>
 
-			<div className="p-4 bg-gray-50 rounded-lg">
+			<div
+				className="p-4 rounded-xl"
+				style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
+			>
 				<Fretboard
 					mode="test"
 					state={step.fretboardState || { dots: [], lines: [] }}
@@ -84,6 +93,7 @@ export function StepVerify({ step, onComplete }: StepVerifyProps) {
 					missedPositions={feedback.missed}
 					onFretClick={handleFretClick}
 					showNoteNames
+					showStringLabels={false}
 				/>
 			</div>
 
@@ -92,19 +102,47 @@ export function StepVerify({ step, onComplete }: StepVerifyProps) {
 					type="button"
 					onClick={handleCheck}
 					disabled={selectedPositions.length === 0}
-					className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+					style={
+						selectedPositions.length === 0
+							? {
+									background: "var(--gb-bg-tab)",
+									color: "var(--gb-text-muted)",
+									cursor: "not-allowed",
+								}
+							: {
+									background: "var(--gb-accent)",
+									color: "#fff8ee",
+									boxShadow: "0 2px 8px rgba(179,93,42,0.28)",
+								}
+					}
+					className="px-6 py-2 rounded-full font-medium text-sm transition-all hover:opacity-90 active:scale-95 focus-visible:outline-none"
 				>
 					Check Answer
 				</button>
-			) : feedback.incorrect.length === 0 && feedback.missed.length === 0 ? (
-				<div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-					<p className="text-green-700 font-medium">✓ Perfect! All positions correct.</p>
+			) : isPerfect ? (
+				<div
+					className="p-4 rounded-xl flex items-center gap-3"
+					style={{
+						background: "color-mix(in srgb, #16a34a 12%, var(--gb-bg-elev))",
+						border: "1px solid color-mix(in srgb, #16a34a 30%, var(--gb-border))",
+					}}
+				>
+					<span className="text-lg">✓</span>
+					<p className="text-sm font-semibold" style={{ color: "#166534" }}>
+						Perfect! All positions correct.
+					</p>
 				</div>
 			) : (
-				<div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-					<p className="text-yellow-700 font-medium">
-						Almost there! You missed {feedback.missed.length} position(s) and selected{" "}
-						{feedback.incorrect.length} incorrect position(s).
+				<div
+					className="p-4 rounded-xl space-y-3"
+					style={{
+						background: "color-mix(in srgb, #ca8a04 10%, var(--gb-bg-elev))",
+						border: "1px solid color-mix(in srgb, #ca8a04 30%, var(--gb-border))",
+					}}
+				>
+					<p className="text-sm font-medium" style={{ color: "#854d0e" }}>
+						Almost there! Missed {feedback.missed.length} position(s), {feedback.incorrect.length}{" "}
+						incorrect.
 					</p>
 					<button
 						type="button"
@@ -113,7 +151,8 @@ export function StepVerify({ step, onComplete }: StepVerifyProps) {
 							setFeedback({ correct: [], incorrect: [], missed: [] });
 							setIsVerified(false);
 						}}
-						className="mt-2 px-4 py-2 bg-yellow-600 text-white rounded-lg font-medium hover:bg-yellow-700 transition-colors"
+						style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
+						className="px-4 py-1.5 rounded-full font-medium text-sm transition-all hover:opacity-90 focus-visible:outline-none"
 					>
 						Try Again
 					</button>

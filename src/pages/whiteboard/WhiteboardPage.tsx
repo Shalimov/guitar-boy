@@ -2,19 +2,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui";
 import { allPatterns } from "@/data/patterns";
 import { useDiagramStore } from "@/hooks/useDiagramStore";
-import { DiagramEditor, PatternLibrary } from "@/pages/whiteboard";
+import { DiagramEditor, DiagramViewer, PatternLibrary } from "@/pages/whiteboard";
 import type { Diagram } from "@/types";
 
+type PageView = "list" | "patterns" | "view" | "edit";
+
 export function WhiteboardPage() {
-	const [view, setView] = useState<"list" | "patterns" | "edit">("list");
+	const [view, setView] = useState<PageView>("list");
+	const [viewingDiagram, setViewingDiagram] = useState<Diagram | undefined>(undefined);
 	const [editingDiagram, setEditingDiagram] = useState<Diagram | undefined>(undefined);
 	const { store, addDiagram, updateDiagram, deleteDiagram, getUserDiagrams } = useDiagramStore();
 
 	const userDiagrams = getUserDiagrams();
 
+	// ── Navigation helpers ───────────────────────────────────────────────────
+
 	const handleNewDiagram = () => {
 		setEditingDiagram(undefined);
 		setView("edit");
+	};
+
+	const handleViewDiagram = (diagram: Diagram) => {
+		setViewingDiagram(diagram);
+		setView("view");
 	};
 
 	const handleEditDiagram = (diagram: Diagram) => {
@@ -22,8 +32,9 @@ export function WhiteboardPage() {
 		setView("edit");
 	};
 
-	const handleSelectPattern = (pattern: Diagram) => {
-		const clonedDiagram: Diagram = {
+	/** Clone a diagram (built-in or user) and open the editor */
+	const handleEditCopy = (pattern: Diagram) => {
+		const cloned: Diagram = {
 			...pattern,
 			id: crypto.randomUUID(),
 			name: `${pattern.name} (Copy)`,
@@ -31,7 +42,7 @@ export function WhiteboardPage() {
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
 		};
-		setEditingDiagram(clonedDiagram);
+		setEditingDiagram(cloned);
 		setView("edit");
 	};
 
@@ -57,6 +68,27 @@ export function WhiteboardPage() {
 		}
 	};
 
+	const handleBackFromView = () => {
+		setViewingDiagram(undefined);
+		// Return to whichever tab was active (patterns if it was a built-in, list otherwise)
+		setView(viewingDiagram?.isBuiltIn ? "patterns" : "list");
+	};
+
+	// ── Views ────────────────────────────────────────────────────────────────
+
+	if (view === "view" && viewingDiagram) {
+		return (
+			<div className="space-y-5">
+				<DiagramViewer
+					diagram={viewingDiagram}
+					onBack={handleBackFromView}
+					onEdit={!viewingDiagram.isBuiltIn ? () => handleEditDiagram(viewingDiagram) : undefined}
+					onEditCopy={() => handleEditCopy(viewingDiagram)}
+				/>
+			</div>
+		);
+	}
+
 	if (view === "edit") {
 		return (
 			<div className="space-y-5">
@@ -76,6 +108,8 @@ export function WhiteboardPage() {
 		);
 	}
 
+	// ── List / Patterns tabs ─────────────────────────────────────────────────
+
 	return (
 		<div className="space-y-6">
 			<header className="flex flex-wrap items-start justify-between gap-4">
@@ -89,31 +123,25 @@ export function WhiteboardPage() {
 				<Button onClick={handleNewDiagram}>New Diagram</Button>
 			</header>
 
+			{/* Tab bar */}
 			<div className="flex flex-wrap gap-2 border-b border-[var(--gb-border)] pb-1">
-				<button
-					type="button"
-					onClick={() => setView("list")}
-					className={`rounded-t-[14px] border px-4 py-2 text-sm font-semibold transition ${
-						view === "list"
-							? "border-[var(--gb-border)] border-b-[var(--gb-bg)] bg-[var(--gb-bg-elev)] text-[var(--gb-text)]"
-							: "border-transparent text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-tab)] hover:text-[var(--gb-text)]"
-					}`}
-				>
-					My Diagrams ({userDiagrams.length})
-				</button>
-				<button
-					type="button"
-					onClick={() => setView("patterns")}
-					className={`rounded-t-[14px] border px-4 py-2 text-sm font-semibold transition ${
-						view === "patterns"
-							? "border-[var(--gb-border)] border-b-[var(--gb-bg)] bg-[var(--gb-bg-elev)] text-[var(--gb-text)]"
-							: "border-transparent text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-tab)] hover:text-[var(--gb-text)]"
-					}`}
-				>
-					Pattern Library
-				</button>
+				{(["list", "patterns"] as const).map((tab) => (
+					<button
+						key={tab}
+						type="button"
+						onClick={() => setView(tab)}
+						className={`rounded-t-[14px] border px-4 py-2 text-sm font-semibold transition ${
+							view === tab
+								? "border-[var(--gb-border)] border-b-[var(--gb-bg)] bg-[var(--gb-bg-elev)] text-[var(--gb-text)]"
+								: "border-transparent text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-tab)] hover:text-[var(--gb-text)]"
+						}`}
+					>
+						{tab === "list" ? `My Diagrams (${userDiagrams.length})` : "Pattern Library"}
+					</button>
+				))}
 			</div>
 
+			{/* My Diagrams tab */}
 			{view === "list" && (
 				<div>
 					{userDiagrams.length === 0 ? (
@@ -128,15 +156,26 @@ export function WhiteboardPage() {
 							{userDiagrams.map((diagram) => (
 								<div
 									key={diagram.id}
-									className="gb-panel p-4 transition-shadow hover:shadow-[var(--gb-shadow)]"
+									className="gb-panel p-4 flex flex-col gap-3 transition-shadow hover:shadow-[var(--gb-shadow)]"
 								>
-									<h3 className="text-lg font-semibold text-[var(--gb-text)]">{diagram.name}</h3>
-									{diagram.description && (
-										<p className="mb-3 text-sm text-[var(--gb-text-muted)]">
-											{diagram.description}
-										</p>
-									)}
+									<div className="flex-1">
+										<h3 className="text-base font-semibold text-[var(--gb-text)]">
+											{diagram.name}
+										</h3>
+										{diagram.description && (
+											<p className="mt-0.5 text-sm text-[var(--gb-text-muted)]">
+												{diagram.description}
+											</p>
+										)}
+									</div>
 									<div className="flex gap-2">
+										<Button
+											size="sm"
+											variant="secondary"
+											onClick={() => handleViewDiagram(diagram)}
+										>
+											View
+										</Button>
 										<Button size="sm" onClick={() => handleEditDiagram(diagram)}>
 											Edit
 										</Button>
@@ -155,8 +194,13 @@ export function WhiteboardPage() {
 				</div>
 			)}
 
+			{/* Pattern Library tab */}
 			{view === "patterns" && (
-				<PatternLibrary patterns={allPatterns} onSelectPattern={handleSelectPattern} />
+				<PatternLibrary
+					patterns={allPatterns}
+					onViewPattern={handleViewDiagram}
+					onEditCopy={handleEditCopy}
+				/>
 			)}
 		</div>
 	);

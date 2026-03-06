@@ -15,9 +15,18 @@ export interface ConnectionLine {
 	color?: string;
 }
 
+export interface NoteGroup {
+	id: string;
+	positions: FretPosition[];
+	color: string;
+	strokeWidth: number;
+	fillOpacity?: number;
+}
+
 export interface FretboardState {
 	dots: MarkedDot[];
 	lines: ConnectionLine[];
+	groups?: NoteGroup[];
 	highlightStrings?: number[];
 	highlightFrets?: number[];
 }

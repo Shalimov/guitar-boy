@@ -9,7 +9,7 @@ import type {
 	MarkedDot,
 } from "@/types";
 import { createCanvasMetrics, positionToCanvasPoint } from "./canvas/geometry";
-import { drawConnectionLines, drawDots, drawFretboardSurface } from "./canvas/render";
+import { drawConnectionLines, drawDots, drawFretboardSurface, drawGroups } from "./canvas/render";
 
 const DEFAULT_STRINGS = ["E", "A", "D", "G", "B", "e"] as const;
 const DEFAULT_FRET_RANGE: [number, number] = [1, 15];
@@ -263,7 +263,16 @@ function sanitizeState(
 			isValidPosition(line.to, minFret, maxFret, stringCount),
 	);
 
-	return { dots, lines };
+	const groups = input.groups
+		?.map((group) => ({
+			...group,
+			positions: group.positions.filter((pos) =>
+				isValidPosition(pos, minFret, maxFret, stringCount),
+			),
+		}))
+		.filter((group) => group.positions.length > 0);
+
+	return { dots, lines, groups };
 }
 
 function buildCellLabel(options: {
@@ -313,6 +322,7 @@ export function CanvasFretboard({
 	fretRange = DEFAULT_FRET_RANGE,
 	strings = [...DEFAULT_STRINGS],
 	showFretNumbers = true,
+	showStringLabels = true,
 	showNoteNames = true,
 	showIntervalLabels = false,
 	state,
@@ -348,7 +358,7 @@ export function CanvasFretboard({
 	const stringCount = safeStrings.length;
 	const isControlled = state !== undefined;
 	const [rawMinFret, rawMaxFret] = normalizeFretRange(fretRange);
-	const minFret = rawMinFret <= 0 ? 1 : rawMinFret;
+	const minFret = Math.max(0, rawMinFret);
 	const maxFret = Math.max(minFret, rawMaxFret);
 	const fretCount = maxFret - minFret + 1;
 	const resolvedAriaLabel = ariaLabel ?? "Guitar fretboard";
@@ -459,6 +469,11 @@ export function CanvasFretboard({
 		}));
 	}, [mode, currentState.dots]);
 
+	const hasFeedback =
+		resolvedCorrectPositions.length > 0 ||
+		resolvedMissedPositions.length > 0 ||
+		resolvedIncorrectPositions.length > 0;
+
 	const renderedDots = useMemo(() => {
 		let dots = stateDots;
 
@@ -469,12 +484,12 @@ export function CanvasFretboard({
 		if (mode === "patterns") {
 			dots = mergeDots(dots, patternDots);
 		}
-		if (mode === "test") {
+		if (mode === "test" && hasFeedback) {
 			dots = mergeDots(dots, targetDots);
 		}
 
 		return dots;
-	}, [stateDots, feedbackDots, mode, patternDots, targetDots]);
+	}, [stateDots, feedbackDots, mode, patternDots, targetDots, hasFeedback]);
 
 	const renderedLines = useMemo(() => {
 		if (mode !== "patterns") {
@@ -501,7 +516,10 @@ export function CanvasFretboard({
 		[fretCount, minFret],
 	);
 	const canvasWidth = Math.max(360, 72 + fretCount * CELL_WIDTH);
-	const canvasHeight = Math.max(220, 44 + Math.max(1, stringCount - 1) * STRING_GAP);
+	// Extra vertical padding so dots and group outlines on the outermost strings aren't clipped.
+	// Max dot radius = MEDIUM_DOT_DIAMETER / 2 = 20; group stroke adds ~8px beyond that → 30px safe.
+	const VERTICAL_PAD = 30;
+	const canvasHeight = Math.max(220, VERTICAL_PAD * 2 + Math.max(1, stringCount - 1) * STRING_GAP);
 	const canvasMetrics = useMemo(
 		() =>
 			createCanvasMetrics({
@@ -510,9 +528,9 @@ export function CanvasFretboard({
 				fretRange: [minFret, maxFret],
 				stringCount,
 				padding: {
-					top: 22,
+					top: VERTICAL_PAD,
 					right: 24,
-					bottom: 22,
+					bottom: VERTICAL_PAD,
 					left: 24,
 				},
 			}),
@@ -733,6 +751,11 @@ export function CanvasFretboard({
 		context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 		drawFretboardSurface(context, canvasMetrics);
+
+		if (currentState.groups && currentState.groups.length > 0) {
+			drawGroups(context, canvasMetrics, currentState.groups);
+		}
+
 		drawConnectionLines(context, canvasMetrics, renderedLinesForCanvas);
 
 		const hasFeedback =
@@ -769,6 +792,7 @@ export function CanvasFretboard({
 		correctPositions,
 		missedPositions,
 		incorrectPositions,
+		currentState.groups,
 	]);
 
 	const handleCellClick = useCallback(
@@ -869,22 +893,24 @@ export function CanvasFretboard({
 	return (
 		<div className="inline-block">
 			<div className="flex items-start gap-3">
-				<div
-					className="grid text-right text-xs text-[var(--gb-text-muted)]"
-					style={{
-						height: canvasHeight,
-						gridTemplateRows: `repeat(${stringCount}, minmax(0, 1fr))`,
-					}}
-				>
-					{stringRows.map(({ rowKey, stringLabel }) => (
-						<div
-							key={`string-label-${rowKey}`}
-							className="flex items-center justify-end pr-1 font-medium"
-						>
-							{stringLabel}
-						</div>
-					))}
-				</div>
+				{showStringLabels && (
+					<div
+						className="grid text-right text-xs text-[var(--gb-text-muted)]"
+						style={{
+							height: canvasHeight,
+							gridTemplateRows: `repeat(${stringCount}, minmax(0, 1fr))`,
+						}}
+					>
+						{stringRows.map(({ rowKey, stringLabel }) => (
+							<div
+								key={`string-label-${rowKey}`}
+								className="flex items-center justify-end pr-1 font-medium"
+							>
+								{stringLabel}
+							</div>
+						))}
+					</div>
+				)}
 
 				<div>
 					<div className="relative" style={{ width: canvasWidth, height: canvasHeight }}>

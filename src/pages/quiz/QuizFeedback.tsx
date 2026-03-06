@@ -18,85 +18,87 @@ export function QuizFeedback({
 	onContinue,
 }: QuizFeedbackProps) {
 	return (
-		<div className="mt-6 p-6 rounded-lg border-2">
-			<div className="flex items-start gap-4">
-				{isCorrect ? (
-					<>
-						<div className="flex-shrink-0 text-4xl">✗</div>
-						<div className="flex-1">
-							<h3 className="text-lg font-bold text-red-700">Incorrect</h3>
-							<p className="text-sm text-gray-600 mt-1">
-								{message ||
-									`The correct position${correctPositions.length !== 1 ? "s were" : " was"}:`}
+		<div
+			className="rounded-xl p-5 space-y-4"
+			style={{
+				background: isCorrect
+					? "color-mix(in srgb, #16a34a 10%, var(--gb-bg-elev))"
+					: "color-mix(in srgb, #dc2626 10%, var(--gb-bg-elev))",
+				border: `1px solid ${isCorrect ? "color-mix(in srgb, #16a34a 30%, var(--gb-border))" : "color-mix(in srgb, #dc2626 30%, var(--gb-border))"}`,
+			}}
+		>
+			<div className="flex items-start gap-3">
+				<span className="text-2xl leading-none mt-0.5">{isCorrect ? "✓" : "✗"}</span>
+				<div className="flex-1 space-y-2">
+					<h3 className="font-bold text-base" style={{ color: isCorrect ? "#166534" : "#991b1b" }}>
+						{isCorrect ? "Correct!" : "Incorrect"}
+					</h3>
+
+					{message && (
+						<p className="text-sm" style={{ color: "var(--gb-text-muted)" }}>
+							{message}
+						</p>
+					)}
+
+					{!isCorrect && correctPositions.length > 0 && (
+						<div>
+							<p className="text-xs font-semibold mb-1" style={{ color: "#166534" }}>
+								Correct positions:
 							</p>
-							{correctPositions.length > 0 && (
-								<div className="mt-2">
-									<p className="text-xs font-medium text-green-700">Correct positions:</p>
-									<ul className="mt-1 text-sm text-gray-700">
-										{correctPositions.map((pos) => (
-											<li key={`${pos.string}-${pos.fret}`}>
-												String {pos.string + 1}, Fret {pos.fret}
-											</li>
-										))}
-									</ul>
-								</div>
-							)}
-							{missedPositions.length > 0 && (
-								<div className="mt-2">
-									<p className="text-xs font-medium text-yellow-700">Missed positions:</p>
-									<ul className="mt-1 text-sm text-gray-700">
-										{missedPositions.map((pos) => (
-											<li key={`missed-${pos.string}-${pos.fret}`}>
-												String {pos.string + 1}, Fret {pos.fret}
-											</li>
-										))}
-									</ul>
-								</div>
-							)}
-							{incorrectPositions.length > 0 && (
-								<div className="mt-2">
-									<p className="text-xs font-medium text-red-700">Incorrect positions:</p>
-									<ul className="mt-1 text-sm text-gray-700">
-										{incorrectPositions.map((pos) => (
-											<li key={`incorrect-${pos.string}-${pos.fret}`}>
-												String {pos.string + 1}, Fret {pos.fret}
-											</li>
-										))}
-									</ul>
-								</div>
-							)}
+							<ul className="text-xs space-y-0.5" style={{ color: "var(--gb-text)" }}>
+								{correctPositions.map((pos) => (
+									<li key={`${pos.string}-${pos.fret}`}>
+										String {pos.string + 1}, Fret {pos.fret}
+									</li>
+								))}
+							</ul>
 						</div>
-					</>
-				) : (
-					<>
-						<div className="flex-shrink-0 text-4xl">✗</div>
-						<div className="flex-1">
-							<h3 className="text-lg font-bold text-red-700">Incorrect</h3>
-							<p className="text-sm text-gray-600 mt-1">
-								{message ||
-									`The correct position${correctPositions.length !== 1 ? "s were" : " was"}:`}
+					)}
+
+					{missedPositions.length > 0 && (
+						<div>
+							<p className="text-xs font-semibold mb-1" style={{ color: "#854d0e" }}>
+								Missed positions:
 							</p>
-							{correctPositions.length > 0 && (
-								<ul className="mt-2 text-sm text-gray-700">
-									{correctPositions.map((pos) => (
-										<li key={`${pos.string}-${pos.fret}`}>
-											String {pos.string + 1}, Fret {pos.fret}
-										</li>
-									))}
-								</ul>
-							)}
+							<ul className="text-xs space-y-0.5" style={{ color: "var(--gb-text)" }}>
+								{missedPositions.map((pos) => (
+									<li key={`missed-${pos.string}-${pos.fret}`}>
+										String {pos.string + 1}, Fret {pos.fret}
+									</li>
+								))}
+							</ul>
 						</div>
-					</>
-				)}
+					)}
+
+					{incorrectPositions.length > 0 && (
+						<div>
+							<p className="text-xs font-semibold mb-1" style={{ color: "#991b1b" }}>
+								Incorrect positions:
+							</p>
+							<ul className="text-xs space-y-0.5" style={{ color: "var(--gb-text)" }}>
+								{incorrectPositions.map((pos) => (
+									<li key={`incorrect-${pos.string}-${pos.fret}`}>
+										String {pos.string + 1}, Fret {pos.fret}
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+				</div>
 			</div>
 
-			<div className="mt-4 flex justify-end">
+			<div className="flex justify-end">
 				<button
 					type="button"
 					onClick={onContinue}
-					className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+					style={{
+						background: "var(--gb-accent)",
+						color: "#fff8ee",
+						boxShadow: "0 2px 8px rgba(179,93,42,0.28)",
+					}}
+					className="px-6 py-2 rounded-full font-semibold text-sm transition-all hover:opacity-90 active:scale-95 focus-visible:outline-none"
 				>
-					{isCorrect ? "Continue" : "Try Next Question"}
+					Continue
 				</button>
 			</div>
 		</div>

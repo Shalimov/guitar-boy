@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { useProgressStore } from "@/hooks/useProgressStore";
-import type { CardCategory } from "@/types";
 import { QuizRunner } from "./QuizRunner";
+import type { QuizSettings } from "./QuizSelector";
 import { QuizSelector } from "./QuizSelector";
 import { ReviewMode } from "./ReviewMode";
 
 export function QuizPage() {
 	const [quizState, setQuizState] = useState<
-		| { mode: "selector" }
-		| { mode: "quiz"; category: CardCategory; difficulty: string; questionCount: number }
-		| { mode: "review" }
+		{ mode: "selector" } | ({ mode: "quiz" } & QuizSettings) | { mode: "review" }
 	>({ mode: "selector" });
 
 	const { getDueCards } = useProgressStore();
 
-	const handleStartQuiz = (category: CardCategory, difficulty: string, questionCount: number) => {
-		setQuizState({ mode: "quiz", category, difficulty, questionCount });
+	const handleStartQuiz = (settings: QuizSettings) => {
+		setQuizState({ mode: "quiz", ...settings });
 	};
 
 	const handleStartReview = () => {
@@ -43,9 +41,11 @@ export function QuizPage() {
 	if (quizState.mode === "quiz") {
 		return (
 			<QuizRunner
-				category={quizState.category}
+				type={quizState.type}
 				difficulty={quizState.difficulty}
 				questionCount={quizState.questionCount}
+				timerEnabled={quizState.timerEnabled}
+				timerSeconds={quizState.timerSeconds}
 				onComplete={handleComplete}
 				onCancel={handleComplete}
 			/>
@@ -53,18 +53,35 @@ export function QuizPage() {
 	}
 
 	return (
-		<div className="max-w-4xl mx-auto p-6">
+		<div className="max-w-2xl mx-auto p-6 space-y-5">
 			<QuizSelector onStartQuiz={handleStartQuiz} />
 
-			<div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-				<h3 className="text-xl font-bold text-gray-900 mb-2">Review Due Cards</h3>
-				<p className="text-gray-600 mb-4">
-					Practice cards that are due for review using spaced repetition.
-				</p>
+			{/* Review Due Cards */}
+			<div
+				className="p-6 rounded-2xl border flex items-center justify-between gap-6"
+				style={{
+					background: "color-mix(in srgb, var(--gb-accent-soft) 12%, var(--gb-bg-elev) 88%)",
+					borderColor: "var(--gb-accent-soft)",
+					boxShadow: "var(--gb-shadow-soft)",
+				}}
+			>
+				<div>
+					<h3 className="text-lg font-semibold mb-1" style={{ color: "var(--gb-text)" }}>
+						Review Due Cards
+					</h3>
+					<p className="text-sm" style={{ color: "var(--gb-text-muted)" }}>
+						Practice cards that are due for review using spaced repetition.
+					</p>
+				</div>
 				<button
 					type="button"
 					onClick={handleStartReview}
-					className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+					style={{
+						background: "var(--gb-bg-elev)",
+						color: "var(--gb-accent-strong)",
+						borderColor: "var(--gb-accent-soft)",
+					}}
+					className="shrink-0 px-5 py-2 rounded-full border font-semibold text-sm transition-all hover:opacity-80 focus-visible:outline-none"
 				>
 					Start Review
 				</button>

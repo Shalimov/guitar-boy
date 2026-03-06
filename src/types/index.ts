@@ -1,5 +1,5 @@
 export type { Diagram, FretboardMode, FretboardProps } from "./diagram";
-export type { ConnectionLine, FretboardState, MarkedDot } from "./fretboard";
+export type { ConnectionLine, FretboardState, MarkedDot, NoteGroup } from "./fretboard";
 export type {
 	AccidentalPreference,
 	FretPosition,

@@ -86,7 +86,7 @@ describe("DiagramEditor", () => {
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
 
-		await userEvent.click(screen.getByRole("button", { name: /connect mode/i }));
+		await userEvent.click(screen.getByRole("button", { name: /line tool/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
 
@@ -116,7 +116,7 @@ describe("DiagramEditor", () => {
 		fireEvent.change(screen.getByLabelText(/line color/i), { target: { value: "#00ff00" } });
 		await userEvent.selectOptions(screen.getByLabelText(/line style/i), "dashed");
 
-		await userEvent.click(screen.getByRole("button", { name: /connect mode/i }));
+		await userEvent.click(screen.getByRole("button", { name: /line tool/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /save/i }));

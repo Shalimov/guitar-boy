@@ -112,6 +112,16 @@ export function isChordCorrect(
 	};
 }
 
+/** Natural notes (no accidentals/sharps/flats) */
+export const NATURAL_NOTES: readonly NoteName[] = ["C", "D", "E", "F", "G", "A", "B"];
+
+/**
+ * Returns true if the given note is a natural note (no sharp/flat).
+ */
+export function isNaturalNote(note: NoteName): boolean {
+	return NATURAL_NOTES.includes(note);
+}
+
 /**
  * Find all positions of a given note within a fret range.
  */
