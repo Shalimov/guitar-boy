@@ -45,6 +45,8 @@ export interface FretboardProps {
 	onFretContextMenu?: (pos: FretPosition, location: { x: number; y: number }) => void;
 	/** Callback when a connection line is formed (draw/patterns modes) */
 	onLineDrawn?: (from: FretPosition, to: FretPosition) => void;
+	/** Hover/focus callback for fret cells */
+	onFretHoverChange?: (pos: FretPosition | null) => void;
 	/** Controlled selection (also used as ordered pattern points in patterns mode) */
 	selectedPositions?: FretPosition[];
 	/** Target positions shown as empty circles in test mode */

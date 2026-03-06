@@ -109,6 +109,19 @@ describe("CanvasFretboard", () => {
 		expect(onFretClick).toHaveBeenCalledWith({ string: 0, fret: 1 });
 	});
 
+	it("reports hovered positions through callback", async () => {
+		const onFretHoverChange = jest.fn();
+		render(
+			<CanvasFretboard mode="view" onFretHoverChange={onFretHoverChange} fretRange={[1, 3]} />,
+		);
+
+		await userEvent.hover(screen.getByRole("button", { name: /string 1 \(E\), fret 1/i }));
+		expect(onFretHoverChange).toHaveBeenCalledWith({ string: 0, fret: 1 });
+
+		await userEvent.unhover(screen.getByRole("button", { name: /string 1 \(E\), fret 1/i }));
+		expect(onFretHoverChange).toHaveBeenLastCalledWith(null);
+	});
+
 	it("calls onFretContextMenu with pointer coordinates in draw mode", () => {
 		const onFretContextMenu = jest.fn();
 		render(

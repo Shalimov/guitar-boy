@@ -50,7 +50,7 @@ describe("WhiteboardPage", () => {
 		const patternsTab = screen.getByRole("button", { name: /pattern library/i });
 		await userEvent.click(patternsTab);
 
-		expect(screen.getByText("Built-in Patterns")).toBeInTheDocument();
+		expect(screen.getByText("CAGED Shapes")).toBeInTheDocument();
 	});
 
 	it("shows diagram count in My Diagrams tab", () => {

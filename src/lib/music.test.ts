@@ -1,7 +1,11 @@
 import {
 	getAllPositionsOfNote,
 	getChordTones,
+	getConstructNotes,
+	getDisplayNoteName,
+	getFrequencyAtFret,
 	getInterval,
+	getIntervalFormulaToken,
 	getNoteAtFret,
 	getSemitoneDistance,
 	isChordCorrect,
@@ -39,6 +43,43 @@ describe("getSemitoneDistance", () => {
 		expect(getSemitoneDistance("C", "E")).toBe(4);
 		expect(getSemitoneDistance("C", "G")).toBe(7);
 		expect(getSemitoneDistance("A", "C")).toBe(3);
+	});
+});
+
+describe("getDisplayNoteName", () => {
+	it("uses sharp spellings by default", () => {
+		expect(getDisplayNoteName("C#/Db")).toBe("C#");
+	});
+
+	it("uses flat spellings when requested", () => {
+		expect(getDisplayNoteName("A#/Bb", "flat")).toBe("Bb");
+	});
+});
+
+describe("getConstructNotes", () => {
+	it("builds major scale notes from interval formula tokens", () => {
+		expect(getConstructNotes("G", ["1", "2", "3", "4", "5", "6", "7"])).toEqual([
+			"G",
+			"A",
+			"B",
+			"C",
+			"D",
+			"E",
+			"F#/Gb",
+		]);
+	});
+});
+
+describe("getIntervalFormulaToken", () => {
+	it("returns relative interval tokens between root and note", () => {
+		expect(getIntervalFormulaToken("D", "C")).toBe("b7");
+		expect(getIntervalFormulaToken("A", "C")).toBe("b3");
+	});
+});
+
+describe("getFrequencyAtFret", () => {
+	it("returns concert-pitch frequency for a fret position", () => {
+		expect(getFrequencyAtFret({ string: 0, fret: 5 })).toBeCloseTo(110, 4);
 	});
 });
 

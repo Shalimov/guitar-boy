@@ -1,7 +1,15 @@
-import type { FretPosition, IntervalName, NoteName, TriadQuality } from "@/types";
+import type {
+	AccidentalPreference,
+	FretPosition,
+	IntervalFormulaToken,
+	IntervalName,
+	NoteName,
+	TriadQuality,
+} from "@/types";
 
 /** Standard tuning: open string notes from string 0 (low E) to string 5 (high e) */
 const STANDARD_TUNING: readonly NoteName[] = ["E", "A", "D", "G", "B", "E"];
+const STANDARD_TUNING_MIDI: readonly number[] = [40, 45, 50, 55, 59, 64];
 
 /** Chromatic scale in order */
 const CHROMATIC: readonly NoteName[] = [
@@ -18,6 +26,87 @@ const CHROMATIC: readonly NoteName[] = [
 	"A#/Bb",
 	"B",
 ];
+
+const SHARP_NOTE_LABELS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const FLAT_NOTE_LABELS = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+
+const INTERVAL_FORMULA_TO_SEMITONES: Record<IntervalFormulaToken, number> = {
+	"1": 0,
+	b2: 1,
+	"2": 2,
+	b3: 3,
+	"3": 4,
+	"4": 5,
+	b5: 6,
+	"#4": 6,
+	"5": 7,
+	"#5": 8,
+	b6: 8,
+	"6": 9,
+	b7: 10,
+	"7": 11,
+	"8": 12,
+};
+
+const SEMITONE_TO_FORMULA: Record<number, IntervalFormulaToken> = {
+	0: "1",
+	1: "b2",
+	2: "2",
+	3: "b3",
+	4: "3",
+	5: "4",
+	6: "b5",
+	7: "5",
+	8: "b6",
+	9: "6",
+	10: "b7",
+	11: "7",
+	12: "8",
+};
+
+export const CHROMATIC_NOTES = CHROMATIC;
+
+export const SCALE_FORMULAS: Record<string, IntervalFormulaToken[]> = {
+	Major: ["1", "2", "3", "4", "5", "6", "7"],
+	"Natural Minor": ["1", "2", "b3", "4", "5", "b6", "b7"],
+	"Major Pentatonic": ["1", "2", "3", "5", "6"],
+	"Minor Pentatonic": ["1", "b3", "4", "5", "b7"],
+	Blues: ["1", "b3", "4", "b5", "5", "b7"],
+	Dorian: ["1", "2", "b3", "4", "5", "6", "b7"],
+	Phrygian: ["1", "b2", "b3", "4", "5", "b6", "b7"],
+	Lydian: ["1", "2", "3", "#4", "5", "6", "7"],
+	Mixolydian: ["1", "2", "3", "4", "5", "6", "b7"],
+	Locrian: ["1", "b2", "b3", "4", "b5", "b6", "b7"],
+	"Harmonic Minor": ["1", "2", "b3", "4", "5", "b6", "7"],
+};
+
+export const CHORD_FORMULAS: Record<string, IntervalFormulaToken[]> = {
+	Major: ["1", "3", "5"],
+	Minor: ["1", "b3", "5"],
+	Diminished: ["1", "b3", "b5"],
+	Augmented: ["1", "3", "#5"],
+	Maj7: ["1", "3", "5", "7"],
+	Min7: ["1", "b3", "5", "b7"],
+	Dom7: ["1", "3", "5", "b7"],
+	"Half-Diminished": ["1", "b3", "b5", "b7"],
+};
+
+export const ARPEGGIO_FORMULAS: Record<string, IntervalFormulaToken[]> = CHORD_FORMULAS;
+
+export const INTERVAL_FORMULAS: Record<string, IntervalFormulaToken[]> = {
+	"Minor 2nd": ["1", "b2"],
+	"Major 2nd": ["1", "2"],
+	"Minor 3rd": ["1", "b3"],
+	"Major 3rd": ["1", "3"],
+	"Perfect 4th": ["1", "4"],
+	Tritone: ["1", "b5"],
+	"Perfect 5th": ["1", "5"],
+	"Minor 6th": ["1", "b6"],
+	"Major 6th": ["1", "6"],
+	"Minor 7th": ["1", "b7"],
+	"Major 7th": ["1", "7"],
+	Octave: ["1", "8"],
+};
 
 /** Semitone to interval name mapping */
 const SEMITONE_TO_INTERVAL: Record<number, IntervalName> = {
@@ -53,6 +142,29 @@ export function getSemitoneDistance(from: NoteName, to: NoteName): number {
 	const fromIndex = CHROMATIC.indexOf(from);
 	const toIndex = CHROMATIC.indexOf(to);
 	return (toIndex - fromIndex + 12) % 12;
+}
+
+export function getDisplayNoteName(
+	note: NoteName,
+	preference: AccidentalPreference = "sharp",
+): string {
+	const noteIndex = CHROMATIC.indexOf(note);
+	const labels = preference === "flat" ? FLAT_NOTE_LABELS : SHARP_NOTE_LABELS;
+	return labels[noteIndex] ?? note;
+}
+
+export function getConstructNotes(root: NoteName, formula: IntervalFormulaToken[]): NoteName[] {
+	const rootIndex = CHROMATIC.indexOf(root);
+	return formula.map((token) => CHROMATIC[(rootIndex + INTERVAL_FORMULA_TO_SEMITONES[token]) % 12]);
+}
+
+export function getIntervalFormulaToken(root: NoteName, note: NoteName): IntervalFormulaToken {
+	return SEMITONE_TO_FORMULA[getSemitoneDistance(root, note)] ?? "1";
+}
+
+export function getFrequencyAtFret(position: FretPosition): number {
+	const midiNote = STANDARD_TUNING_MIDI[position.string] + position.fret;
+	return 440 * 2 ** ((midiNote - 69) / 12);
 }
 
 /**

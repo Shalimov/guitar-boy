@@ -21,6 +21,7 @@ export interface NoteGroup {
 	color: string;
 	strokeWidth: number;
 	fillOpacity?: number;
+	label?: string;
 }
 
 export interface FretboardState {

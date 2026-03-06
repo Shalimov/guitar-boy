@@ -330,6 +330,7 @@ export function CanvasFretboard({
 	onFretClick,
 	onFretContextMenu,
 	onLineDrawn,
+	onFretHoverChange,
 	ariaLabel,
 	selectedPositions,
 	targetPositions,
@@ -808,6 +809,13 @@ export function CanvasFretboard({
 		[applyPositionAction],
 	);
 
+	const handleCellHover = useCallback(
+		(position: FretPosition | null) => {
+			onFretHoverChange?.(position);
+		},
+		[onFretHoverChange],
+	);
+
 	const handleCellContextMenu = useCallback(
 		(
 			event: {
@@ -918,6 +926,12 @@ export function CanvasFretboard({
 		[moveActivePosition, applyPositionAction],
 	);
 
+	useEffect(() => {
+		return () => {
+			onFretHoverChange?.(null);
+		};
+	}, [onFretHoverChange]);
+
 	return (
 		<div className="inline-block">
 			<div className="flex items-start gap-3">
@@ -965,6 +979,8 @@ export function CanvasFretboard({
 											fill="rgba(0,0,0,0.01)"
 											onMouseDown={() => handleCellPointerDown(hotspot.logicalPosition)}
 											onMouseUp={() => handleCellPointerUp(hotspot.logicalPosition)}
+											onMouseEnter={() => handleCellHover(hotspot.logicalPosition)}
+											onMouseLeave={() => handleCellHover(null)}
 											onContextMenu={(event) =>
 												handleCellContextMenu(event.evt, hotspot.logicalPosition)
 											}
@@ -1026,6 +1042,9 @@ export function CanvasFretboard({
 														tabIndex={isActiveCell ? 0 : -1}
 														aria-label={ariaCellLabel}
 														onFocus={() => setActivePosition(position)}
+														onMouseEnter={() => handleCellHover(position)}
+														onMouseLeave={() => handleCellHover(null)}
+														onBlur={() => handleCellHover(null)}
 														onKeyDown={(event) => handleCellKeyDown(event, position)}
 														onContextMenu={(event) => handleCellContextMenu(event, position)}
 														onPointerDown={() => handleCellPointerDown(position)}

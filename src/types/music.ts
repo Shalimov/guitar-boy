@@ -39,4 +39,21 @@ export type IntervalName =
 	| "M7"
 	| "Octave";
 
+export type IntervalFormulaToken =
+	| "1"
+	| "b2"
+	| "2"
+	| "b3"
+	| "3"
+	| "4"
+	| "b5"
+	| "#4"
+	| "5"
+	| "#5"
+	| "b6"
+	| "6"
+	| "b7"
+	| "7"
+	| "8";
+
 export type TriadQuality = "major" | "minor" | "diminished" | "augmented";

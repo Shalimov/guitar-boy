@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Lesson } from "@/types/lesson";
+import { ExplorerPanel } from "./ExplorerPanel";
 import { LessonList } from "./LessonList";
 import { LessonPlayer } from "./LessonPlayer";
 
@@ -34,7 +35,7 @@ export function LearningPage() {
 	}
 
 	return (
-		<div className="max-w-4xl mx-auto p-6 space-y-6">
+		<div className={`${showExplorer ? "w-full" : "max-w-4xl mx-auto"} p-6 space-y-6`}>
 			{/* Tab bar */}
 			<div
 				className="flex gap-1 p-1 rounded-xl"
@@ -83,19 +84,11 @@ export function LearningPage() {
 						<p className="gb-page-kicker mb-1">Explore</p>
 						<h1 className="gb-page-title">Fretboard Explorer</h1>
 						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
-							Interactive reference view to explore notes, intervals, and patterns on the fretboard.
+							Interactive theory lab for mapping scales, chords, arpeggios, and interval shapes
+							across the neck.
 						</p>
 					</div>
-					<div
-						className="rounded-xl p-8 text-center text-sm"
-						style={{
-							background: "var(--gb-bg-panel)",
-							border: "1px dashed var(--gb-border)",
-							color: "var(--gb-text-muted)",
-						}}
-					>
-						Explorer mode coming soon! This will allow you to interactively explore the fretboard.
-					</div>
+					<ExplorerPanel />
 				</div>
 			)}
 		</div>

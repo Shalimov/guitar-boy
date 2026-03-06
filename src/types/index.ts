@@ -3,6 +3,7 @@ export type { ConnectionLine, FretboardState, MarkedDot, NoteGroup } from "./fre
 export type {
 	AccidentalPreference,
 	FretPosition,
+	IntervalFormulaToken,
 	IntervalName,
 	NoteName,
 	TriadQuality,
