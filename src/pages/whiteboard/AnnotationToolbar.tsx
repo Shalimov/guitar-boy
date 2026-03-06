@@ -2,19 +2,15 @@ interface AnnotationToolbarProps {
 	dotColor: string;
 	dotLabel: string;
 	dotShape: "circle" | "square" | "diamond";
-	lineColor: string;
-	lineStyle: "solid" | "dashed";
-	connectMode: boolean;
-	groupMode: boolean;
 	groupColor: string;
+	selectedGroupCount: number;
+	canCreateGroup: boolean;
 	onDotColorChange: (color: string) => void;
 	onDotLabelChange: (label: string) => void;
 	onDotShapeChange: (shape: "circle" | "square" | "diamond") => void;
-	onLineColorChange: (color: string) => void;
-	onLineStyleChange: (style: "solid" | "dashed") => void;
-	onConnectModeChange: (mode: boolean) => void;
-	onGroupModeChange: (mode: boolean) => void;
 	onGroupColorChange: (color: string) => void;
+	onCreateGroup: () => void;
+	onClearSelection: () => void;
 }
 
 // Shared label style
@@ -55,70 +51,35 @@ export function AnnotationToolbar({
 	dotColor,
 	dotLabel,
 	dotShape,
-	lineColor,
-	lineStyle,
-	connectMode,
-	groupMode,
 	groupColor,
+	selectedGroupCount,
+	canCreateGroup,
 	onDotColorChange,
 	onDotLabelChange,
 	onDotShapeChange,
-	onLineColorChange,
-	onLineStyleChange,
-	onConnectModeChange,
-	onGroupModeChange,
 	onGroupColorChange,
+	onCreateGroup,
+	onClearSelection,
 }: AnnotationToolbarProps) {
-	const activeTool: "dot" | "line" | "group" = connectMode ? "line" : groupMode ? "group" : "dot";
-
-	const setTool = (tool: "dot" | "line" | "group") => {
-		onConnectModeChange(tool === "line");
-		onGroupModeChange(tool === "group");
-	};
-
 	return (
 		<div
-			className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-4 py-3"
+			className="flex flex-wrap items-start gap-4 rounded-xl px-4 py-3"
 			style={{
 				background: "var(--gb-bg-panel)",
 				border: "1px solid var(--gb-border)",
 			}}
 		>
-			{/* ── Tool mode pill ── */}
-			<div
-				className="flex items-center rounded-lg p-0.5 flex-shrink-0"
-				style={{ background: "var(--gb-bg-tab)" }}
-			>
-				{(["dot", "line", "group"] as const).map((tool) => (
-					<button
-						key={tool}
-						type="button"
-						onClick={() => setTool(tool)}
-						aria-pressed={activeTool === tool}
-						className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all focus-visible:outline-none"
-						style={
-							activeTool === tool
-								? {
-										background: "var(--gb-accent)",
-										color: "#fff8ee",
-										boxShadow: "0 1px 4px rgba(179,93,42,0.3)",
-									}
-								: {
-										color: "var(--gb-text)",
-									}
-						}
-					>
-						{tool === "dot" ? "Dot" : tool === "line" ? "Line" : "Group"}
-					</button>
-				))}
-			</div>
+			<div className="min-w-[17rem] flex-1 space-y-3">
+				<div>
+					<p className="text-xs font-bold tracking-[0.18em] uppercase" style={labelStyle}>
+						Markers
+					</p>
+					<p className="mt-1 text-sm" style={{ color: "var(--gb-text-muted)" }}>
+						Click any fret to add or remove a marker.
+					</p>
+				</div>
 
-			{/* ── Divider ── */}
-			<div className="h-6 w-px flex-shrink-0" style={{ background: "var(--gb-border)" }} />
-
-			{/* ── Contextual settings ── */}
-			{activeTool === "dot" && (
-				<>
+				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 					<ColorSwatch id="dot-color" label="Color" value={dotColor} onChange={onDotColorChange} />
 
 					<div className="flex items-center gap-1.5">
@@ -131,7 +92,7 @@ export function AnnotationToolbar({
 							value={dotLabel}
 							onChange={(e) => onDotLabelChange(e.target.value)}
 							maxLength={8}
-							placeholder="R, 1, …"
+							placeholder="R, 1, ..."
 							className="w-16 rounded-lg px-2 py-1 text-xs focus:outline-none"
 							style={{
 								background: "var(--gb-bg-elev)",
@@ -163,49 +124,67 @@ export function AnnotationToolbar({
 							<option value="diamond">Diamond</option>
 						</select>
 					</div>
-				</>
-			)}
+				</div>
+			</div>
 
-			{activeTool === "line" && (
-				<>
+			<div
+				className="hidden self-stretch md:block w-px"
+				style={{ background: "var(--gb-border)" }}
+			/>
+
+			<div className="min-w-[18rem] flex-1 space-y-3">
+				<div>
+					<p className="text-xs font-bold tracking-[0.18em] uppercase" style={labelStyle}>
+						Groups
+					</p>
+					<p className="mt-1 text-sm" style={{ color: "var(--gb-text-muted)" }}>
+						Right-click markers to build a selection, then create a group from the context menu or
+						here.
+					</p>
+				</div>
+
+				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 					<ColorSwatch
-						id="line-color"
+						id="group-color"
 						label="Color"
-						value={lineColor}
-						onChange={onLineColorChange}
+						value={groupColor}
+						onChange={onGroupColorChange}
 					/>
 
-					<div className="flex items-center gap-1.5">
-						<label htmlFor="line-style" className={labelCls} style={labelStyle}>
-							Style
-						</label>
-						<select
-							id="line-style"
-							value={lineStyle}
-							onChange={(e) => onLineStyleChange(e.target.value as "solid" | "dashed")}
-							className="rounded-lg px-2 py-1 text-xs focus:outline-none"
-							style={{
-								background: "var(--gb-bg-elev)",
-								border: "1px solid var(--gb-border)",
-								color: "var(--gb-text)",
-							}}
-							aria-label="Line style"
-						>
-							<option value="solid">Solid</option>
-							<option value="dashed">Dashed</option>
-						</select>
+					<div
+						className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+						style={{
+							background: "var(--gb-bg-tab)",
+							color: "var(--gb-text)",
+						}}
+					>
+						{selectedGroupCount} selected
 					</div>
-				</>
-			)}
 
-			{activeTool === "group" && (
-				<ColorSwatch
-					id="group-color"
-					label="Color"
-					value={groupColor}
-					onChange={onGroupColorChange}
-				/>
-			)}
+					<button
+						type="button"
+						onClick={onCreateGroup}
+						disabled={!canCreateGroup}
+						className="inline-flex items-center justify-center rounded-[var(--gb-radius-pill)] border border-transparent bg-[var(--gb-accent)] px-3.5 py-1.5 text-sm font-semibold text-[#fff7ef] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55"
+					>
+						Group Selected
+					</button>
+
+					<button
+						type="button"
+						onClick={onClearSelection}
+						disabled={selectedGroupCount === 0}
+						className="inline-flex items-center justify-center rounded-[var(--gb-radius-pill)] border px-3.5 py-1.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55"
+						style={{
+							borderColor: "var(--gb-border)",
+							background: "var(--gb-bg-panel)",
+							color: "var(--gb-text)",
+						}}
+					>
+						Clear Selection
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }

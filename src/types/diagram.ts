@@ -41,6 +41,8 @@ export interface FretboardProps {
 	mode: FretboardMode;
 	/** Callback when fret clicked in interactive modes */
 	onFretClick?: (pos: FretPosition) => void;
+	/** Callback when a fret is right-clicked in interactive modes */
+	onFretContextMenu?: (pos: FretPosition, location: { x: number; y: number }) => void;
 	/** Callback when a connection line is formed (draw/patterns modes) */
 	onLineDrawn?: (from: FretPosition, to: FretPosition) => void;
 	/** Controlled selection (also used as ordered pattern points in patterns mode) */

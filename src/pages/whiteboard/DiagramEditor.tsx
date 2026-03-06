@@ -5,6 +5,12 @@ import type { Diagram, FretPosition } from "@/types";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 import { useDiagramHistory } from "./useDiagramHistory";
 
+interface GroupContextMenuState {
+	position: FretPosition;
+	x: number;
+	y: number;
+}
+
 interface DiagramEditorProps {
 	diagram?: Diagram;
 	onSave: (diagram: Diagram) => void;
@@ -20,13 +26,9 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	const [dotLabel, setDotLabel] = useState("");
 	const [dotColor, setDotColor] = useState("#3B82F6");
 	const [dotShape, setDotShape] = useState<"circle" | "square" | "diamond">("circle");
-	const [lineColor, setLineColor] = useState("#4A3A2C");
-	const [lineStyle, setLineStyle] = useState<"solid" | "dashed">("solid");
-	const [connectMode, setConnectMode] = useState(false);
-	const [groupMode, setGroupMode] = useState(false);
-	const [pendingLineStart, setPendingLineStart] = useState<FretPosition | null>(null);
 	const [pendingGroupDots, setPendingGroupDots] = useState<FretPosition[]>([]);
-	const [groupColor, setGroupColor] = useState("#8B5CF6"); // dark purple
+	const [groupColor, setGroupColor] = useState("#C46A2D");
+	const [groupContextMenu, setGroupContextMenu] = useState<GroupContextMenuState | null>(null);
 
 	const initialSnapshot = useMemo(
 		() =>
@@ -72,81 +74,39 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		return a.string === b.string && a.fret === b.fret;
 	};
 
-	const hasLineBetween = (from: FretPosition, to: FretPosition): boolean => {
-		return currentState.lines.some(
-			(line) =>
-				(isSamePosition(line.from, from) && isSamePosition(line.to, to)) ||
-				(isSamePosition(line.from, to) && isSamePosition(line.to, from)),
-		);
+	const isPositionSelectedForGroup = (position: FretPosition): boolean => {
+		return pendingGroupDots.some((candidate) => isSamePosition(candidate, position));
 	};
 
-	const addConnectionLine = (from: FretPosition, to: FretPosition) => {
-		if (isSamePosition(from, to) || hasLineBetween(from, to)) {
+	const clearGroupSelection = () => {
+		setPendingGroupDots([]);
+		setGroupContextMenu(null);
+	};
+
+	const toggleGroupSelection = (position: FretPosition) => {
+		if (!hasDotAt(position)) {
 			return;
 		}
 
-		if (!hasDotAt(from) || !hasDotAt(to)) {
-			return;
-		}
+		setPendingGroupDots((prev) => {
+			const isAlreadySelected = prev.some((candidate) => isSamePosition(candidate, position));
+			if (isAlreadySelected) {
+				return prev.filter((candidate) => !isSamePosition(candidate, position));
+			}
 
-		updateState({
-			...currentState,
-			lines: [
-				...currentState.lines,
-				{
-					from,
-					to,
-					style: lineStyle,
-					color: lineColor,
-				},
-			],
-			groups: currentState.groups || [],
+			return [...prev, position];
 		});
 	};
 
 	const handleFretClick = (pos: FretPosition) => {
-		if (connectMode) {
-			if (!hasDotAt(pos)) {
-				setPendingLineStart(null);
-				return;
-			}
-
-			if (!pendingLineStart) {
-				setPendingLineStart(pos);
-				return;
-			}
-
-			if (isSamePosition(pendingLineStart, pos)) {
-				setPendingLineStart(null);
-				return;
-			}
-
-			addConnectionLine(pendingLineStart, pos);
-			setPendingLineStart(null);
-			return;
-		}
-
-		if (groupMode) {
-			if (!hasDotAt(pos)) {
-				return;
-			}
-
-			setPendingGroupDots((prev) => {
-				const isAlreadySelected = prev.some((p) => isSamePosition(p, pos));
-				if (isAlreadySelected) {
-					return prev.filter((p) => !isSamePosition(p, pos));
-				}
-				return [...prev, pos];
-			});
-			return;
-		}
+		setGroupContextMenu(null);
 
 		const existingDotIndex = currentState.dots.findIndex(
 			(d) => d.position.string === pos.string && d.position.fret === pos.fret,
 		);
 
 		if (existingDotIndex >= 0) {
-			setPendingLineStart(null);
+			setPendingGroupDots((prev) => prev.filter((candidate) => !isSamePosition(candidate, pos)));
 			updateState({
 				...currentState,
 				dots: currentState.dots.filter((_, i) => i !== existingDotIndex),
@@ -182,32 +142,35 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		}
 	};
 
-	const handleLineDrawn = (from: FretPosition, to: FretPosition) => {
-		if (!connectMode) {
+	const handleFretContextMenu = (position: FretPosition, location: { x: number; y: number }) => {
+		if (!hasDotAt(position)) {
+			setGroupContextMenu(null);
 			return;
 		}
 
-		addConnectionLine(from, to);
-		setPendingLineStart(null);
+		setGroupContextMenu({
+			position,
+			x: location.x,
+			y: location.y,
+		});
 	};
 
 	const handleClearDiagram = () => {
-		if (!window.confirm("Clear all dots and lines from the diagram? This cannot be undone.")) {
+		if (
+			!window.confirm(
+				"Clear all markers, groups, and connections from the diagram? This cannot be undone.",
+			)
+		) {
 			return;
 		}
 
 		updateState({ dots: [], lines: [], groups: [] });
-		setPendingLineStart(null);
-		setPendingGroupDots([]);
-	};
-
-	const handleCancelPendingLine = () => {
-		setPendingLineStart(null);
+		clearGroupSelection();
 	};
 
 	const handleFinishGroup = () => {
 		if (pendingGroupDots.length < 2) {
-			setPendingGroupDots([]);
+			clearGroupSelection();
 			return;
 		}
 
@@ -224,8 +187,36 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				},
 			],
 		});
-		setPendingGroupDots([]);
+		clearGroupSelection();
 	};
+
+	useEffect(() => {
+		if (!groupContextMenu) {
+			return;
+		}
+
+		const handlePointerDown = (event: PointerEvent) => {
+			const target = event.target;
+			if (target instanceof HTMLElement && target.closest("[data-group-context-menu='true']")) {
+				return;
+			}
+
+			setGroupContextMenu(null);
+		};
+
+		const handleEscape = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				setGroupContextMenu(null);
+			}
+		};
+
+		window.addEventListener("pointerdown", handlePointerDown);
+		window.addEventListener("keydown", handleEscape);
+		return () => {
+			window.removeEventListener("pointerdown", handlePointerDown);
+			window.removeEventListener("keydown", handleEscape);
+		};
+	}, [groupContextMenu]);
 
 	const handleCancel = () => {
 		if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) {
@@ -303,29 +294,15 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				dotColor={dotColor}
 				dotLabel={dotLabel}
 				dotShape={dotShape}
-				lineColor={lineColor}
-				lineStyle={lineStyle}
-				connectMode={connectMode}
-				groupMode={groupMode}
 				groupColor={groupColor}
+				selectedGroupCount={pendingGroupDots.length}
+				canCreateGroup={pendingGroupDots.length >= 2}
 				onDotColorChange={setDotColor}
 				onDotLabelChange={setDotLabel}
 				onDotShapeChange={setDotShape}
-				onLineColorChange={setLineColor}
-				onLineStyleChange={setLineStyle}
-				onConnectModeChange={(enabled) => {
-					setConnectMode(enabled);
-					setPendingLineStart(null);
-					if (enabled) setPendingGroupDots([]);
-				}}
-				onGroupModeChange={(enabled) => {
-					setGroupMode(enabled);
-					if (enabled) {
-						setPendingGroupDots([]);
-						setPendingLineStart(null);
-					}
-				}}
 				onGroupColorChange={setGroupColor}
+				onCreateGroup={handleFinishGroup}
+				onClearSelection={clearGroupSelection}
 			/>
 
 			<div className="flex gap-2">
@@ -335,15 +312,10 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				<Button variant="secondary" onClick={redo} disabled={!canRedo}>
 					Redo
 				</Button>
-				{connectMode && pendingLineStart && (
-					<Button variant="secondary" onClick={handleCancelPendingLine}>
-						Cancel Line
-					</Button>
-				)}
-				{groupMode && pendingGroupDots.length > 0 && (
+				{pendingGroupDots.length > 0 && (
 					<div className="flex gap-2">
-						<Button variant="secondary" onClick={() => setPendingGroupDots([])}>
-							Cancel Group
+						<Button variant="secondary" onClick={clearGroupSelection}>
+							Clear Group Selection
 						</Button>
 						<Button onClick={handleFinishGroup}>Finish Group ({pendingGroupDots.length})</Button>
 					</div>
@@ -358,12 +330,60 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 					mode="draw"
 					state={currentState}
 					onFretClick={handleFretClick}
-					onLineDrawn={connectMode ? handleLineDrawn : undefined}
-					selectedPositions={
-						pendingLineStart ? [pendingLineStart] : groupMode ? pendingGroupDots : []
-					}
+					onFretContextMenu={handleFretContextMenu}
+					selectedPositions={pendingGroupDots}
 					fretRange={[1, 15]}
 				/>
+				{groupContextMenu && (
+					<div
+						role="menu"
+						aria-label="Group actions"
+						className="fixed z-50 min-w-52 rounded-xl border px-2 py-2 shadow-[0_18px_48px_rgba(28,20,12,0.24)]"
+						style={{
+							left: groupContextMenu.x,
+							top: groupContextMenu.y,
+							background: "var(--gb-bg-panel)",
+							borderColor: "var(--gb-border)",
+						}}
+						data-group-context-menu="true"
+						onPointerDown={(event) => event.stopPropagation()}
+					>
+						<button
+							type="button"
+							role="menuitem"
+							onClick={() => {
+								toggleGroupSelection(groupContextMenu.position);
+								setGroupContextMenu(null);
+							}}
+							className="flex w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--gb-bg-elev)]"
+							style={{ color: "var(--gb-text)" }}
+						>
+							{isPositionSelectedForGroup(groupContextMenu.position)
+								? "Remove from group selection"
+								: "Add to group selection"}
+						</button>
+						<button
+							type="button"
+							role="menuitem"
+							onClick={handleFinishGroup}
+							disabled={pendingGroupDots.length < 2}
+							className="flex w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--gb-bg-elev)] disabled:cursor-not-allowed disabled:opacity-50"
+							style={{ color: "var(--gb-text)" }}
+						>
+							Create group from selection
+						</button>
+						<button
+							type="button"
+							role="menuitem"
+							onClick={clearGroupSelection}
+							disabled={pendingGroupDots.length === 0}
+							className="flex w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--gb-bg-elev)] disabled:cursor-not-allowed disabled:opacity-50"
+							style={{ color: "var(--gb-text)" }}
+						>
+							Clear selection
+						</button>
+					</div>
+				)}
 			</div>
 
 			<div className="flex justify-end gap-2">

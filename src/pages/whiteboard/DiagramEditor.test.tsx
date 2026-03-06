@@ -4,6 +4,34 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import type { Diagram } from "@/types";
 import { DiagramEditor } from "./DiagramEditor";
 
+function createMockContext(): CanvasRenderingContext2D {
+	return {
+		clearRect: jest.fn(),
+		fillRect: jest.fn(),
+		beginPath: jest.fn(),
+		moveTo: jest.fn(),
+		lineTo: jest.fn(),
+		stroke: jest.fn(),
+		fill: jest.fn(),
+		arc: jest.fn(),
+		rect: jest.fn(),
+		closePath: jest.fn(),
+		setLineDash: jest.fn(),
+		save: jest.fn(),
+		restore: jest.fn(),
+		translate: jest.fn(),
+		rotate: jest.fn(),
+		fillText: jest.fn(),
+		setTransform: jest.fn(),
+		strokeStyle: "",
+		fillStyle: "",
+		lineWidth: 1,
+		font: "",
+		textAlign: "left",
+		textBaseline: "alphabetic",
+	} as unknown as CanvasRenderingContext2D;
+}
+
 const mockDiagram: Diagram = {
 	id: "test-1",
 	name: "Test Diagram",
@@ -30,6 +58,10 @@ const renderWithRouter = (component: React.ReactElement) => {
 describe("DiagramEditor", () => {
 	beforeEach(() => {
 		localStorage.clear();
+		jest.clearAllMocks();
+		jest
+			.spyOn(HTMLCanvasElement.prototype, "getContext")
+			.mockImplementation(() => createMockContext());
 	});
 
 	it("renders diagram name input", () => {
@@ -79,46 +111,51 @@ describe("DiagramEditor", () => {
 		expect(screen.getByText("E")).toBeInTheDocument();
 	});
 
-	it("creates a connection line in connect mode and persists it on save", async () => {
+	it("creates a group from selected markers and persists it on save", async () => {
 		const onSave = jest.fn();
 		renderWithRouter(<DiagramEditor diagram={mockDiagram} onSave={onSave} onCancel={jest.fn()} />);
 
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
 
-		await userEvent.click(screen.getByRole("button", { name: /line tool/i }));
-		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
-		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
+		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
+		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
+		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
+		await userEvent.click(screen.getByRole("button", { name: /group selected/i }));
 
 		await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
 		expect(onSave).toHaveBeenCalled();
-		expect(onSave.mock.calls[0][0].fretboardState.lines).toHaveLength(1);
-		expect(onSave.mock.calls[0][0].fretboardState.lines[0]).toMatchObject({
-			from: { string: 0, fret: 1 },
-			to: { string: 0, fret: 3 },
+		expect(onSave.mock.calls[0][0].fretboardState.groups).toHaveLength(1);
+		expect(onSave.mock.calls[0][0].fretboardState.groups?.[0]).toMatchObject({
+			positions: [
+				{ string: 0, fret: 1 },
+				{ string: 0, fret: 3 },
+			],
 		});
 	});
 
-	it("persists dot and line metadata from toolbar controls", async () => {
+	it("persists dot and group metadata from toolbar controls", async () => {
 		const onSave = jest.fn();
 		renderWithRouter(<DiagramEditor onSave={onSave} onCancel={jest.fn()} />);
 
 		await userEvent.type(screen.getByLabelText(/name/i), "Metadata Diagram");
 
-		fireEvent.change(screen.getByLabelText(/dot color/i), { target: { value: "#ff0000" } });
+		const colorInputs = screen.getAllByLabelText(/color/i);
+		fireEvent.change(colorInputs[0], { target: { value: "#ff0000" } });
 		await userEvent.type(screen.getByLabelText(/dot label/i), "R");
 		await userEvent.selectOptions(screen.getByLabelText(/dot shape/i), "square");
 
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
 
-		fireEvent.change(screen.getByLabelText(/line color/i), { target: { value: "#00ff00" } });
-		await userEvent.selectOptions(screen.getByLabelText(/line style/i), "dashed");
-
-		await userEvent.click(screen.getByRole("button", { name: /line tool/i }));
-		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
-		await userEvent.click(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
+		fireEvent.change(colorInputs[1], { target: { value: "#00ff00" } });
+		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
+		fireEvent.contextMenu(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
+		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
+		await userEvent.click(screen.getByRole("button", { name: /group selected/i }));
 		await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
 		const savedDiagram = onSave.mock.calls[0][0];
@@ -128,10 +165,33 @@ describe("DiagramEditor", () => {
 			color: "#ff0000",
 			shape: "square",
 		});
-		expect(savedDiagram.fretboardState.lines[0]).toMatchObject({
-			style: "dashed",
+		expect(savedDiagram.fretboardState.groups?.[0]).toMatchObject({
 			color: "#00ff00",
 		});
+	});
+
+	it("shows context menu actions for grouping", async () => {
+		renderWithRouter(<DiagramEditor onSave={jest.fn()} onCancel={jest.fn()} />);
+
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+
+		expect(screen.getByRole("menu", { name: /group actions/i })).toBeInTheDocument();
+		expect(screen.getByRole("menuitem", { name: /add to group selection/i })).toBeInTheDocument();
+		expect(screen.getByRole("menuitem", { name: /create group from selection/i })).toBeDisabled();
+	});
+
+	it("keeps the marker and menu open after right click", async () => {
+		renderWithRouter(<DiagramEditor onSave={jest.fn()} onCancel={jest.fn()} />);
+
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		const marker = screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i });
+		fireEvent.contextMenu(marker);
+
+		expect(screen.getByRole("menu", { name: /group actions/i })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }),
+		).toBeInTheDocument();
 	});
 
 	it("prompts before cancel when there are unsaved changes", async () => {

@@ -109,6 +109,31 @@ describe("CanvasFretboard", () => {
 		expect(onFretClick).toHaveBeenCalledWith({ string: 0, fret: 1 });
 	});
 
+	it("calls onFretContextMenu with pointer coordinates in draw mode", () => {
+		const onFretContextMenu = jest.fn();
+		render(
+			<CanvasFretboard mode="draw" onFretContextMenu={onFretContextMenu} fretRange={[1, 3]} />,
+		);
+
+		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 2/i }), {
+			clientX: 120,
+			clientY: 240,
+		});
+
+		expect(onFretContextMenu).toHaveBeenCalledWith({ string: 0, fret: 2 }, { x: 120, y: 240 });
+	});
+
+	it("does not treat a context-menu interaction as a normal click", () => {
+		const onFretClick = jest.fn();
+		render(<CanvasFretboard mode="draw" onFretClick={onFretClick} fretRange={[1, 3]} />);
+
+		const cell = screen.getByRole("button", { name: /string 1 \(E\), fret 2/i });
+		fireEvent.contextMenu(cell, { clientX: 120, clientY: 240 });
+		fireEvent.click(cell);
+
+		expect(onFretClick).not.toHaveBeenCalled();
+	});
+
 	it("uses note-name labels for circles by default", () => {
 		const drawDotsMock = renderModule.drawDots as jest.Mock;
 		render(

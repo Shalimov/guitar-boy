@@ -328,6 +328,7 @@ export function CanvasFretboard({
 	state,
 	mode,
 	onFretClick,
+	onFretContextMenu,
 	onLineDrawn,
 	ariaLabel,
 	selectedPositions,
@@ -807,6 +808,33 @@ export function CanvasFretboard({
 		[applyPositionAction],
 	);
 
+	const handleCellContextMenu = useCallback(
+		(
+			event: {
+				preventDefault: () => void;
+				stopPropagation: () => void;
+				clientX: number;
+				clientY: number;
+			},
+			position: FretPosition,
+		) => {
+			event.preventDefault();
+			event.stopPropagation();
+			suppressNextClickRef.current = true;
+			requestAnimationFrame(() => {
+				suppressNextClickRef.current = false;
+			});
+
+			if (mode === "view") {
+				return;
+			}
+
+			setActivePosition(position);
+			onFretContextMenu?.(position, { x: event.clientX, y: event.clientY });
+		},
+		[mode, onFretContextMenu],
+	);
+
 	const handleCellPointerDown = useCallback(
 		(position: FretPosition) => {
 			if (mode !== "draw") {
@@ -937,6 +965,9 @@ export function CanvasFretboard({
 											fill="rgba(0,0,0,0.01)"
 											onMouseDown={() => handleCellPointerDown(hotspot.logicalPosition)}
 											onMouseUp={() => handleCellPointerUp(hotspot.logicalPosition)}
+											onContextMenu={(event) =>
+												handleCellContextMenu(event.evt, hotspot.logicalPosition)
+											}
 											onTouchStart={() => handleCellPointerDown(hotspot.logicalPosition)}
 											onTouchEnd={() => handleCellPointerUp(hotspot.logicalPosition)}
 											onClick={() => handleCellClick(hotspot.logicalPosition)}
@@ -996,6 +1027,7 @@ export function CanvasFretboard({
 														aria-label={ariaCellLabel}
 														onFocus={() => setActivePosition(position)}
 														onKeyDown={(event) => handleCellKeyDown(event, position)}
+														onContextMenu={(event) => handleCellContextMenu(event, position)}
 														onPointerDown={() => handleCellPointerDown(position)}
 														onPointerUp={() => handleCellPointerUp(position)}
 														onClick={() => handleCellClick(position)}
