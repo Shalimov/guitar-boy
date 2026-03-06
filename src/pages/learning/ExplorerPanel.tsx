@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import { Button } from "@/components/ui";
+import { playFretPosition } from "@/lib/audio";
 import {
 	getConstructNotes,
 	getDisplayNoteName,
@@ -63,10 +64,12 @@ function TooltipCard({
 	position,
 	root,
 	accidentalPreference,
+	onPlay,
 }: {
 	position: FretPosition | null;
 	root: NoteName;
 	accidentalPreference: AccidentalPreference;
+	onPlay: () => void;
 }) {
 	if (!position) {
 		return (
@@ -98,6 +101,11 @@ function TooltipCard({
 					<p className="text-[var(--gb-text-muted)]">Against Root {rootLabel}</p>
 					<p className="font-semibold text-[var(--gb-text)]">{intervalFormula}</p>
 				</div>
+			</div>
+			<div className="mt-4">
+				<Button size="sm" onClick={onPlay}>
+					Play note
+				</Button>
 			</div>
 		</div>
 	);
@@ -131,6 +139,14 @@ export function ExplorerPanel() {
 			setState((current) => ({ ...current, noteFilter: "all" }));
 		}
 	}, [state.noteFilter, constructNoteNames]);
+
+	const handlePlayHoveredNote = useCallback(() => {
+		if (!hoveredPosition) {
+			return;
+		}
+
+		void playFretPosition(hoveredPosition, "4n");
+	}, [hoveredPosition]);
 
 	return (
 		<div className="space-y-6">
@@ -381,7 +397,7 @@ export function ExplorerPanel() {
 						</h2>
 						<p className="mt-2 max-w-2xl text-sm text-[var(--gb-text-muted)]">
 							Square notes anchor the root. Switch to interval labels to see how each tone
-							functions.
+							functions. Click a marked note or use the inspector to hear it.
 						</p>
 					</div>
 					<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-4 py-3 text-sm text-[var(--gb-text)]">
@@ -396,6 +412,7 @@ export function ExplorerPanel() {
 						fretRange={state.fretRange}
 						showNoteNames={state.labelType === "notes"}
 						showIntervalLabels={state.labelType === "intervals"}
+						playAudioOnFretClick
 						ariaLabel="Fretboard explorer"
 						onFretHoverChange={setHoveredPosition}
 					/>
@@ -405,6 +422,7 @@ export function ExplorerPanel() {
 					position={hoveredPosition}
 					root={state.root}
 					accidentalPreference={state.accidentalPreference}
+					onPlay={handlePlayHoveredNote}
 				/>
 			</section>
 		</div>

@@ -1,7 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { playFretPosition } from "@/lib/audio";
 import { CanvasFretboard } from "./CanvasFretboard";
 import * as renderModule from "./canvas/render";
+
+jest.mock("@/lib/audio", () => ({
+	playFretPosition: jest.fn(() => Promise.resolve()),
+}));
 
 jest.mock("./canvas/render", () => {
 	const actual = jest.requireActual("./canvas/render");
@@ -107,6 +112,21 @@ describe("CanvasFretboard", () => {
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1/i }));
 
 		expect(onFretClick).toHaveBeenCalledWith({ string: 0, fret: 1 });
+	});
+
+	it("plays audio for visible markers when enabled in view mode", async () => {
+		render(
+			<CanvasFretboard
+				mode="view"
+				playAudioOnFretClick
+				state={{ dots: [{ position: { string: 0, fret: 3 }, label: "G" }], lines: [] }}
+				fretRange={[1, 5]}
+			/>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3/i }));
+
+		expect(playFretPosition).toHaveBeenCalledWith({ string: 0, fret: 3 });
 	});
 
 	it("reports hovered positions through callback", async () => {

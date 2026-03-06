@@ -92,9 +92,13 @@ export function StepVerify({ step, onComplete }: StepVerifyProps) {
 					incorrectPositions={feedback.incorrect}
 					missedPositions={feedback.missed}
 					onFretClick={handleFretClick}
+					playAudioOnFretClick
 					showNoteNames
 					showStringLabels={false}
 				/>
+				<p className="mt-3 text-xs" style={{ color: "var(--gb-text-muted)" }}>
+					Tap a marked fret to hear the note you are checking.
+				</p>
 			</div>
 
 			{!isVerified ? (

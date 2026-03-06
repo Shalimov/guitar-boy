@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { playFretPosition } from "@/lib/audio";
 import { ExplorerPanel } from "./ExplorerPanel";
+
+jest.mock("@/lib/audio", () => ({
+	playFretPosition: jest.fn(() => Promise.resolve()),
+}));
 
 beforeEach(() => {
 	jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
@@ -81,5 +86,14 @@ describe("ExplorerPanel", () => {
 		await userEvent.selectOptions(filter, "E");
 
 		expect(filter).toHaveValue("E");
+	});
+
+	it("plays the selected tone from the inspector", async () => {
+		render(<ExplorerPanel />);
+
+		await userEvent.hover(screen.getByRole("button", { name: /fret 3, note c/i }));
+		await userEvent.click(screen.getByRole("button", { name: /play note/i }));
+
+		expect(playFretPosition).toHaveBeenCalledWith({ string: 1, fret: 3 }, "4n");
 	});
 });

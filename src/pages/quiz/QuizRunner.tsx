@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
+import { playFretPosition } from "@/lib/audio";
 import { getAllPositionsOfNote, getInterval, getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
 import type { FretPosition, NoteName } from "@/types";
 import { QuizFeedback } from "./QuizFeedback";
@@ -25,7 +26,7 @@ interface NoteQuestion {
 
 interface NoteGuessQuestion {
 	id: string;
-	type: "note-guess";
+	type: "note-guess" | "note-guess-sound";
 	/** The single position shown on the board */
 	shownPosition: FretPosition;
 	/** Correct note name */
@@ -102,6 +103,7 @@ export function QuizRunner({
 	// Timer state
 	const [timeLeft, setTimeLeft] = useState<number>(timerSeconds);
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+	const playedQuestionIdRef = useRef<string | null>(null);
 
 	const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
 	const minFret = 1;
@@ -114,7 +116,7 @@ export function QuizRunner({
 				const targetNote = NATURAL_NOTES[Math.floor(Math.random() * NATURAL_NOTES.length)];
 				const targetPositions = getAllPositionsOfNote(targetNote, [minFret, maxFret]);
 				generated.push({ id: `note-${i}`, type: "note", targetPositions, targetNote });
-			} else if (type === "note-guess") {
+			} else if (type === "note-guess" || type === "note-guess-sound") {
 				// Pick a position whose note is a natural note (no accidentals)
 				let shownPosition: FretPosition;
 				let targetNote: NoteName;
@@ -125,8 +127,8 @@ export function QuizRunner({
 					targetNote = getNoteAtFret(shownPosition);
 				} while (!NATURAL_NOTES.includes(targetNote));
 				generated.push({
-					id: `note-guess-${i}`,
-					type: "note-guess",
+					id: `${type}-${i}`,
+					type,
 					shownPosition,
 					targetNote,
 					noteOptions: shuffle([...NATURAL_NOTES]) as string[],
@@ -174,6 +176,29 @@ export function QuizRunner({
 	}, [generateQuestions]);
 
 	const currentQuestion = questions[currentQuestionIndex];
+	const isNoteGuessQuestion =
+		currentQuestion?.type === "note-guess" || currentQuestion?.type === "note-guess-sound";
+
+	useEffect(() => {
+		if (!currentQuestion || currentQuestion.type !== "note-guess-sound" || feedback) {
+			return;
+		}
+
+		if (playedQuestionIdRef.current === currentQuestion.id) {
+			return;
+		}
+
+		playedQuestionIdRef.current = currentQuestion.id;
+		void playFretPosition(currentQuestion.shownPosition, "4n");
+	}, [currentQuestion, feedback]);
+
+	const handleReplaySound = useCallback(() => {
+		if (!currentQuestion || currentQuestion.type !== "note-guess-sound") {
+			return;
+		}
+
+		void playFretPosition(currentQuestion.shownPosition, "4n");
+	}, [currentQuestion]);
 
 	// ── Timer ────────────────────────────────────────────────────────────────
 
@@ -212,7 +237,10 @@ export function QuizRunner({
 					}
 				}
 				isCorrect = incorrect.length === 0 && missed.length === 0;
-			} else if (currentQuestion.type === "note-guess") {
+			} else if (
+				currentQuestion.type === "note-guess" ||
+				currentQuestion.type === "note-guess-sound"
+			) {
 				isCorrect = note === currentQuestion.targetNote;
 				// For note-guess we use shownPosition for feedback overlay
 				if (isCorrect) correct.push(currentQuestion.shownPosition);
@@ -237,14 +265,22 @@ export function QuizRunner({
 
 			if (isCorrect) setScore((prev) => prev + 1);
 
-			const answerLabel =
-				currentQuestion.type === "note"
-					? currentQuestion.targetNote
-					: currentQuestion.type === "note-guess"
-						? currentQuestion.targetNote
-						: currentQuestion.type === "interval"
-							? currentQuestion.targetInterval
-							: currentQuestion.targetChord;
+			let answerLabel: string;
+
+			if (currentQuestion.type === "note") {
+				answerLabel = currentQuestion.targetNote;
+			} else if (
+				currentQuestion.type === "note-guess" ||
+				currentQuestion.type === "note-guess-sound"
+			) {
+				answerLabel = currentQuestion.targetNote;
+			} else if (currentQuestion.type === "interval") {
+				answerLabel = currentQuestion.targetInterval;
+			} else if (currentQuestion.type === "chord") {
+				answerLabel = currentQuestion.targetChord;
+			} else {
+				answerLabel = currentQuestion.targetNote;
+			}
 
 			setFeedback({
 				correct,
@@ -325,6 +361,7 @@ export function QuizRunner({
 			setSelectedInterval(null);
 			setSelectedNote(null);
 			setFeedback(null);
+			playedQuestionIdRef.current = null;
 			if (timerEnabled) setTimeLeft(timerSeconds);
 		} else {
 			setShowSummary(true);
@@ -355,6 +392,7 @@ export function QuizRunner({
 					setFeedback(null);
 					setScore(0);
 					setShowSummary(false);
+					playedQuestionIdRef.current = null;
 				}}
 				onReturnToDashboard={onComplete}
 			/>
@@ -371,13 +409,16 @@ export function QuizRunner({
 	const canSubmit = (() => {
 		if (feedback) return false;
 		if (currentQuestion.type === "interval") return selectedInterval !== null;
-		if (currentQuestion.type === "note-guess") return selectedNote !== null;
+		if (currentQuestion.type === "note-guess" || currentQuestion.type === "note-guess-sound") {
+			return selectedNote !== null;
+		}
 		return selectedPositions.length > 0;
 	})();
 
 	const questionTitle = {
 		note: "Find the Note",
 		"note-guess": "Guess the Note",
+		"note-guess-sound": "Guess by Sound",
 		interval: "Identify the Interval",
 		chord: "Build the Chord",
 	}[currentQuestion.type];
@@ -470,6 +511,9 @@ export function QuizRunner({
 						</>
 					)}
 					{currentQuestion.type === "note-guess" && <>What note is shown on the fretboard?</>}
+					{currentQuestion.type === "note-guess-sound" && (
+						<>Listen to the note, then choose the correct note name.</>
+					)}
 					{currentQuestion.type === "interval" && (
 						<>What interval is between these two positions?</>
 					)}
@@ -509,6 +553,40 @@ export function QuizRunner({
 							showNoteNames={false}
 							showStringLabels={false}
 						/>
+					) : currentQuestion.type === "note-guess-sound" ? (
+						<div className="space-y-4">
+							<div className="rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 text-center">
+								<p className="text-sm" style={{ color: "var(--gb-text-muted)" }}>
+									Use your ear only. Replay the prompt as many times as you need.
+								</p>
+								<button
+									type="button"
+									onClick={handleReplaySound}
+									style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
+									className="mt-4 rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 focus-visible:outline-none"
+								>
+									Play note
+								</button>
+							</div>
+							{feedback && (
+								<Fretboard
+									mode="view"
+									state={{
+										dots: [
+											{
+												position: currentQuestion.shownPosition,
+												shape: "circle",
+												color: feedback.correct.length > 0 ? "#16a34a" : "#dc2626",
+												label: currentQuestion.targetNote,
+											},
+										],
+										lines: [],
+									}}
+									fretRange={[minFret, maxFret]}
+									showStringLabels={false}
+								/>
+							)}
+						</div>
 					) : (
 						<Fretboard
 							mode={currentQuestion.type === "interval" ? "view" : "test"}
@@ -529,7 +607,7 @@ export function QuizRunner({
 				</div>
 
 				{/* Note-guess multiple-choice buttons */}
-				{currentQuestion.type === "note-guess" && (
+				{isNoteGuessQuestion && (
 					<div className="grid grid-cols-4 gap-2">
 						{currentQuestion.noteOptions.map((note) => {
 							const isSelected = selectedNote === note;

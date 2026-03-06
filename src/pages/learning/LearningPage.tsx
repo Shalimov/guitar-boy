@@ -73,7 +73,7 @@ export function LearningPage() {
 						<h1 className="gb-page-title">Guided Lessons</h1>
 						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
 							Structured lessons to help you learn note positions, intervals, and chords on the
-							fretboard.
+							fretboard, now with playable note examples for ear-and-eye practice.
 						</p>
 					</div>
 					<LessonList onSelectLesson={handleSelectLesson} />

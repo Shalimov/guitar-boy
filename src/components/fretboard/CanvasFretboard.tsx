@@ -1,5 +1,6 @@
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Layer, Stage } from "react-konva";
+import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret } from "@/lib/music";
 import type {
 	ConnectionLine,
@@ -330,6 +331,7 @@ export function CanvasFretboard({
 	onFretClick,
 	onFretContextMenu,
 	onLineDrawn,
+	playAudioOnFretClick = false,
 	onFretHoverChange,
 	ariaLabel,
 	selectedPositions,
@@ -658,6 +660,13 @@ export function CanvasFretboard({
 		(position: FretPosition) => {
 			setActivePosition(position);
 
+			if (
+				playAudioOnFretClick &&
+				(mode !== "view" || getDotFromCollection(renderedDots, position))
+			) {
+				void playFretPosition(position);
+			}
+
 			if (mode === "view") {
 				return;
 			}
@@ -705,7 +714,15 @@ export function CanvasFretboard({
 				};
 			});
 		},
-		[mode, onFretClick, onLineDrawn, selectedPositions, updateInternalState],
+		[
+			mode,
+			onFretClick,
+			onLineDrawn,
+			playAudioOnFretClick,
+			renderedDots,
+			selectedPositions,
+			updateInternalState,
+		],
 	);
 
 	const commitLine = useCallback(

@@ -21,7 +21,16 @@ export function StepExplain({ step }: StepExplainProps) {
 					className="mt-4 p-4 rounded-xl"
 					style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
 				>
-					<Fretboard mode="view" state={step.fretboardState} fretRange={[0, 5]} showNoteNames />
+					<Fretboard
+						mode="view"
+						state={step.fretboardState}
+						fretRange={[0, 5]}
+						showNoteNames
+						playAudioOnFretClick
+					/>
+					<p className="mt-3 text-xs" style={{ color: "var(--gb-text-muted)" }}>
+						Click a marked note to hear its pitch.
+					</p>
 				</div>
 			)}
 		</div>

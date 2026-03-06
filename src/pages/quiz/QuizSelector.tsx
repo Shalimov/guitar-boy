@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { CardCategory } from "@/types";
 
-export type QuizType = CardCategory | "note-guess";
+export type QuizType = CardCategory | "note-guess" | "note-guess-sound";
 
 export interface QuizSettings {
 	type: QuizType;
@@ -25,6 +25,11 @@ const QUIZ_TYPES = [
 		value: "note-guess",
 		label: "Guess the Note",
 		desc: "Identify the note shown at a fretboard position",
+	},
+	{
+		value: "note-guess-sound",
+		label: "Guess by Sound",
+		desc: "Hear a note, then identify it without a visual marker",
 	},
 	{
 		value: "interval",
