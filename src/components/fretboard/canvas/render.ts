@@ -80,6 +80,19 @@ export function drawFretboardSurface(
 	ctx.fillStyle = backgroundColor;
 	ctx.fillRect(0, 0, metrics.width, metrics.height);
 
+	const hasOpenStrings = metrics.minFret === 0;
+
+	if (hasOpenStrings) {
+		const nutX = metrics.padding.left;
+		const firstFretX = metrics.padding.left + metrics.fretSpacing;
+		const openStringAreaWidth = firstFretX - nutX;
+
+		ctx.fillStyle = nutColor;
+		ctx.globalAlpha = 0.12;
+		ctx.fillRect(nutX, metrics.padding.top - 4, openStringAreaWidth, metrics.playableHeight + 8);
+		ctx.globalAlpha = 1;
+	}
+
 	for (let fretIndex = 0; fretIndex <= metrics.fretCount; fretIndex += 1) {
 		const fret = metrics.minFret + fretIndex;
 		const x = metrics.padding.left + fretIndex * metrics.fretSpacing;
@@ -87,10 +100,27 @@ export function drawFretboardSurface(
 		ctx.beginPath();
 		ctx.moveTo(x, metrics.padding.top);
 		ctx.lineTo(x, metrics.padding.top + metrics.playableHeight);
-		ctx.lineWidth = fret === 0 ? 5 : 1.5;
-		ctx.strokeStyle = fret === 0 ? nutColor : fretColor;
+
+		if (fret === 1 && hasOpenStrings) {
+			ctx.lineWidth = 7;
+			ctx.strokeStyle = nutColor;
+			ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+			ctx.shadowBlur = 5;
+			ctx.shadowOffsetX = 0;
+			ctx.shadowOffsetY = 2;
+		} else {
+			ctx.lineWidth = 1.5;
+			ctx.strokeStyle = fretColor;
+			ctx.shadowColor = "transparent";
+			ctx.shadowBlur = 0;
+			ctx.shadowOffsetX = 0;
+			ctx.shadowOffsetY = 0;
+		}
+
 		ctx.stroke();
 	}
+
+	ctx.shadowColor = "transparent";
 
 	for (let stringIndex = 0; stringIndex < metrics.stringCount; stringIndex += 1) {
 		const y = metrics.padding.top + stringIndex * metrics.stringSpacing;

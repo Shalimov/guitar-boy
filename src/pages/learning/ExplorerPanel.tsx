@@ -44,6 +44,10 @@ const CONSTRUCT_TYPES: ExplorerConstructType[] = [
 const CAGED_SHAPES: ExplorerCagedShape[] = ["C", "A", "G", "E", "D"];
 const MAX_FRET = 15;
 
+function getRangeProgress(value: number, min: number, max: number): string {
+	return `${((value - min) / (max - min)) * 100}%`;
+}
+
 const INITIAL_STATE: ExplorerState = {
 	root: "C",
 	constructType: "Scales",
@@ -150,7 +154,7 @@ export function ExplorerPanel() {
 
 	return (
 		<div className="space-y-6">
-			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[linear-gradient(180deg,rgba(255,248,238,0.96),rgba(240,223,205,0.95))] p-5 shadow-[var(--gb-shadow-soft)]">
+			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-5 shadow-[var(--gb-shadow-soft)]">
 				<div className="mb-5">
 					<p className="gb-page-kicker mb-1">Control Deck</p>
 					<h2 className="text-2xl font-semibold text-[var(--gb-text)]">Build a neck map</h2>
@@ -306,6 +310,11 @@ export function ExplorerPanel() {
 									min={1}
 									max={MAX_FRET - 1}
 									value={state.fretRange[0]}
+									style={
+										{
+											"--range-progress": getRangeProgress(state.fretRange[0], 1, MAX_FRET - 1),
+										} as React.CSSProperties
+									}
 									onChange={(event) => {
 										const nextMin = Number(event.target.value);
 										setState((current) => ({
@@ -329,6 +338,11 @@ export function ExplorerPanel() {
 									min={2}
 									max={MAX_FRET}
 									value={state.fretRange[1]}
+									style={
+										{
+											"--range-progress": getRangeProgress(state.fretRange[1], 2, MAX_FRET),
+										} as React.CSSProperties
+									}
 									onChange={(event) => {
 										const nextMax = Number(event.target.value);
 										setState((current) => ({
@@ -348,7 +362,7 @@ export function ExplorerPanel() {
 						</div>
 					</div>
 
-					<div className="rounded-[16px] border border-[var(--gb-border)] bg-[rgba(255,255,255,0.52)] p-4 lg:col-span-2 2xl:col-span-1">
+					<div className="rounded-[16px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 lg:col-span-2 2xl:col-span-1">
 						<div className="flex items-center justify-between gap-3">
 							<div>
 								<p className="text-sm font-semibold text-[var(--gb-text)]">CAGED overlays</p>
@@ -388,7 +402,7 @@ export function ExplorerPanel() {
 				</div>
 			</section>
 
-			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[linear-gradient(180deg,rgba(255,249,239,0.92),rgba(255,248,238,0.98))] p-5 shadow-[var(--gb-shadow)]">
+			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow)]">
 				<div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 					<div>
 						<p className="gb-page-kicker mb-1">Live View</p>

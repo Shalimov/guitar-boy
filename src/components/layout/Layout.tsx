@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from "react-router";
+import { useDarkMode } from "../../hooks/useDarkMode";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 const navItems = [
 	{ to: "/", label: "Dashboard" },
@@ -8,6 +10,8 @@ const navItems = [
 ] as const;
 
 export function Layout() {
+	const [theme, setTheme] = useDarkMode();
+
 	return (
 		<div className="relative min-h-screen overflow-x-hidden text-[var(--gb-text)]">
 			<div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -17,28 +21,31 @@ export function Layout() {
 			</div>
 
 			<nav className="sticky top-0 z-20 border-b border-[var(--gb-border)]/80 bg-[color:var(--gb-bg-elev)]/85 backdrop-blur-md">
-				<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-3 md:px-6">
-					<span className="text-xl font-bold tracking-[0.01em] text-[var(--gb-text)]">
-						Guitar Boy
-					</span>
-					<div className="flex flex-wrap gap-2">
-						{navItems.map((item) => (
-							<NavLink
-								key={item.to}
-								to={item.to}
-								end={item.to === "/"}
-								className={({ isActive }) =>
-									`rounded-[var(--gb-radius-pill)] px-4 py-2 text-sm font-semibold transition ${
-										isActive
-											? "bg-[var(--gb-accent)] text-[#fff7ef] shadow-[0_9px_20px_rgba(179,93,42,0.35)]"
-											: "text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-panel)] hover:text-[var(--gb-text)]"
-									}`
-								}
-							>
-								{item.label}
-							</NavLink>
-						))}
+				<div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 md:px-6">
+					<div className="flex flex-wrap items-center gap-4">
+						<span className="text-xl font-bold tracking-[0.01em] text-[var(--gb-text)]">
+							Guitar Boy
+						</span>
+						<div className="flex flex-wrap gap-2">
+							{navItems.map((item) => (
+								<NavLink
+									key={item.to}
+									to={item.to}
+									end={item.to === "/"}
+									className={({ isActive }) =>
+										`rounded-[var(--gb-radius-pill)] px-4 py-2 text-sm font-semibold transition ${
+											isActive
+												? "bg-[var(--gb-accent)] text-[#fff7ef] shadow-[0_9px_20px_rgba(179,93,42,0.35)]"
+												: "text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-panel)] hover:text-[var(--gb-text)]"
+										}`
+									}
+								>
+									{item.label}
+								</NavLink>
+							))}
+						</div>
 					</div>
+					<ThemeToggle theme={theme} onThemeChange={setTheme} />
 				</div>
 			</nav>
 			<main className="mx-auto max-w-7xl px-4 pb-10 pt-8 md:px-6">

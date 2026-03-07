@@ -88,7 +88,7 @@ function createPrompt(candidates: FretPosition[]): TrainerPrompt | null {
 function StatCard({ label, value, statKey }: { label: string; value: string; statKey: string }) {
 	return (
 		<div
-			className="rounded-[18px] border border-[var(--gb-border)] bg-[rgba(255,255,255,0.56)] p-4"
+			className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4"
 			data-testid={`trainer-stat-${statKey}`}
 		>
 			<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">{label}</p>
@@ -176,7 +176,7 @@ export function NoteMemoryTrainer() {
 
 	return (
 		<div className="space-y-6">
-			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[linear-gradient(180deg,rgba(255,248,238,0.96),rgba(240,223,205,0.95))] p-5 shadow-[var(--gb-shadow-soft)]">
+			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-5 shadow-[var(--gb-shadow-soft)]">
 				<div className="mb-5">
 					<p className="gb-page-kicker mb-1">Practice Loop</p>
 					<h2 className="text-2xl font-semibold text-[var(--gb-text)]">
@@ -232,7 +232,7 @@ export function NoteMemoryTrainer() {
 							<p className="mt-2 text-xs text-[var(--gb-text-muted)]">{rangeConfig.description}</p>
 						</div>
 
-						<label className="flex items-center gap-3 rounded-[18px] border border-[var(--gb-border)] bg-[rgba(255,255,255,0.48)] px-4 py-3 text-sm text-[var(--gb-text)]">
+						<label className="flex items-center gap-3 rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-4 py-3 text-sm text-[var(--gb-text)]">
 							<input
 								type="checkbox"
 								checked={includeOpenStrings}
@@ -241,7 +241,7 @@ export function NoteMemoryTrainer() {
 							<span>Include open strings so you keep hearing the tuning anchors too.</span>
 						</label>
 
-						<div className="rounded-[18px] border border-[var(--gb-border)] bg-[rgba(255,255,255,0.52)] p-4 text-sm text-[var(--gb-text-muted)]">
+						<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 text-sm text-[var(--gb-text-muted)]">
 							<p className="font-semibold text-[var(--gb-text)]">Best results</p>
 							<p className="mt-2">1. Say the note before you click.</p>
 							<p>2. In sound mode, sing or hum it once before answering.</p>
@@ -262,7 +262,7 @@ export function NoteMemoryTrainer() {
 				</div>
 			</section>
 
-			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[linear-gradient(180deg,rgba(255,249,239,0.92),rgba(255,248,238,0.98))] p-5 shadow-[var(--gb-shadow)]">
+			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow)]">
 				<div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 					<div>
 						<p className="gb-page-kicker mb-1">Current Drill</p>
@@ -318,7 +318,7 @@ export function NoteMemoryTrainer() {
 								</div>
 							) : (
 								<div className="space-y-4">
-									<div className="rounded-[18px] border border-[var(--gb-border)] bg-[rgba(255,255,255,0.52)] p-5 text-center">
+									<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 text-center">
 										<p className="text-sm text-[var(--gb-text-muted)]">
 											Listen to the prompt, picture where that pitch sits on the neck, then choose
 											the note name.
