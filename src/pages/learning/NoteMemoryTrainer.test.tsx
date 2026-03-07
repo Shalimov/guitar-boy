@@ -93,10 +93,37 @@ describe("NoteMemoryTrainer", () => {
 		expect(screen.getByTestId("trainer-stat-best-streak")).toHaveTextContent("4");
 	});
 
+	it("prioritizes notes with more mistakes when picking prompts", async () => {
+		jest.spyOn(Math, "random").mockReturnValueOnce(0.4).mockReturnValue(0);
+		localStorage.setItem(
+			"guitar-boy.note-memory-trainer.stats",
+			JSON.stringify({
+				attempts: 12,
+				correct: 5,
+				streak: 0,
+				bestStreak: 2,
+				mistakesByNote: { C: 10 },
+			}),
+		);
+
+		render(<NoteMemoryTrainer />);
+
+		await userEvent.click(screen.getByRole("button", { name: "D" }));
+		await userEvent.click(screen.getByRole("button", { name: /check answer/i }));
+
+		expect(screen.getByText(/this is c\./i)).toBeInTheDocument();
+	});
+
 	it("resets persisted stats", async () => {
 		localStorage.setItem(
 			"guitar-boy.note-memory-trainer.stats",
-			JSON.stringify({ attempts: 8, correct: 6, streak: 2, bestStreak: 4 }),
+			JSON.stringify({
+				attempts: 8,
+				correct: 6,
+				streak: 2,
+				bestStreak: 4,
+				mistakesByNote: { G: 3 },
+			}),
 		);
 
 		render(<NoteMemoryTrainer />);
@@ -104,7 +131,7 @@ describe("NoteMemoryTrainer", () => {
 		await userEvent.click(screen.getByRole("button", { name: /reset stats/i }));
 
 		expect(localStorage.getItem("guitar-boy.note-memory-trainer.stats")).toBe(
-			JSON.stringify({ attempts: 0, correct: 0, streak: 0, bestStreak: 0 }),
+			JSON.stringify({ attempts: 0, correct: 0, streak: 0, bestStreak: 0, mistakesByNote: {} }),
 		);
 	});
 });
