@@ -10,9 +10,28 @@ interface DiagramViewerProps {
 	onEdit?: () => void;
 	/** Called when the user wants to create an editable copy — shown for built-in diagrams */
 	onEditCopy?: () => void;
+	/** Navigate to the previous diagram in the list */
+	onPrevious?: () => void;
+	/** Navigate to the next diagram in the list */
+	onNext?: () => void;
+	/** Whether the previous button should be disabled */
+	hasPrevious?: boolean;
+	/** Whether the next button should be disabled */
+	hasNext?: boolean;
 }
 
-export function DiagramViewer({ diagram, onBack, onEdit, onEditCopy }: DiagramViewerProps) {
+export function DiagramViewer({
+	diagram,
+	onBack,
+	onEdit,
+	onEditCopy,
+	onPrevious,
+	onNext,
+	hasPrevious,
+	hasNext,
+}: DiagramViewerProps) {
+	const showNavigation = onPrevious || onNext;
+
 	return (
 		<div className="space-y-5">
 			{/* Header */}
@@ -24,25 +43,44 @@ export function DiagramViewer({ diagram, onBack, onEdit, onEditCopy }: DiagramVi
 					className="flex-1"
 				/>
 
-				<div className="flex items-center gap-2 flex-shrink-0">
+				{/* Button toolbar */}
+				<div
+					className="inline-flex items-center gap-1 rounded-xl px-3 py-2"
+					style={{
+						background: "var(--gb-bg-panel)",
+						border: "1px solid var(--gb-border)",
+					}}
+				>
+					{showNavigation && (
+						<button
+							type="button"
+							onClick={onPrevious}
+							disabled={!hasPrevious}
+							className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition-all hover:opacity-70 focus-visible:outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+							style={{ color: "var(--gb-text-muted)" }}
+							aria-label="Previous diagram"
+						>
+							←
+						</button>
+					)}
+
 					<button
 						type="button"
 						onClick={onBack}
-						className="px-4 py-2 rounded-full text-sm font-medium transition-all hover:opacity-70 focus-visible:outline-none"
+						className="flex h-8 items-center justify-center rounded-lg px-3 text-sm font-medium transition-all hover:opacity-70 focus-visible:outline-none"
 						style={{ color: "var(--gb-text-muted)" }}
 					>
-						← Back
+						Back
 					</button>
 
 					{onEdit && (
 						<button
 							type="button"
 							onClick={onEdit}
-							className="px-5 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95 focus-visible:outline-none"
+							className="flex h-8 items-center justify-center rounded-lg px-3 text-sm font-semibold transition-all hover:opacity-90 active:scale-95 focus-visible:outline-none"
 							style={{
 								background: "var(--gb-accent)",
 								color: "#fff8ee",
-								boxShadow: "0 2px 8px rgba(179,93,42,0.28)",
 							}}
 						>
 							Edit
@@ -53,14 +91,26 @@ export function DiagramViewer({ diagram, onBack, onEdit, onEditCopy }: DiagramVi
 						<button
 							type="button"
 							onClick={onEditCopy}
-							className="px-5 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95 focus-visible:outline-none"
+							className="flex h-8 items-center justify-center rounded-lg px-3 text-sm font-semibold transition-all hover:opacity-90 active:scale-95 focus-visible:outline-none"
 							style={{
 								background: "var(--gb-accent)",
 								color: "#fff8ee",
-								boxShadow: "0 2px 8px rgba(179,93,42,0.28)",
 							}}
 						>
 							Edit Copy
+						</button>
+					)}
+
+					{showNavigation && (
+						<button
+							type="button"
+							onClick={onNext}
+							disabled={!hasNext}
+							className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition-all hover:opacity-70 focus-visible:outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+							style={{ color: "var(--gb-text-muted)" }}
+							aria-label="Next diagram"
+						>
+							→
 						</button>
 					)}
 				</div>

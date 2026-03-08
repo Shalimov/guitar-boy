@@ -81,6 +81,32 @@ export function WhiteboardPage() {
 		setView(viewingDiagram?.isBuiltIn ? "patterns" : "list");
 	};
 
+	// ── Diagram navigation (left/right arrows) ─────────────────────────────────
+
+	const getCurrentDiagramList = (): Diagram[] => {
+		return viewingDiagram?.isBuiltIn ? allPatterns : userDiagrams;
+	};
+
+	const currentDiagramIndex = viewingDiagram
+		? getCurrentDiagramList().findIndex((d) => d.id === viewingDiagram.id)
+		: -1;
+
+	const hasPrevious = currentDiagramIndex > 0;
+	const hasNext =
+		currentDiagramIndex >= 0 && currentDiagramIndex < getCurrentDiagramList().length - 1;
+
+	const handlePreviousDiagram = () => {
+		if (!viewingDiagram || !hasPrevious) return;
+		const list = getCurrentDiagramList();
+		setViewingDiagram(list[currentDiagramIndex - 1]);
+	};
+
+	const handleNextDiagram = () => {
+		if (!viewingDiagram || !hasNext) return;
+		const list = getCurrentDiagramList();
+		setViewingDiagram(list[currentDiagramIndex + 1]);
+	};
+
 	// ── Views ────────────────────────────────────────────────────────────────
 
 	if (view === "view" && viewingDiagram) {
@@ -91,6 +117,10 @@ export function WhiteboardPage() {
 					onBack={handleBackFromView}
 					onEdit={!viewingDiagram.isBuiltIn ? () => handleEditDiagram(viewingDiagram) : undefined}
 					onEditCopy={() => handleEditCopy(viewingDiagram)}
+					onPrevious={handlePreviousDiagram}
+					onNext={handleNextDiagram}
+					hasPrevious={hasPrevious}
+					hasNext={hasNext}
 				/>
 			</div>
 		);
