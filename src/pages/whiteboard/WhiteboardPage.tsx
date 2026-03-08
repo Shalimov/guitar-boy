@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui";
+import { Button, TabBar } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { allPatterns } from "@/data/patterns";
 import { useDiagramStore } from "@/hooks/useDiagramStore";
 import { DiagramEditor, DiagramViewer, PatternLibrary } from "@/pages/whiteboard";
@@ -11,6 +12,7 @@ export function WhiteboardPage() {
 	const [view, setView] = useState<PageView>("list");
 	const [viewingDiagram, setViewingDiagram] = useState<Diagram | undefined>(undefined);
 	const [editingDiagram, setEditingDiagram] = useState<Diagram | undefined>(undefined);
+	const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 	const { store, addDiagram, updateDiagram, deleteDiagram, getUserDiagrams } = useDiagramStore();
 
 	const userDiagrams = getUserDiagrams();
@@ -63,8 +65,13 @@ export function WhiteboardPage() {
 	};
 
 	const handleDeleteDiagram = (id: string) => {
-		if (window.confirm("Are you sure you want to delete this diagram?")) {
-			deleteDiagram(id);
+		setDeleteConfirmId(id);
+	};
+
+	const handleConfirmDelete = () => {
+		if (deleteConfirmId) {
+			deleteDiagram(deleteConfirmId);
+			setDeleteConfirmId(null);
 		}
 	};
 
@@ -123,23 +130,20 @@ export function WhiteboardPage() {
 				<Button onClick={handleNewDiagram}>New Diagram</Button>
 			</header>
 
-			{/* Tab bar */}
-			<div className="flex flex-wrap gap-2 border-b border-[var(--gb-border)] pb-1">
-				{(["list", "patterns"] as const).map((tab) => (
-					<button
-						key={tab}
-						type="button"
-						onClick={() => setView(tab)}
-						className={`rounded-t-[14px] border px-4 py-2 text-sm font-semibold transition ${
-							view === tab
-								? "border-[var(--gb-border)] border-b-[var(--gb-bg)] bg-[var(--gb-bg-elev)] text-[var(--gb-text)]"
-								: "border-transparent text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-tab)] hover:text-[var(--gb-text)]"
-						}`}
-					>
-						{tab === "list" ? `My Diagrams (${userDiagrams.length})` : "Pattern Library"}
-					</button>
-				))}
-			</div>
+			<TabBar
+				tabs={[
+					{
+						label: `My Diagrams (${userDiagrams.length})`,
+						active: view === "list",
+						onClick: () => setView("list"),
+					},
+					{
+						label: "Pattern Library",
+						active: view === "patterns",
+						onClick: () => setView("patterns"),
+					},
+				]}
+			/>
 
 			{/* My Diagrams tab */}
 			{view === "list" && (
@@ -202,6 +206,16 @@ export function WhiteboardPage() {
 					onEditCopy={handleEditCopy}
 				/>
 			)}
+
+			<ConfirmDialog
+				isOpen={deleteConfirmId !== null}
+				onClose={() => setDeleteConfirmId(null)}
+				onConfirm={handleConfirmDelete}
+				title="Delete Diagram"
+				message="Are you sure you want to delete this diagram?"
+				confirmText="Delete"
+				confirmVariant="secondary"
+			/>
 		</div>
 	);
 }

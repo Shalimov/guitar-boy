@@ -41,10 +41,8 @@
 	box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-	min-height: 100%;
+html {
+	height: 100%;
 }
 
 body {
@@ -56,6 +54,11 @@ body {
 		radial-gradient(circle at 82% 15%, rgba(220, 166, 128, 0.35), transparent 42%),
 		linear-gradient(180deg, #f9f2e8 0%, var(--gb-bg) 54%, #f3e7d8 100%);
 	line-height: 1.45;
+	min-height: 100%;
+}
+
+#root {
+	min-height: 100%;
 }
 
 :root.dark body {

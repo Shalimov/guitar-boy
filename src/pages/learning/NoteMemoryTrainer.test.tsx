@@ -102,7 +102,7 @@ describe("NoteMemoryTrainer", () => {
 				correct: 5,
 				streak: 0,
 				bestStreak: 2,
-				mistakesByNote: { C: 10 },
+				mistakesByPosition: { "1-3": 10 },
 			}),
 		);
 
@@ -122,7 +122,7 @@ describe("NoteMemoryTrainer", () => {
 				correct: 6,
 				streak: 2,
 				bestStreak: 4,
-				mistakesByNote: { G: 3 },
+				mistakesByPosition: { "3-0": 3 },
 			}),
 		);
 
@@ -131,7 +131,7 @@ describe("NoteMemoryTrainer", () => {
 		await userEvent.click(screen.getByRole("button", { name: /reset stats/i }));
 
 		expect(localStorage.getItem("guitar-boy.note-memory-trainer.stats")).toBe(
-			JSON.stringify({ attempts: 0, correct: 0, streak: 0, bestStreak: 0, mistakesByNote: {} }),
+			JSON.stringify({ attempts: 0, correct: 0, streak: 0, bestStreak: 0, mistakesByPosition: {} }),
 		);
 	});
 });

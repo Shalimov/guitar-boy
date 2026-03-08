@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import { playFretPosition } from "@/lib/audio";
-import { getAllPositionsOfNote, getInterval, getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
-import type { FretPosition, NoteName } from "@/types";
+import type { FretPosition } from "@/types";
 import { QuizFeedback } from "./QuizFeedback";
-import type { QuizType } from "./QuizSelector";
+import type { Difficulty, QuizType } from "./QuizSelector";
+import { checkAnswer, generateQuestions, type Question } from "./questions";
 import { SessionSummary } from "./SessionSummary";
+import { useQuizTimer } from "./useQuizTimer";
 
 interface QuizRunnerProps {
 	type: QuizType;
-	difficulty: string;
+	difficulty: Difficulty;
 	questionCount: number;
 	timerEnabled: boolean;
 	timerSeconds: number;
@@ -17,69 +18,13 @@ interface QuizRunnerProps {
 	onCancel: () => void;
 }
 
-interface NoteQuestion {
-	id: string;
-	type: "note";
-	targetPositions: FretPosition[];
-	targetNote: string;
-}
-
-interface NoteGuessQuestion {
-	id: string;
-	type: "note-guess" | "note-guess-sound";
-	/** The single position shown on the board */
-	shownPosition: FretPosition;
-	/** Correct note name */
-	targetNote: NoteName;
-	/** All 7 natural note options shuffled */
-	noteOptions: string[];
-}
-
-interface IntervalQuestion {
-	id: string;
-	type: "interval";
-	targetPositions: FretPosition[];
-	targetInterval: string;
-	intervalOptions: string[];
-}
-
-interface ChordQuestion {
-	id: string;
-	type: "chord";
-	targetPositions: FretPosition[];
-	targetChord: string;
-}
-
-type Question = NoteQuestion | NoteGuessQuestion | IntervalQuestion | ChordQuestion;
-
-interface Feedback {
-	correct: FretPosition[];
-	incorrect: FretPosition[];
-	missed: FretPosition[];
-	message?: string;
-	/** For note-guess: whether the selected option was right */
-	selectedOption?: string;
-}
-
-const INTERVAL_NAMES = [
-	"Unison",
-	"m2",
-	"M2",
-	"m3",
-	"M3",
-	"P4",
-	"Tritone",
-	"P5",
-	"m6",
-	"M6",
-	"m7",
-	"M7",
-	"Octave",
-];
-
-function shuffle<T>(arr: T[]): T[] {
-	return [...arr].sort(() => Math.random() - 0.5);
-}
+const QUESTION_TITLES: Record<Question["type"], string> = {
+	note: "Find the Note",
+	"note-guess": "Guess the Note",
+	"note-guess-sound": "Guess by Sound",
+	interval: "Identify the Interval",
+	chord: "Build the Chord",
+};
 
 export function QuizRunner({
 	type,
@@ -95,237 +40,58 @@ export function QuizRunner({
 	const [selectedPositions, setSelectedPositions] = useState<FretPosition[]>([]);
 	const [selectedInterval, setSelectedInterval] = useState<string | null>(null);
 	const [selectedNote, setSelectedNote] = useState<string | null>(null);
-	const [feedback, setFeedback] = useState<Feedback | null>(null);
+	const [feedback, setFeedback] = useState<ReturnType<typeof checkAnswer> | null>(null);
 	const [score, setScore] = useState(0);
 	const [startTime] = useState(Date.now());
 	const [showSummary, setShowSummary] = useState(false);
 
-	// Timer state
-	const [timeLeft, setTimeLeft] = useState<number>(timerSeconds);
-	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const playedQuestionIdRef = useRef<string | null>(null);
+	const currentQuestion = questions[currentQuestionIndex];
 
 	const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
 	const minFret = 1;
 
-	const generateQuestions = useCallback((): Question[] => {
-		const generated: Question[] = [];
+	const { timeLeft, resetTimer } = useQuizTimer({
+		enabled: timerEnabled,
+		seconds: timerSeconds,
+		onTimeout: () => submitAnswerRef.current?.(),
+		paused: feedback !== null,
+	});
 
-		for (let i = 0; i < questionCount; i++) {
-			if (type === "note") {
-				const targetNote = NATURAL_NOTES[Math.floor(Math.random() * NATURAL_NOTES.length)];
-				const targetPositions = getAllPositionsOfNote(targetNote, [minFret, maxFret]);
-				generated.push({ id: `note-${i}`, type: "note", targetPositions, targetNote });
-			} else if (type === "note-guess" || type === "note-guess-sound") {
-				// Pick a position whose note is a natural note (no accidentals)
-				let shownPosition: FretPosition;
-				let targetNote: NoteName;
-				do {
-					const string = Math.floor(Math.random() * 6);
-					const fret = Math.floor(Math.random() * maxFret) + minFret;
-					shownPosition = { string, fret };
-					targetNote = getNoteAtFret(shownPosition);
-				} while (!NATURAL_NOTES.includes(targetNote));
-				generated.push({
-					id: `${type}-${i}`,
-					type,
-					shownPosition,
-					targetNote,
-					noteOptions: shuffle([...NATURAL_NOTES]) as string[],
-				});
-			} else if (type === "interval") {
-				const string1 = Math.floor(Math.random() * 6);
-				const fret1 = Math.floor(Math.random() * maxFret) + minFret;
-				const string2 = Math.floor(Math.random() * 6);
-				const fret2 = Math.floor(Math.random() * maxFret) + minFret;
-				const interval = getInterval(
-					{ string: string1, fret: fret1 },
-					{ string: string2, fret: fret2 },
-				);
-				const options = shuffle([
-					interval,
-					...shuffle(INTERVAL_NAMES.filter((n) => n !== interval)).slice(0, 3),
-				]);
-				generated.push({
-					id: `interval-${i}`,
-					type: "interval",
-					targetPositions: [
-						{ string: string1, fret: fret1 },
-						{ string: string2, fret: fret2 },
-					],
-					targetInterval: interval,
-					intervalOptions: options,
-				});
-			} else if (type === "chord") {
-				const rootString = Math.floor(Math.random() * 6);
-				const rootFret = Math.floor(Math.random() * maxFret) + minFret;
-				const rootNote = getNoteAtFret({ string: rootString, fret: rootFret });
-				generated.push({
-					id: `chord-${i}`,
-					type: "chord",
-					targetPositions: [{ string: rootString, fret: rootFret }],
-					targetChord: `${rootNote} major`,
-				});
-			}
-		}
-		return generated;
-	}, [type, questionCount, maxFret]);
+	const submitAnswerRef = useRef<(() => void) | null>(null);
+
+	const handleGenerateQuestions = useCallback(() => {
+		return generateQuestions(type, difficulty, questionCount);
+	}, [type, difficulty, questionCount]);
 
 	useEffect(() => {
-		setQuestions(generateQuestions());
-	}, [generateQuestions]);
+		setQuestions(handleGenerateQuestions());
+	}, [handleGenerateQuestions]);
 
-	const currentQuestion = questions[currentQuestionIndex];
-	const isNoteGuessQuestion =
-		currentQuestion?.type === "note-guess" || currentQuestion?.type === "note-guess-sound";
+	const handleSubmitAnswer = useCallback(() => {
+		if (!currentQuestion) return;
+
+		const result = checkAnswer(currentQuestion, selectedPositions, selectedInterval, selectedNote);
+		if (result.correct.length > 0 && result.incorrect.length === 0 && result.missed.length === 0) {
+			setScore((prev) => prev + 1);
+		}
+		setFeedback(result);
+	}, [currentQuestion, selectedPositions, selectedInterval, selectedNote]);
+
+	submitAnswerRef.current = handleSubmitAnswer;
 
 	useEffect(() => {
-		if (!currentQuestion || currentQuestion.type !== "note-guess-sound" || feedback) {
-			return;
-		}
-
-		if (playedQuestionIdRef.current === currentQuestion.id) {
-			return;
-		}
+		if (!currentQuestion || currentQuestion.type !== "note-guess-sound" || feedback) return;
+		if (playedQuestionIdRef.current === currentQuestion.id) return;
 
 		playedQuestionIdRef.current = currentQuestion.id;
 		void playFretPosition(currentQuestion.shownPosition, "4n");
 	}, [currentQuestion, feedback]);
 
 	const handleReplaySound = useCallback(() => {
-		if (!currentQuestion || currentQuestion.type !== "note-guess-sound") {
-			return;
-		}
-
+		if (!currentQuestion || currentQuestion.type !== "note-guess-sound") return;
 		void playFretPosition(currentQuestion.shownPosition, "4n");
 	}, [currentQuestion]);
-
-	// ── Timer ────────────────────────────────────────────────────────────────
-
-	const submitAnswer = useCallback(
-		(
-			overridePositions?: FretPosition[],
-			overrideInterval?: string | null,
-			overrideNote?: string | null,
-		) => {
-			if (!currentQuestion) return;
-
-			const positions = overridePositions ?? selectedPositions;
-			const interval = overrideInterval !== undefined ? overrideInterval : selectedInterval;
-			const note = overrideNote !== undefined ? overrideNote : selectedNote;
-
-			const correct: FretPosition[] = [];
-			const incorrect: FretPosition[] = [];
-			const missed: FretPosition[] = [];
-			let isCorrect = false;
-
-			if (currentQuestion.type === "note") {
-				for (const target of currentQuestion.targetPositions) {
-					if (positions.some((p) => p.string === target.string && p.fret === target.fret)) {
-						correct.push(target);
-					} else {
-						missed.push(target);
-					}
-				}
-				for (const sel of positions) {
-					if (
-						!currentQuestion.targetPositions.some(
-							(t) => t.string === sel.string && t.fret === sel.fret,
-						)
-					) {
-						incorrect.push(sel);
-					}
-				}
-				isCorrect = incorrect.length === 0 && missed.length === 0;
-			} else if (
-				currentQuestion.type === "note-guess" ||
-				currentQuestion.type === "note-guess-sound"
-			) {
-				isCorrect = note === currentQuestion.targetNote;
-				// For note-guess we use shownPosition for feedback overlay
-				if (isCorrect) correct.push(currentQuestion.shownPosition);
-				else missed.push(currentQuestion.shownPosition);
-			} else if (currentQuestion.type === "interval") {
-				if (interval === currentQuestion.targetInterval) {
-					correct.push(...currentQuestion.targetPositions);
-				} else {
-					missed.push(...currentQuestion.targetPositions);
-				}
-				isCorrect = interval === currentQuestion.targetInterval;
-			} else if (currentQuestion.type === "chord") {
-				for (const target of currentQuestion.targetPositions) {
-					if (positions.some((p) => p.string === target.string && p.fret === target.fret)) {
-						correct.push(target);
-					} else {
-						missed.push(target);
-					}
-				}
-				isCorrect = incorrect.length === 0 && missed.length === 0;
-			}
-
-			if (isCorrect) setScore((prev) => prev + 1);
-
-			let answerLabel: string;
-
-			if (currentQuestion.type === "note") {
-				answerLabel = currentQuestion.targetNote;
-			} else if (
-				currentQuestion.type === "note-guess" ||
-				currentQuestion.type === "note-guess-sound"
-			) {
-				answerLabel = currentQuestion.targetNote;
-			} else if (currentQuestion.type === "interval") {
-				answerLabel = currentQuestion.targetInterval;
-			} else if (currentQuestion.type === "chord") {
-				answerLabel = currentQuestion.targetChord;
-			} else {
-				answerLabel = currentQuestion.targetNote;
-			}
-
-			setFeedback({
-				correct,
-				incorrect,
-				missed,
-				message: isCorrect ? "Correct!" : `Incorrect. The answer was: ${answerLabel}`,
-				selectedOption: note ?? interval ?? undefined,
-			});
-		},
-		[currentQuestion, selectedPositions, selectedInterval, selectedNote],
-	);
-
-	// Keep a stable ref to submitAnswer so the interval closure is never stale
-	const submitAnswerRef = useRef(submitAnswer);
-	useEffect(() => {
-		submitAnswerRef.current = submitAnswer;
-	}, [submitAnswer]);
-
-	// Start/reset timer whenever a new question is shown (feedback cleared)
-	useEffect(() => {
-		if (!timerEnabled || feedback !== null) return;
-
-		setTimeLeft(timerSeconds);
-
-		timerRef.current = setInterval(() => {
-			setTimeLeft((prev) => {
-				if (prev <= 1) {
-					if (timerRef.current) clearInterval(timerRef.current);
-					timerRef.current = null;
-					submitAnswerRef.current();
-					return 0;
-				}
-				return prev - 1;
-			});
-		}, 1000);
-
-		return () => {
-			if (timerRef.current) {
-				clearInterval(timerRef.current);
-				timerRef.current = null;
-			}
-		};
-	}, [timerEnabled, timerSeconds, feedback]);
-
-	// ── Interaction handlers ─────────────────────────────────────────────────
 
 	const handleFretClick = (position: FretPosition) => {
 		if (feedback) return;
@@ -334,8 +100,9 @@ export function QuizRunner({
 
 		setSelectedPositions((prev) => {
 			const already = prev.some((p) => p.string === position.string && p.fret === position.fret);
-			if (already)
+			if (already) {
 				return prev.filter((p) => !(p.string === position.string && p.fret === position.fret));
+			}
 			return [...prev, position];
 		});
 	};
@@ -351,7 +118,7 @@ export function QuizRunner({
 	};
 
 	const handleCheckAnswer = () => {
-		submitAnswer();
+		handleSubmitAnswer();
 	};
 
 	const handleContinue = () => {
@@ -362,20 +129,19 @@ export function QuizRunner({
 			setSelectedNote(null);
 			setFeedback(null);
 			playedQuestionIdRef.current = null;
-			if (timerEnabled) setTimeLeft(timerSeconds);
+			if (timerEnabled) resetTimer();
 		} else {
 			setShowSummary(true);
 		}
 	};
 
-	// ── Render guards ────────────────────────────────────────────────────────
-
-	if (!currentQuestion)
+	if (!currentQuestion) {
 		return (
 			<div className="p-6" style={{ color: "var(--gb-text-muted)" }}>
 				Loading quiz…
 			</div>
 		);
+	}
 
 	if (showSummary) {
 		return (
@@ -384,7 +150,7 @@ export function QuizRunner({
 				correctCount={score}
 				durationMs={Date.now() - startTime}
 				onReviewAgain={() => {
-					setQuestions(generateQuestions());
+					setQuestions(handleGenerateQuestions());
 					setCurrentQuestionIndex(0);
 					setSelectedPositions([]);
 					setSelectedInterval(null);
@@ -399,12 +165,8 @@ export function QuizRunner({
 		);
 	}
 
-	// ── Timer progress bar ───────────────────────────────────────────────────
-
 	const timerPct = timerEnabled && !feedback ? (timeLeft / timerSeconds) * 100 : 100;
 	const timerBarColor = timerPct > 50 ? "var(--gb-accent)" : timerPct > 25 ? "#ca8a04" : "#dc2626";
-
-	// ── Question-specific helpers ────────────────────────────────────────────
 
 	const canSubmit = (() => {
 		if (feedback) return false;
@@ -415,22 +177,16 @@ export function QuizRunner({
 		return selectedPositions.length > 0;
 	})();
 
-	const questionTitle = {
-		note: "Find the Note",
-		"note-guess": "Guess the Note",
-		"note-guess-sound": "Guess by Sound",
-		interval: "Identify the Interval",
-		chord: "Build the Chord",
-	}[currentQuestion.type];
+	const isNoteGuessQuestion =
+		currentQuestion.type === "note-guess" || currentQuestion.type === "note-guess-sound";
 
 	return (
 		<div className="max-w-4xl mx-auto p-6 space-y-5">
-			{/* Header */}
 			<div className="space-y-3">
 				<div className="flex justify-between items-start">
 					<div>
 						<p className="gb-page-kicker mb-0.5">Quiz</p>
-						<h2 className="gb-page-title">{questionTitle}</h2>
+						<h2 className="gb-page-title">{QUESTION_TITLES[currentQuestion.type]}</h2>
 					</div>
 					<button
 						type="button"
@@ -442,7 +198,6 @@ export function QuizRunner({
 					</button>
 				</div>
 
-				{/* Progress bar */}
 				<div className="flex items-center gap-3">
 					<div
 						className="flex-1 h-2 rounded-full overflow-hidden"
@@ -467,7 +222,6 @@ export function QuizRunner({
 					</span>
 				</div>
 
-				{/* Timer bar */}
 				{timerEnabled && (
 					<div className="flex items-center gap-3">
 						<div
@@ -489,7 +243,6 @@ export function QuizRunner({
 				)}
 			</div>
 
-			{/* Question card */}
 			<div
 				className="rounded-2xl p-6 space-y-4"
 				style={{
@@ -498,7 +251,6 @@ export function QuizRunner({
 					boxShadow: "var(--gb-shadow-soft)",
 				}}
 			>
-				{/* Prompt */}
 				<p className="text-base font-medium" style={{ color: "var(--gb-text)" }}>
 					{currentQuestion.type === "note" && (
 						<>
@@ -527,7 +279,6 @@ export function QuizRunner({
 					)}
 				</p>
 
-				{/* Fretboard */}
 				<div
 					className="p-4 rounded-xl"
 					style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
@@ -606,7 +357,6 @@ export function QuizRunner({
 					)}
 				</div>
 
-				{/* Note-guess multiple-choice buttons */}
 				{isNoteGuessQuestion && (
 					<div className="grid grid-cols-4 gap-2">
 						{currentQuestion.noteOptions.map((note) => {
@@ -641,7 +391,6 @@ export function QuizRunner({
 					</div>
 				)}
 
-				{/* Interval multiple-choice buttons */}
 				{currentQuestion.type === "interval" && currentQuestion.intervalOptions && (
 					<div className="grid grid-cols-2 gap-2">
 						{currentQuestion.intervalOptions.map((option) => {
@@ -676,7 +425,6 @@ export function QuizRunner({
 					</div>
 				)}
 
-				{/* Check / feedback */}
 				{!feedback ? (
 					<button
 						type="button"

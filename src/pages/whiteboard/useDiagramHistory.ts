@@ -57,18 +57,11 @@ export function useDiagramHistory(initialState: FretboardState) {
 		setCurrentState(entry.fretboardState);
 	}, []);
 
-	const reset = useCallback((newInitialState: FretboardState) => {
-		historyRef.current = [{ fretboardState: newInitialState, timestamp: Date.now() }];
-		historyIndexRef.current = 0;
-		setCurrentState(newInitialState);
-	}, []);
-
 	return {
 		currentState,
 		updateState,
 		undo,
 		redo,
-		reset,
 		canUndo,
 		canRedo,
 	};

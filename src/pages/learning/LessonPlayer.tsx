@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui";
+import { Button, ProgressBar } from "@/components/ui";
 import type { Lesson } from "@/types/lesson";
 import { StepExplain } from "./StepExplain";
 import { StepVerify } from "./StepVerify";
@@ -51,24 +51,11 @@ export function LessonPlayer({ lesson, onComplete, onExit }: LessonPlayerProps) 
 					</button>
 				</div>
 
-				{/* Progress bar */}
-				<div className="flex items-center gap-3">
-					<div
-						className="flex-1 h-2 rounded-full overflow-hidden"
-						style={{ background: "var(--gb-bg-panel)" }}
-					>
-						<div
-							className="h-full rounded-full transition-all duration-500"
-							style={{ width: `${progress}%`, background: "var(--gb-accent)" }}
-						/>
-					</div>
-					<span
-						className="text-xs tabular-nums font-medium"
-						style={{ color: "var(--gb-text-muted)" }}
-					>
-						{currentStepIndex + 1} / {lesson.steps.length}
-					</span>
-				</div>
+				<ProgressBar
+					progress={progress}
+					current={currentStepIndex + 1}
+					total={lesson.steps.length}
+				/>
 			</div>
 
 			{/* Step card */}

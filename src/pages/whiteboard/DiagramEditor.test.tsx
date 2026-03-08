@@ -196,7 +196,6 @@ describe("DiagramEditor", () => {
 
 	it("prompts before cancel when there are unsaved changes", async () => {
 		const onCancel = jest.fn();
-		const confirmSpy = jest.spyOn(window, "confirm").mockReturnValue(false);
 
 		renderWithRouter(
 			<DiagramEditor diagram={mockDiagram} onSave={jest.fn()} onCancel={onCancel} />,
@@ -206,13 +205,10 @@ describe("DiagramEditor", () => {
 		await userEvent.type(screen.getByLabelText(/name/i), "Changed Name");
 		await userEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
-		expect(confirmSpy).toHaveBeenCalledWith("Discard unsaved changes?");
+		expect(screen.getByText("Discard Changes")).toBeInTheDocument();
 		expect(onCancel).not.toHaveBeenCalled();
 
-		confirmSpy.mockReturnValue(true);
-		await userEvent.click(screen.getByRole("button", { name: /cancel/i }));
+		await userEvent.click(screen.getByRole("button", { name: /discard/i }));
 		expect(onCancel).toHaveBeenCalled();
-
-		confirmSpy.mockRestore();
 	});
 });

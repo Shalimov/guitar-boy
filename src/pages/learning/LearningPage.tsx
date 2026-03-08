@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmDialog, PageHeader, TabBar } from "@/components/ui";
 import type { Lesson } from "@/types/lesson";
 import { ExplorerPanel } from "./ExplorerPanel";
 import { LessonList } from "./LessonList";
@@ -7,9 +8,16 @@ import { NoteMemoryTrainer } from "./NoteMemoryTrainer";
 
 type LearningTab = "lessons" | "trainer" | "explorer";
 
+const TABS: { label: LearningTab; labelText: string }[] = [
+	{ label: "lessons", labelText: "Lessons" },
+	{ label: "trainer", labelText: "Trainer" },
+	{ label: "explorer", labelText: "Explorer" },
+];
+
 export function LearningPage() {
 	const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 	const [activeTab, setActiveTab] = useState<LearningTab>("lessons");
+	const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
 	const handleSelectLesson = (lesson: Lesson) => {
 		setSelectedLesson(lesson);
@@ -17,13 +25,23 @@ export function LearningPage() {
 	};
 
 	const handleLessonComplete = () => {
-		alert("Lesson completed! Great job!");
-		setSelectedLesson(null);
+		setShowCompleteDialog(true);
 	};
 
 	const handleExitLesson = () => {
 		setSelectedLesson(null);
 	};
+
+	const handleCompleteDialogClose = () => {
+		setShowCompleteDialog(false);
+		setSelectedLesson(null);
+	};
+
+	const tabs = TABS.map((t) => ({
+		label: t.labelText,
+		active: activeTab === t.label,
+		onClick: () => setActiveTab(t.label),
+	}));
 
 	if (selectedLesson) {
 		return (
@@ -39,86 +57,46 @@ export function LearningPage() {
 
 	return (
 		<div className={`${activeTab === "explorer" ? "w-full" : "max-w-5xl mx-auto"} p-6 space-y-6`}>
-			{/* Tab bar */}
-			<div
-				className="flex gap-1 p-1 rounded-xl"
-				style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
-			>
-				{[
-					{
-						label: "Lessons",
-						active: activeTab === "lessons",
-						onClick: () => setActiveTab("lessons"),
-					},
-					{
-						label: "Trainer",
-						active: activeTab === "trainer",
-						onClick: () => setActiveTab("trainer"),
-					},
-					{
-						label: "Explorer",
-						active: activeTab === "explorer",
-						onClick: () => setActiveTab("explorer"),
-					},
-				].map(({ label, active, onClick }) => (
-					<button
-						key={label}
-						type="button"
-						onClick={onClick}
-						style={
-							active
-								? {
-										background: "var(--gb-accent)",
-										color: "#fff8ee",
-										boxShadow: "0 2px 8px rgba(179,93,42,0.3)",
-									}
-								: { color: "var(--gb-text-muted)" }
-						}
-						className="flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-all"
-					>
-						{label}
-					</button>
-				))}
-			</div>
+			<TabBar tabs={tabs} />
 
 			{/* Content */}
 			{activeTab === "lessons" ? (
 				<div className="gb-panel p-7 space-y-5">
-					<div>
-						<p className="gb-page-kicker mb-1">Learn</p>
-						<h1 className="gb-page-title">Guided Lessons</h1>
-						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
-							Structured lessons to help you learn note positions, intervals, and chords on the
-							fretboard, now with playable note examples for ear-and-eye practice.
-						</p>
-					</div>
+					<PageHeader
+						kicker="Learn"
+						title="Guided Lessons"
+						description="Structured lessons to help you learn note positions, intervals, and chords on the fretboard, now with playable note examples for ear-and-eye practice."
+					/>
 					<LessonList onSelectLesson={handleSelectLesson} />
 				</div>
 			) : activeTab === "trainer" ? (
 				<div className="gb-panel p-7 space-y-5">
-					<div>
-						<p className="gb-page-kicker mb-1">Practice</p>
-						<h1 className="gb-page-title">Note Memory Trainer</h1>
-						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
-							Use short visual and ear-first drills to connect note names, fretboard locations, and
-							pitch faster.
-						</p>
-					</div>
+					<PageHeader
+						kicker="Practice"
+						title="Note Memory Trainer"
+						description="Use short visual and ear-first drills to connect note names, fretboard locations, and pitch faster."
+					/>
 					<NoteMemoryTrainer />
 				</div>
 			) : (
 				<div className="gb-panel p-7 space-y-5">
-					<div>
-						<p className="gb-page-kicker mb-1">Explore</p>
-						<h1 className="gb-page-title">Fretboard Explorer</h1>
-						<p className="text-sm mt-2" style={{ color: "var(--gb-text-muted)" }}>
-							Interactive theory lab for mapping scales, chords, arpeggios, and interval shapes
-							across the neck.
-						</p>
-					</div>
+					<PageHeader
+						kicker="Explore"
+						title="Fretboard Explorer"
+						description="Interactive theory lab for mapping scales, chords, arpeggios, and interval shapes across the neck."
+					/>
 					<ExplorerPanel />
 				</div>
 			)}
+
+			<ConfirmDialog
+				isOpen={showCompleteDialog}
+				onClose={handleCompleteDialogClose}
+				title="Lesson Completed!"
+				message="Great job! You've finished this lesson."
+				confirmText="Continue"
+				showCancel={false}
+			/>
 		</div>
 	);
 }

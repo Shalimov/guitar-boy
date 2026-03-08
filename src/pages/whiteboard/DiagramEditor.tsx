@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import { Button } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Diagram, FretPosition } from "@/types";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 import { useDiagramHistory } from "./useDiagramHistory";
@@ -29,6 +30,8 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	const [pendingGroupDots, setPendingGroupDots] = useState<FretPosition[]>([]);
 	const [groupColor, setGroupColor] = useState("#C46A2D");
 	const [groupContextMenu, setGroupContextMenu] = useState<GroupContextMenuState | null>(null);
+	const [showClearConfirm, setShowClearConfirm] = useState(false);
+	const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
 	const initialSnapshot = useMemo(
 		() =>
@@ -156,16 +159,13 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	};
 
 	const handleClearDiagram = () => {
-		if (
-			!window.confirm(
-				"Clear all markers, groups, and connections from the diagram? This cannot be undone.",
-			)
-		) {
-			return;
-		}
+		setShowClearConfirm(true);
+	};
 
+	const handleConfirmClear = () => {
 		updateState({ dots: [], lines: [], groups: [] });
 		clearGroupSelection();
+		setShowClearConfirm(false);
 	};
 
 	const handleFinishGroup = () => {
@@ -219,10 +219,16 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	}, [groupContextMenu]);
 
 	const handleCancel = () => {
-		if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) {
+		if (hasUnsavedChanges) {
+			setShowDiscardConfirm(true);
 			return;
 		}
 
+		onCancel();
+	};
+
+	const handleConfirmDiscard = () => {
+		setShowDiscardConfirm(false);
 		onCancel();
 	};
 
@@ -394,6 +400,26 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 					Save
 				</Button>
 			</div>
+
+			<ConfirmDialog
+				isOpen={showClearConfirm}
+				onClose={() => setShowClearConfirm(false)}
+				onConfirm={handleConfirmClear}
+				title="Clear Diagram"
+				message="Clear all markers, groups, and connections from the diagram? This cannot be undone."
+				confirmText="Clear"
+				confirmVariant="secondary"
+			/>
+
+			<ConfirmDialog
+				isOpen={showDiscardConfirm}
+				onClose={() => setShowDiscardConfirm(false)}
+				onConfirm={handleConfirmDiscard}
+				title="Discard Changes"
+				message="You have unsaved changes. Are you sure you want to discard them?"
+				confirmText="Discard"
+				confirmVariant="secondary"
+			/>
 		</div>
 	);
 }

@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/ui";
 import type { CardCategory } from "@/types";
 
 export type QuizType = CardCategory | "note-guess" | "note-guess-sound";
+export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 export interface QuizSettings {
 	type: QuizType;
-	difficulty: string;
+	difficulty: Difficulty;
 	questionCount: number;
 	timerEnabled: boolean;
 	timerSeconds: number;
@@ -45,7 +47,7 @@ const QUIZ_TYPES = [
 
 export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 	const [type, setType] = useState<QuizType>("note");
-	const [difficulty, setDifficulty] = useState<string>("beginner");
+	const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
 	const [questionCount, setQuestionCount] = useState<number>(10);
 	const [timerEnabled, setTimerEnabled] = useState<boolean>(false);
 	const [timerSeconds, setTimerSeconds] = useState<number>(15);
@@ -56,11 +58,7 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 
 	return (
 		<div className="gb-panel p-7 space-y-7">
-			{/* Title */}
-			<div>
-				<p className="gb-page-kicker mb-1">Practice</p>
-				<h1 className="gb-page-title">Quiz Mode</h1>
-			</div>
+			<PageHeader kicker="Practice" title="Quiz Mode" />
 
 			{/* Quiz type */}
 			<fieldset className="space-y-2">
@@ -116,7 +114,7 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 					Difficulty
 				</legend>
 				<div className="flex gap-2 flex-wrap">
-					{["beginner", "intermediate", "advanced"].map((level) => {
+					{(["beginner", "intermediate", "advanced"] as const).map((level) => {
 						const active = difficulty === level;
 						return (
 							<button

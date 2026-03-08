@@ -9,6 +9,17 @@ import type { FretPosition, NoteName } from "@/types";
 type TrainerMode = "visual" | "sound";
 type TrainerRangeKey = "first-position" | "octave";
 
+type PositionKey = `${number}-${number}`;
+
+function positionToKey(position: FretPosition): PositionKey {
+	return `${position.string}-${position.fret}`;
+}
+
+function keyToPosition(key: PositionKey): FretPosition {
+	const [string, fret] = key.split("-").map(Number);
+	return { string, fret };
+}
+
 interface TrainerPrompt {
 	position: FretPosition;
 	note: NoteName;
@@ -19,7 +30,7 @@ interface TrainerStats {
 	correct: number;
 	streak: number;
 	bestStreak: number;
-	mistakesByNote: Partial<Record<NoteName, number>>;
+	mistakesByPosition: Partial<Record<PositionKey, number>>;
 }
 
 const TRAINER_STATS_STORAGE_KEY = "guitar-boy.note-memory-trainer.stats";
@@ -28,7 +39,7 @@ const INITIAL_TRAINER_STATS: TrainerStats = {
 	correct: 0,
 	streak: 0,
 	bestStreak: 0,
-	mistakesByNote: {},
+	mistakesByPosition: {},
 };
 
 const RANGE_CONFIG: Record<
@@ -80,64 +91,46 @@ function normalizeTrainerStats(stats: Partial<TrainerStats> | null | undefined):
 		correct: stats?.correct ?? 0,
 		streak: stats?.streak ?? 0,
 		bestStreak: stats?.bestStreak ?? 0,
-		mistakesByNote: stats?.mistakesByNote ?? {},
+		mistakesByPosition: stats?.mistakesByPosition ?? {},
 	};
 }
 
 function createPrompt(
 	candidates: FretPosition[],
-	mistakesByNote: Partial<Record<NoteName, number>>,
+	mistakesByPosition: Partial<Record<PositionKey, number>>,
 ): TrainerPrompt | null {
 	if (candidates.length === 0) {
 		return null;
 	}
 
-	const positionsByNote = new Map<NoteName, FretPosition[]>();
+	const naturalNotes = candidates.filter((p) => NATURAL_NOTES.includes(getNoteAtFret(p)));
 
-	for (const position of candidates) {
-		const note = getNoteAtFret(position);
-		const positions = positionsByNote.get(note);
-
-		if (positions) {
-			positions.push(position);
-		} else {
-			positionsByNote.set(note, [position]);
-		}
-	}
-
-	const availableNotes = NATURAL_NOTES.filter((note) => positionsByNote.has(note));
-
-	if (availableNotes.length === 0) {
+	if (naturalNotes.length === 0) {
 		return null;
 	}
 
-	const totalWeight = availableNotes.reduce(
-		(sum, note) => sum + 1 + (mistakesByNote[note] ?? 0),
+	const totalWeight = naturalNotes.reduce(
+		(sum, pos) => sum + 1 + (mistakesByPosition[positionToKey(pos)] ?? 0),
 		0,
 	);
-	let roll = Math.random() * totalWeight;
-	let selectedNote = availableNotes[availableNotes.length - 1];
 
-	for (const note of availableNotes) {
-		roll -= 1 + (mistakesByNote[note] ?? 0);
+	let roll = Math.random() * totalWeight;
+	let selectedPosition = naturalNotes[naturalNotes.length - 1];
+
+	for (const pos of naturalNotes) {
+		roll -= 1 + (mistakesByPosition[positionToKey(pos)] ?? 0);
 
 		if (roll < 0) {
-			selectedNote = note;
+			selectedPosition = pos;
 			break;
 		}
 	}
 
-	const positionsForNote = positionsByNote.get(selectedNote);
-
-	if (!positionsForNote || positionsForNote.length === 0) {
-		return null;
-	}
-
-	const position = positionsForNote[Math.floor(Math.random() * positionsForNote.length)];
+	const note = getNoteAtFret(selectedPosition);
 
 	return {
-		position,
-		note: selectedNote,
+		position: selectedPosition,
+		note,
 	};
 }
 
@@ -149,6 +142,59 @@ function StatCard({ label, value, statKey }: { label: string; value: string; sta
 		>
 			<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">{label}</p>
 			<p className="mt-2 text-2xl font-semibold text-[var(--gb-text)]">{value}</p>
+		</div>
+	);
+}
+
+function ProblemNotesCard({
+	mistakesByPosition,
+}: {
+	mistakesByPosition: Partial<Record<PositionKey, number>>;
+}) {
+	const problemPositions = useMemo(() => {
+		const entries = Object.entries(mistakesByPosition) as [PositionKey, number][];
+		return entries.sort((a, b) => b[1] - a[1]).slice(0, 4);
+	}, [mistakesByPosition]);
+
+	if (problemPositions.length === 0) {
+		return (
+			<div
+				className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4"
+				data-testid="trainer-stat-problem-notes"
+			>
+				<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">
+					Focus Areas
+				</p>
+				<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
+					No mistakes yet — keep practicing!
+				</p>
+			</div>
+		);
+	}
+
+	return (
+		<div
+			className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4"
+			data-testid="trainer-stat-problem-notes"
+		>
+			<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">Focus Areas</p>
+			<div className="mt-3 flex flex-wrap gap-2">
+				{problemPositions.map(([key, count]) => {
+					const pos = keyToPosition(key);
+					const note = getNoteAtFret(pos);
+					return (
+						<span
+							key={key}
+							className="inline-flex items-center gap-1.5 rounded-full border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-2.5 py-1 text-sm font-medium text-[var(--gb-text)]"
+						>
+							<span>
+								{note} @ {pos.string}-{pos.fret}
+							</span>
+							<span className="text-xs text-[var(--gb-text-muted)]">({count})</span>
+						</span>
+					);
+				})}
+			</div>
 		</div>
 	);
 }
@@ -165,7 +211,7 @@ export function NoteMemoryTrainer() {
 		INITIAL_TRAINER_STATS,
 	);
 	const normalizedStats = useMemo(() => normalizeTrainerStats(stats), [stats]);
-	const mistakesByNoteRef = useRef(normalizedStats.mistakesByNote);
+	const mistakesByPositionRef = useRef(normalizedStats.mistakesByPosition);
 
 	const rangeConfig = RANGE_CONFIG[rangeKey];
 	const candidatePositions = useMemo(
@@ -174,11 +220,11 @@ export function NoteMemoryTrainer() {
 	);
 
 	useEffect(() => {
-		mistakesByNoteRef.current = normalizedStats.mistakesByNote;
-	}, [normalizedStats.mistakesByNote]);
+		mistakesByPositionRef.current = normalizedStats.mistakesByPosition;
+	}, [normalizedStats.mistakesByPosition]);
 
 	const queueNextPrompt = useCallback(() => {
-		setPrompt(createPrompt(candidatePositions, mistakesByNoteRef.current));
+		setPrompt(createPrompt(candidatePositions, mistakesByPositionRef.current));
 		setSelectedNote(null);
 		setFeedback(null);
 	}, [candidatePositions]);
@@ -218,17 +264,18 @@ export function NoteMemoryTrainer() {
 		setStats((current) => {
 			const nextStats = normalizeTrainerStats(current);
 			const nextStreak = isCorrect ? nextStats.streak + 1 : 0;
+			const positionKey = positionToKey(prompt.position);
 
 			return {
 				attempts: nextStats.attempts + 1,
 				correct: nextStats.correct + (isCorrect ? 1 : 0),
 				streak: nextStreak,
 				bestStreak: Math.max(nextStats.bestStreak, nextStreak),
-				mistakesByNote: isCorrect
-					? nextStats.mistakesByNote
+				mistakesByPosition: isCorrect
+					? nextStats.mistakesByPosition
 					: {
-							...nextStats.mistakesByNote,
-							[prompt.note]: (nextStats.mistakesByNote[prompt.note] ?? 0) + 1,
+							...nextStats.mistakesByPosition,
+							[positionKey]: (nextStats.mistakesByPosition[positionKey] ?? 0) + 1,
 						},
 			};
 		});
@@ -334,6 +381,7 @@ export function NoteMemoryTrainer() {
 							value={String(normalizedStats.bestStreak)}
 							statKey="best-streak"
 						/>
+						<ProblemNotesCard mistakesByPosition={normalizedStats.mistakesByPosition} />
 						<Button variant="ghost" size="sm" onClick={handleResetStats}>
 							Reset stats
 						</Button>

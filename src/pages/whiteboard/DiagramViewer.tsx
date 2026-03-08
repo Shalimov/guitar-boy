@@ -1,4 +1,5 @@
 import { Fretboard } from "@/components/fretboard";
+import { PageHeader } from "@/components/ui";
 import type { Diagram } from "@/types";
 
 interface DiagramViewerProps {
@@ -16,17 +17,12 @@ export function DiagramViewer({ diagram, onBack, onEdit, onEditCopy }: DiagramVi
 		<div className="space-y-5">
 			{/* Header */}
 			<div className="flex flex-wrap items-start justify-between gap-3">
-				<div>
-					<p className="gb-page-kicker mb-0.5">
-						{diagram.isBuiltIn ? "Built-in Pattern" : "My Diagram"}
-					</p>
-					<h1 className="gb-page-title">{diagram.name}</h1>
-					{diagram.description && (
-						<p className="mt-1 text-sm" style={{ color: "var(--gb-text-muted)" }}>
-							{diagram.description}
-						</p>
-					)}
-				</div>
+				<PageHeader
+					kicker={diagram.isBuiltIn ? "Built-in Pattern" : "My Diagram"}
+					title={diagram.name}
+					description={diagram.description}
+					className="flex-1"
+				/>
 
 				<div className="flex items-center gap-2 flex-shrink-0">
 					<button
