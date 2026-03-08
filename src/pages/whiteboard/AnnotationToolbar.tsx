@@ -3,21 +3,21 @@ interface AnnotationToolbarProps {
 	dotLabel: string;
 	dotShape: "circle" | "square" | "diamond";
 	groupColor: string;
+	groupSelectionMode: boolean;
 	selectedGroupCount: number;
 	canCreateGroup: boolean;
 	onDotColorChange: (color: string) => void;
 	onDotLabelChange: (label: string) => void;
 	onDotShapeChange: (shape: "circle" | "square" | "diamond") => void;
 	onGroupColorChange: (color: string) => void;
+	onGroupSelectionModeChange: () => void;
 	onCreateGroup: () => void;
 	onClearSelection: () => void;
 }
 
-// Shared label style
 const labelCls = "text-xs font-semibold tracking-wide uppercase whitespace-nowrap";
 const labelStyle = { color: "var(--gb-text-muted)" };
 
-// Small color picker swatch
 function ColorSwatch({
 	id,
 	value,
@@ -52,12 +52,14 @@ export function AnnotationToolbar({
 	dotLabel,
 	dotShape,
 	groupColor,
+	groupSelectionMode,
 	selectedGroupCount,
 	canCreateGroup,
 	onDotColorChange,
 	onDotLabelChange,
 	onDotShapeChange,
 	onGroupColorChange,
+	onGroupSelectionModeChange,
 	onCreateGroup,
 	onClearSelection,
 }: AnnotationToolbarProps) {
@@ -138,12 +140,25 @@ export function AnnotationToolbar({
 						Groups
 					</p>
 					<p className="mt-1 text-sm" style={{ color: "var(--gb-text-muted)" }}>
-						Right-click markers to build a selection, then create a group from the context menu or
-						here.
+						Enable selection mode, then click markers to build a group. Color auto-advances after
+						creating each group.
 					</p>
 				</div>
 
 				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+					<button
+						type="button"
+						onClick={onGroupSelectionModeChange}
+						className="inline-flex items-center justify-center rounded-[var(--gb-radius-pill)] border px-3.5 py-1.5 text-sm font-semibold transition-all duration-200"
+						style={{
+							borderColor: groupSelectionMode ? "var(--gb-accent)" : "var(--gb-border)",
+							background: groupSelectionMode ? "var(--gb-accent)" : "var(--gb-bg-panel)",
+							color: groupSelectionMode ? "#fff7ef" : "var(--gb-text)",
+						}}
+					>
+						{groupSelectionMode ? "Selection Mode: ON" : "Select Markers"}
+					</button>
+
 					<ColorSwatch
 						id="group-color"
 						label="Color"

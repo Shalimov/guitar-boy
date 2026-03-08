@@ -6,11 +6,18 @@ import type { Diagram, FretPosition } from "@/types";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 import { useDiagramHistory } from "./useDiagramHistory";
 
-interface GroupContextMenuState {
-	position: FretPosition;
-	x: number;
-	y: number;
-}
+const GROUP_COLORS = [
+	"#C46A2D",
+	"#6B8E23",
+	"#6A5ACD",
+	"#CD5C5C",
+	"#2E8B57",
+	"#DAA520",
+	"#9370DB",
+	"#20B2AA",
+	"#DB7093",
+	"#4682B4",
+];
 
 interface DiagramEditorProps {
 	diagram?: Diagram;
@@ -29,9 +36,15 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	const [dotShape, setDotShape] = useState<"circle" | "square" | "diamond">("circle");
 	const [pendingGroupDots, setPendingGroupDots] = useState<FretPosition[]>([]);
 	const [groupColor, setGroupColor] = useState("#C46A2D");
-	const [groupContextMenu, setGroupContextMenu] = useState<GroupContextMenuState | null>(null);
+	const [groupSelectionMode, setGroupSelectionMode] = useState(false);
 	const [showClearConfirm, setShowClearConfirm] = useState(false);
 	const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+	const getNextGroupColor = (currentColor: string): string => {
+		const currentIndex = GROUP_COLORS.indexOf(currentColor);
+		const nextIndex = (currentIndex + 1) % GROUP_COLORS.length;
+		return GROUP_COLORS[nextIndex];
+	};
 
 	const initialSnapshot = useMemo(
 		() =>
@@ -77,13 +90,8 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		return a.string === b.string && a.fret === b.fret;
 	};
 
-	const isPositionSelectedForGroup = (position: FretPosition): boolean => {
-		return pendingGroupDots.some((candidate) => isSamePosition(candidate, position));
-	};
-
 	const clearGroupSelection = () => {
 		setPendingGroupDots([]);
-		setGroupContextMenu(null);
 	};
 
 	const toggleGroupSelection = (position: FretPosition) => {
@@ -102,7 +110,12 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 	};
 
 	const handleFretClick = (pos: FretPosition) => {
-		setGroupContextMenu(null);
+		if (groupSelectionMode) {
+			if (hasDotAt(pos)) {
+				toggleGroupSelection(pos);
+			}
+			return;
+		}
 
 		const existingDotIndex = currentState.dots.findIndex(
 			(d) => d.position.string === pos.string && d.position.fret === pos.fret,
@@ -145,19 +158,6 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		}
 	};
 
-	const handleFretContextMenu = (position: FretPosition, location: { x: number; y: number }) => {
-		if (!hasDotAt(position)) {
-			setGroupContextMenu(null);
-			return;
-		}
-
-		setGroupContextMenu({
-			position,
-			x: location.x,
-			y: location.y,
-		});
-	};
-
 	const handleClearDiagram = () => {
 		setShowClearConfirm(true);
 	};
@@ -188,35 +188,8 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 			],
 		});
 		clearGroupSelection();
+		setGroupColor(getNextGroupColor(groupColor));
 	};
-
-	useEffect(() => {
-		if (!groupContextMenu) {
-			return;
-		}
-
-		const handlePointerDown = (event: PointerEvent) => {
-			const target = event.target;
-			if (target instanceof HTMLElement && target.closest("[data-group-context-menu='true']")) {
-				return;
-			}
-
-			setGroupContextMenu(null);
-		};
-
-		const handleEscape = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
-				setGroupContextMenu(null);
-			}
-		};
-
-		window.addEventListener("pointerdown", handlePointerDown);
-		window.addEventListener("keydown", handleEscape);
-		return () => {
-			window.removeEventListener("pointerdown", handlePointerDown);
-			window.removeEventListener("keydown", handleEscape);
-		};
-	}, [groupContextMenu]);
 
 	const handleCancel = () => {
 		if (hasUnsavedChanges) {
@@ -245,6 +218,13 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 		};
 
 		onSave(updatedDiagram);
+	};
+
+	const toggleGroupSelectionMode = () => {
+		setGroupSelectionMode((prev) => !prev);
+		if (!groupSelectionMode) {
+			clearGroupSelection();
+		}
 	};
 
 	return (
@@ -301,12 +281,14 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 				dotLabel={dotLabel}
 				dotShape={dotShape}
 				groupColor={groupColor}
+				groupSelectionMode={groupSelectionMode}
 				selectedGroupCount={pendingGroupDots.length}
 				canCreateGroup={pendingGroupDots.length >= 2}
 				onDotColorChange={setDotColor}
 				onDotLabelChange={setDotLabel}
 				onDotShapeChange={setDotShape}
 				onGroupColorChange={setGroupColor}
+				onGroupSelectionModeChange={toggleGroupSelectionMode}
 				onCreateGroup={handleFinishGroup}
 				onClearSelection={clearGroupSelection}
 			/>
@@ -336,60 +318,9 @@ export function DiagramEditor({ diagram, onSave, onCancel }: DiagramEditorProps)
 					mode="draw"
 					state={currentState}
 					onFretClick={handleFretClick}
-					onFretContextMenu={handleFretContextMenu}
 					selectedPositions={pendingGroupDots}
 					fretRange={[1, 15]}
 				/>
-				{groupContextMenu && (
-					<div
-						role="menu"
-						aria-label="Group actions"
-						className="fixed z-50 min-w-52 rounded-xl border px-2 py-2 shadow-[0_18px_48px_rgba(28,20,12,0.24)]"
-						style={{
-							left: groupContextMenu.x,
-							top: groupContextMenu.y,
-							background: "var(--gb-bg-panel)",
-							borderColor: "var(--gb-border)",
-						}}
-						data-group-context-menu="true"
-						onPointerDown={(event) => event.stopPropagation()}
-					>
-						<button
-							type="button"
-							role="menuitem"
-							onClick={() => {
-								toggleGroupSelection(groupContextMenu.position);
-								setGroupContextMenu(null);
-							}}
-							className="flex w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--gb-bg-elev)]"
-							style={{ color: "var(--gb-text)" }}
-						>
-							{isPositionSelectedForGroup(groupContextMenu.position)
-								? "Remove from group selection"
-								: "Add to group selection"}
-						</button>
-						<button
-							type="button"
-							role="menuitem"
-							onClick={handleFinishGroup}
-							disabled={pendingGroupDots.length < 2}
-							className="flex w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--gb-bg-elev)] disabled:cursor-not-allowed disabled:opacity-50"
-							style={{ color: "var(--gb-text)" }}
-						>
-							Create group from selection
-						</button>
-						<button
-							type="button"
-							role="menuitem"
-							onClick={clearGroupSelection}
-							disabled={pendingGroupDots.length === 0}
-							className="flex w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--gb-bg-elev)] disabled:cursor-not-allowed disabled:opacity-50"
-							style={{ color: "var(--gb-text)" }}
-						>
-							Clear selection
-						</button>
-					</div>
-				)}
 			</div>
 
 			<div className="flex justify-end gap-2">

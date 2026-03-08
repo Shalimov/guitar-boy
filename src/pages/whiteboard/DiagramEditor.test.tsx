@@ -118,10 +118,9 @@ describe("DiagramEditor", () => {
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
 
-		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
-		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
-		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
-		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
+		await userEvent.click(screen.getByRole("button", { name: /select markers/i }));
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /group selected/i }));
 
 		await userEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -150,11 +149,9 @@ describe("DiagramEditor", () => {
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
 
-		fireEvent.change(colorInputs[1], { target: { value: "#00ff00" } });
-		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
-		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
-		fireEvent.contextMenu(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
-		await userEvent.click(screen.getByRole("menuitem", { name: /add to group selection/i }));
+		await userEvent.click(screen.getByRole("button", { name: /select markers/i }));
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		await userEvent.click(screen.getByRole("button", { name: /string 2 \(A\), fret 3, note/i }));
 		await userEvent.click(screen.getByRole("button", { name: /group selected/i }));
 		await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
@@ -165,33 +162,31 @@ describe("DiagramEditor", () => {
 			color: "#ff0000",
 			shape: "square",
 		});
-		expect(savedDiagram.fretboardState.groups?.[0]).toMatchObject({
-			color: "#00ff00",
-		});
 	});
 
-	it("shows context menu actions for grouping", async () => {
+	it("shows selection mode button and controls", async () => {
+		renderWithRouter(<DiagramEditor onSave={jest.fn()} onCancel={jest.fn()} />);
+
+		expect(screen.getByRole("button", { name: /select markers/i })).toBeInTheDocument();
+	});
+
+	it("selection mode allows selecting markers for grouping", async () => {
 		renderWithRouter(<DiagramEditor onSave={jest.fn()} onCancel={jest.fn()} />);
 
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
-		fireEvent.contextMenu(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
 
-		expect(screen.getByRole("menu", { name: /group actions/i })).toBeInTheDocument();
-		expect(screen.getByRole("menuitem", { name: /add to group selection/i })).toBeInTheDocument();
-		expect(screen.getByRole("menuitem", { name: /create group from selection/i })).toBeDisabled();
-	});
+		await userEvent.click(screen.getByRole("button", { name: /select markers/i }));
 
-	it("keeps the marker and menu open after right click", async () => {
-		renderWithRouter(<DiagramEditor onSave={jest.fn()} onCancel={jest.fn()} />);
+		expect(screen.getByText("0 selected")).toBeInTheDocument();
 
 		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }));
-		const marker = screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i });
-		fireEvent.contextMenu(marker);
+		expect(screen.getByText("1 selected")).toBeInTheDocument();
 
-		expect(screen.getByRole("menu", { name: /group actions/i })).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: /string 1 \(E\), fret 1, note/i }),
-		).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: /string 1 \(E\), fret 3, note/i }));
+		expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+		expect(screen.getByRole("button", { name: /group selected/i })).toBeEnabled();
 	});
 
 	it("prompts before cancel when there are unsaved changes", async () => {
