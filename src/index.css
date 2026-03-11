@@ -42,7 +42,7 @@
 }
 
 html {
-	height: 100%;
+	min-height: 100%;
 }
 
 body {
@@ -53,8 +53,11 @@ body {
 		radial-gradient(circle at 14% 6%, rgba(232, 180, 141, 0.45), transparent 35%),
 		radial-gradient(circle at 82% 15%, rgba(220, 166, 128, 0.35), transparent 42%),
 		linear-gradient(180deg, #f9f2e8 0%, var(--gb-bg) 54%, #f3e7d8 100%);
+	background-attachment: fixed;
+	background-repeat: no-repeat;
 	line-height: 1.45;
 	min-height: 100%;
+	overflow-x: hidden;
 }
 
 #root {
@@ -66,6 +69,8 @@ body {
 		radial-gradient(circle at 14% 6%, rgba(139, 90, 53, 0.2), transparent 35%),
 		radial-gradient(circle at 82% 15%, rgba(100, 70, 50, 0.15), transparent 42%),
 		linear-gradient(180deg, #1f1916 0%, var(--gb-bg) 54%, #161210 100%);
+	background-attachment: fixed;
+	background-repeat: no-repeat;
 }
 
 h1,

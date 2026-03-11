@@ -14,7 +14,7 @@ export function Layout() {
 	const [theme, setTheme] = useDarkMode();
 
 	return (
-		<div className="relative flex min-h-screen flex-col overflow-x-hidden text-[var(--gb-text)]">
+		<div className="relative flex min-h-screen flex-col text-[var(--gb-text)]">
 			<div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
 				<div className="absolute -left-16 top-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(179,93,42,0.24),_transparent_70%)] blur-3xl" />
 				<div className="absolute -right-20 -top-10 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(91,62,43,0.24),_transparent_70%)] blur-3xl" />
