@@ -56,7 +56,8 @@ export const EXPLORER_CONSTRUCT_OPTIONS: Record<ExplorerConstructType, string[]>
 function getFormula(state: ExplorerState): IntervalFormulaToken[] {
 	switch (state.constructType) {
 		case "Scales":
-			return SCALE_FORMULAS[state.constructName] ?? SCALE_FORMULAS.Major;
+			return SCALE_FORMULAS[state.constructName] ?? SCALE_FORMULAS["Major Scale"];
+
 		case "Chords":
 			return CHORD_FORMULAS[state.constructName] ?? CHORD_FORMULAS.Major;
 		case "Arpeggios":

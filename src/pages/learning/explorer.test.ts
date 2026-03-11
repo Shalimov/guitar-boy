@@ -7,7 +7,7 @@ import {
 const baseState: ExplorerState = {
 	root: "C",
 	constructType: "Scales",
-	constructName: "Major",
+	constructName: "Major Scale",
 	labelType: "notes",
 	noteFilter: "all",
 	accidentalPreference: "sharp",
@@ -36,7 +36,7 @@ describe("explorer helpers", () => {
 		const fretboardState = buildExplorerFretboardState({
 			...baseState,
 			labelType: "intervals",
-			constructName: "Mixolydian",
+			constructName: "Natural Minor Scale",
 		});
 
 		expect(fretboardState.dots).toEqual(

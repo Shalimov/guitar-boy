@@ -67,17 +67,14 @@ const SEMITONE_TO_FORMULA: Record<number, IntervalFormulaToken> = {
 export const CHROMATIC_NOTES = CHROMATIC;
 
 export const SCALE_FORMULAS: Record<string, IntervalFormulaToken[]> = {
-	Major: ["1", "2", "3", "4", "5", "6", "7"],
-	"Natural Minor": ["1", "2", "b3", "4", "5", "b6", "b7"],
-	"Major Pentatonic": ["1", "2", "3", "5", "6"],
-	"Minor Pentatonic": ["1", "b3", "4", "5", "b7"],
-	Blues: ["1", "b3", "4", "b5", "5", "b7"],
-	Dorian: ["1", "2", "b3", "4", "5", "6", "b7"],
-	Phrygian: ["1", "b2", "b3", "4", "5", "b6", "b7"],
-	Lydian: ["1", "2", "3", "#4", "5", "6", "7"],
-	Mixolydian: ["1", "2", "3", "4", "5", "6", "b7"],
-	Locrian: ["1", "b2", "b3", "4", "b5", "b6", "b7"],
-	"Harmonic Minor": ["1", "2", "b3", "4", "5", "b6", "7"],
+	"Major Scale": ["1", "2", "3", "4", "5", "6", "7"],
+	"Natural Minor Scale": ["1", "2", "b3", "4", "5", "b6", "b7"],
+	"Minor Pentatonic Scale": ["1", "b3", "4", "5", "b7"],
+	"Major Pentatonic Scale": ["1", "2", "3", "5", "6"],
+	"Blues Scale": ["1", "b3", "4", "b5", "5", "b7"],
+	"Harmonic Minor Scale": ["1", "2", "b3", "4", "5", "b6", "7"],
+	"Melodic Minor Scale": ["1", "2", "b3", "4", "5", "6", "7"],
+	"Chromatic Scale": ["1", "b2", "2", "b3", "3", "4", "b5", "5", "b6", "6", "b7", "7"],
 };
 
 export const CHORD_FORMULAS: Record<string, IntervalFormulaToken[]> = {
