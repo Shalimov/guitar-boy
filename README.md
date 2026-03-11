@@ -18,16 +18,9 @@ A single-page React web application that helps guitar players learn note positio
 - Export diagrams to localStorage
 
 ### Learning Mode
-- **13 guided lessons** covering:
+- **Guided lessons** (currently 2, more in development) covering:
   - Open strings
   - Natural notes on low E string
-  - Chromatic scale with accidentals
-  - Octave shapes
-  - Notes on every string
-  - Interval introduction
-  - Interval shapes (unison, octave, P5, M3, m3)
-  - Major, minor, diminished, augmented triads
-  - CAGED system overview
 - **Interactive steps** with explain and verify phases
 - **Explorer mode** for free exploration
 
@@ -248,6 +241,7 @@ Contributions welcome! Please ensure:
 - [Technical Design](./TECH_DESIGN.md)
 - [Feature Specifications](./specs/001-fretboard-learning-app/)
 - [Task List](./specs/001-fretboard-learning-app/tasks.md)
+- [Known Refinements](./docs/refinements.md)
 
 ---
 

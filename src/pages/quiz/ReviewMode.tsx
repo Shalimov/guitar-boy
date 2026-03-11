@@ -7,6 +7,7 @@ interface ReviewResult {
 	cardId: string;
 	rating: number;
 	correct: boolean;
+	updatedCard: SRSCard;
 }
 
 interface ReviewModeProps {
@@ -30,15 +31,22 @@ export function ReviewMode({ cards, onComplete, onCancel }: ReviewModeProps) {
 	const handleNext = () => {
 		if (rating === null || !currentCard) return;
 
-		sm2Update(currentCard, rating as 0 | 1 | 2 | 3);
+		const updatedCard = sm2Update(currentCard, rating as 0 | 1 | 2 | 3);
 		const isCorrect = rating >= 2;
 
-		const newResult: ReviewResult = { cardId: currentCard.id, rating, correct: isCorrect };
-		setResults((prev) => [...prev, newResult]);
+		const newResult: ReviewResult = {
+			cardId: currentCard.id,
+			rating,
+			correct: isCorrect,
+			updatedCard,
+		};
+
+		const allResults = [...results, newResult];
 
 		if (isLast) {
-			onComplete([...results, newResult]);
+			onComplete(allResults);
 		} else {
+			setResults(allResults);
 			setCurrentIndex((prev) => prev + 1);
 			setRating(null);
 		}

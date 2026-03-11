@@ -1,4 +1,5 @@
 import { getAllPositionsOfNote, getInterval, getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
+import { defaultRNG, shuffle } from "@/lib/rng";
 import type { FretPosition, NoteName } from "@/types";
 import type { Difficulty, QuizType } from "./QuizSelector";
 
@@ -58,14 +59,11 @@ export interface Feedback {
 	selectedOption?: string;
 }
 
-function shuffle<T>(arr: T[]): T[] {
-	return [...arr].sort(() => Math.random() - 0.5);
-}
-
 export function generateQuestions(
 	type: QuizType,
 	difficulty: Difficulty,
 	questionCount: number,
+	rng: { random: () => number } = defaultRNG(),
 ): Question[] {
 	const generated: Question[] = [];
 	const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
@@ -73,15 +71,15 @@ export function generateQuestions(
 
 	for (let i = 0; i < questionCount; i++) {
 		if (type === "note") {
-			const targetNote = NATURAL_NOTES[Math.floor(Math.random() * NATURAL_NOTES.length)];
+			const targetNote = NATURAL_NOTES[Math.floor(rng.random() * NATURAL_NOTES.length)];
 			const targetPositions = getAllPositionsOfNote(targetNote, [minFret, maxFret]);
 			generated.push({ id: `note-${i}`, type: "note", targetPositions, targetNote });
 		} else if (type === "note-guess" || type === "note-guess-sound") {
 			let shownPosition: FretPosition;
 			let targetNote: NoteName;
 			do {
-				const string = Math.floor(Math.random() * 6);
-				const fret = Math.floor(Math.random() * maxFret) + minFret;
+				const string = Math.floor(rng.random() * 6);
+				const fret = Math.floor(rng.random() * maxFret) + minFret;
 				shownPosition = { string, fret };
 				targetNote = getNoteAtFret(shownPosition);
 			} while (!NATURAL_NOTES.includes(targetNote));
@@ -90,21 +88,27 @@ export function generateQuestions(
 				type,
 				shownPosition,
 				targetNote,
-				noteOptions: shuffle([...NATURAL_NOTES]) as string[],
+				noteOptions: shuffle([...NATURAL_NOTES], rng) as string[],
 			});
 		} else if (type === "interval") {
-			const string1 = Math.floor(Math.random() * 6);
-			const fret1 = Math.floor(Math.random() * maxFret) + minFret;
-			const string2 = Math.floor(Math.random() * 6);
-			const fret2 = Math.floor(Math.random() * maxFret) + minFret;
+			const string1 = Math.floor(rng.random() * 6);
+			const fret1 = Math.floor(rng.random() * maxFret) + minFret;
+			const string2 = Math.floor(rng.random() * 6);
+			const fret2 = Math.floor(rng.random() * maxFret) + minFret;
 			const interval = getInterval(
 				{ string: string1, fret: fret1 },
 				{ string: string2, fret: fret2 },
 			);
-			const options = shuffle([
-				interval,
-				...shuffle(INTERVAL_NAMES.filter((n) => n !== interval)).slice(0, 3),
-			]);
+			const options = shuffle(
+				[
+					interval,
+					...shuffle(
+						INTERVAL_NAMES.filter((n) => n !== interval),
+						rng,
+					).slice(0, 3),
+				],
+				rng,
+			);
 			generated.push({
 				id: `interval-${i}`,
 				type: "interval",
@@ -116,8 +120,8 @@ export function generateQuestions(
 				intervalOptions: options,
 			});
 		} else if (type === "chord") {
-			const rootString = Math.floor(Math.random() * 6);
-			const rootFret = Math.floor(Math.random() * maxFret) + minFret;
+			const rootString = Math.floor(rng.random() * 6);
+			const rootFret = Math.floor(rng.random() * maxFret) + minFret;
 			const rootNote = getNoteAtFret({ string: rootString, fret: rootFret });
 			generated.push({
 				id: `chord-${i}`,

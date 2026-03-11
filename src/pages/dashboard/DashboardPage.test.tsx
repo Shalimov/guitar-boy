@@ -60,7 +60,9 @@ describe("DashboardPage", () => {
 
 	it("has Explore Whiteboard button", () => {
 		renderWithRouter(<DashboardPage />);
-		expect(screen.getByRole("button", { name: /explore whiteboard/i })).toBeInTheDocument();
+		expect(screen.getAllByRole("button", { name: /explore whiteboard/i }).length).toBeGreaterThan(
+			0,
+		);
 	});
 
 	it("shows 0% accuracy for empty session history", () => {

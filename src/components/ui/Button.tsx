@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
+import { forwardRef } from "react";
 
 interface ButtonProps {
 	children: ReactNode;
@@ -10,15 +11,18 @@ interface ButtonProps {
 	className?: string;
 }
 
-export function Button({
-	children,
-	onClick,
-	variant = "primary",
-	size = "md",
-	disabled = false,
-	type = "button",
-	className = "",
-}: ButtonProps) {
+export const Button = forwardRef(function Button(
+	{
+		children,
+		onClick,
+		variant = "primary",
+		size = "md",
+		disabled = false,
+		type = "button",
+		className = "",
+	}: ButtonProps,
+	ref: Ref<HTMLButtonElement>,
+) {
 	const baseStyles =
 		"inline-flex items-center justify-center rounded-[var(--gb-radius-pill)] font-semibold tracking-[0.01em] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gb-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gb-bg-elev)]";
 
@@ -41,6 +45,7 @@ export function Button({
 
 	return (
 		<button
+			ref={ref}
 			type={type}
 			onClick={onClick}
 			disabled={disabled}
@@ -49,4 +54,4 @@ export function Button({
 			{children}
 		</button>
 	);
-}
+});

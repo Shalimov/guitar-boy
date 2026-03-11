@@ -159,6 +159,12 @@ export function AnnotationToolbar({
 						{groupSelectionMode ? "Selection Mode: ON" : "Select Markers"}
 					</button>
 
+					{groupSelectionMode && (
+						<div className="rounded-full bg-[var(--gb-accent-soft)]/30 px-3 py-1 text-xs font-semibold text-[var(--gb-accent-strong)]">
+							Click existing markers to add them to the next group.
+						</div>
+					)}
+
 					<ColorSwatch
 						id="group-color"
 						label="Color"

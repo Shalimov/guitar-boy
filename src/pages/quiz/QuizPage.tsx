@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router";
+import { Button, PageHeader } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
 import { QuizRunner } from "./QuizRunner";
 import type { QuizSettings } from "./QuizSelector";
@@ -6,31 +7,39 @@ import { QuizSelector } from "./QuizSelector";
 import { ReviewMode } from "./ReviewMode";
 
 export function QuizPage() {
-	const [quizState, setQuizState] = useState<
-		{ mode: "selector" } | ({ mode: "quiz" } & QuizSettings) | { mode: "review" }
-	>({ mode: "selector" });
+	const navigate = useNavigate();
+	const location = useLocation();
+	const params = useParams<{ "*": string }>();
+	const pathSegments = (params["*"] ?? "")
+		.split("/")
+		.map((segment) => segment.trim())
+		.filter(Boolean);
+	const currentMode = pathSegments[0] ?? "selector";
+	const quizSettings = location.state as QuizSettings | undefined;
 
-	const { getDueCards } = useProgressStore();
+	const { getDueCards, updateCard } = useProgressStore();
+	const dueCards = getDueCards();
 
 	const handleStartQuiz = (settings: QuizSettings) => {
-		setQuizState({ mode: "quiz", ...settings });
+		navigate("/quiz/play", { state: settings });
 	};
 
 	const handleStartReview = () => {
-		setQuizState({ mode: "review" });
+		navigate("/quiz/review");
 	};
 
 	const handleComplete = () => {
-		setQuizState({ mode: "selector" });
+		navigate("/quiz");
 	};
 
-	if (quizState.mode === "review") {
-		const dueCards = getDueCards();
+	if (currentMode === "review") {
 		return (
 			<ReviewMode
 				cards={dueCards}
 				onComplete={(results) => {
-					console.log("Review completed:", results);
+					for (const result of results) {
+						updateCard(result.updatedCard);
+					}
 					handleComplete();
 				}}
 				onCancel={handleComplete}
@@ -38,54 +47,78 @@ export function QuizPage() {
 		);
 	}
 
-	if (quizState.mode === "quiz") {
+	if (currentMode === "play") {
+		if (!quizSettings) {
+			return <Navigate to="/quiz" replace />;
+		}
+
 		return (
 			<QuizRunner
-				type={quizState.type}
-				difficulty={quizState.difficulty}
-				questionCount={quizState.questionCount}
-				timerEnabled={quizState.timerEnabled}
-				timerSeconds={quizState.timerSeconds}
+				type={quizSettings.type}
+				difficulty={quizSettings.difficulty}
+				questionCount={quizSettings.questionCount}
+				timerEnabled={quizSettings.timerEnabled}
+				timerSeconds={quizSettings.timerSeconds}
 				onComplete={handleComplete}
 				onCancel={handleComplete}
 			/>
 		);
 	}
 
-	return (
-		<div className="max-w-2xl mx-auto p-6 space-y-5">
-			<QuizSelector onStartQuiz={handleStartQuiz} />
+	if (currentMode !== "selector") {
+		return <Navigate to="/quiz" replace />;
+	}
 
-			{/* Review Due Cards */}
-			<div
-				className="p-6 rounded-2xl border flex items-center justify-between gap-6"
-				style={{
-					background: "color-mix(in srgb, var(--gb-accent-soft) 12%, var(--gb-bg-elev) 88%)",
-					borderColor: "var(--gb-accent-soft)",
-					boxShadow: "var(--gb-shadow-soft)",
-				}}
-			>
-				<div>
-					<h3 className="text-lg font-semibold mb-1" style={{ color: "var(--gb-text)" }}>
-						Review Due Cards
-					</h3>
-					<p className="text-sm" style={{ color: "var(--gb-text-muted)" }}>
-						Practice cards that are due for review using spaced repetition.
-					</p>
-				</div>
-				<button
-					type="button"
-					onClick={handleStartReview}
+	return (
+		<div className="max-w-4xl mx-auto p-6 space-y-5">
+			<PageHeader
+				kicker="Practice"
+				title="Quiz Studio"
+				description="Choose a drill for active recall, then decide whether today is a short warm-up or a focused challenge."
+			/>
+
+			<div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
+				<div
+					className="rounded-[var(--gb-radius-card)] border border-[var(--gb-accent-soft)] p-6"
 					style={{
-						background: "var(--gb-bg-elev)",
-						color: "var(--gb-accent-strong)",
-						borderColor: "var(--gb-accent-soft)",
+						background: "color-mix(in srgb, var(--gb-accent-soft) 12%, var(--gb-bg-elev) 88%)",
+						boxShadow: "var(--gb-shadow-soft)",
 					}}
-					className="shrink-0 px-5 py-2 rounded-full border font-semibold text-sm transition-all hover:opacity-80 focus-visible:outline-none"
 				>
-					Start Review
-				</button>
+					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+						Daily review
+					</p>
+					<h3 className="mt-2 text-xl font-semibold text-[var(--gb-text)]">Review Due Cards</h3>
+					<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
+						{dueCards.length > 0
+							? `You have ${dueCards.length} card${dueCards.length === 1 ? "" : "s"} ready for spaced repetition.`
+							: "No cards are due right now. Start a fresh quiz to generate more review material."}
+					</p>
+					<div className="mt-4 flex items-center gap-3">
+						<Button onClick={handleStartReview} disabled={dueCards.length === 0}>
+							{dueCards.length > 0 ? "Start Review" : "No Cards Due"}
+						</Button>
+						{dueCards.length === 0 && (
+							<span className="text-sm text-[var(--gb-text-muted)]">
+								Try a quiz session instead.
+							</span>
+						)}
+					</div>
+				</div>
+
+				<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-6 shadow-[var(--gb-shadow-soft)]">
+					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+						Quick guide
+					</p>
+					<ul className="mt-3 space-y-2 text-sm text-[var(--gb-text-muted)]">
+						<li>Use quizzes for new recall reps.</li>
+						<li>Use review mode to protect long-term retention.</li>
+						<li>Keep sessions short when accuracy starts to dip.</li>
+					</ul>
+				</div>
 			</div>
+
+			<QuizSelector onStartQuiz={handleStartQuiz} />
 		</div>
 	);
 }

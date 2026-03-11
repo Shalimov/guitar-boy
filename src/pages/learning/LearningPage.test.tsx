@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { LearningPage } from "./LearningPage";
 
 beforeEach(() => {
@@ -37,15 +38,37 @@ afterEach(() => {
 	jest.restoreAllMocks();
 });
 
+function renderLearningPage(initialEntry = "/learn") {
+	const router = createMemoryRouter(
+		[
+			{
+				path: "/learn/*",
+				element: <LearningPage />,
+			},
+		],
+		{ initialEntries: [initialEntry] },
+	);
+
+	return { ...render(<RouterProvider router={router} />), router };
+}
+
 describe("LearningPage", () => {
 	it("switches from lessons to the note trainer", async () => {
-		render(<LearningPage />);
+		const { router } = renderLearningPage();
 
 		await userEvent.click(screen.getByRole("button", { name: /trainer/i }));
+		await screen.findByRole("heading", { name: /note memory trainer/i });
 
 		expect(screen.getByRole("heading", { name: /note memory trainer/i })).toBeInTheDocument();
 		expect(
 			screen.getByRole("heading", { name: /train note memory two ways/i }),
 		).toBeInTheDocument();
+		expect(router.state.location.pathname).toBe("/learn/trainer");
+	});
+
+	it("restores trainer tab from the url", () => {
+		renderLearningPage("/learn/trainer");
+
+		expect(screen.getByRole("heading", { name: /note memory trainer/i })).toBeInTheDocument();
 	});
 });

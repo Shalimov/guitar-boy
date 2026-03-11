@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router";
+import { Fretboard } from "@/components/fretboard";
 import { Button, TabBar } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { allPatterns } from "@/data/patterns";
@@ -8,33 +10,73 @@ import type { Diagram } from "@/types";
 
 type PageView = "list" | "patterns" | "view" | "edit";
 
+const BUILT_IN_IDS = new Set(allPatterns.map((pattern) => pattern.id));
+
+function DiagramPreview({ diagram }: { diagram: Diagram }) {
+	return (
+		<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg)] p-2">
+			<div className="pointer-events-none origin-top scale-[0.8] overflow-hidden rounded-[var(--gb-radius-card)]">
+				<Fretboard
+					mode="view"
+					state={diagram.fretboardState}
+					fretRange={[1, 12]}
+					showNoteNames={false}
+					showFretNumbers={false}
+					showStringLabels={false}
+				/>
+			</div>
+		</div>
+	);
+}
+
 export function WhiteboardPage() {
-	const [view, setView] = useState<PageView>("list");
-	const [viewingDiagram, setViewingDiagram] = useState<Diagram | undefined>(undefined);
-	const [editingDiagram, setEditingDiagram] = useState<Diagram | undefined>(undefined);
+	const navigate = useNavigate();
+	const location = useLocation();
+	const params = useParams<{ "*": string }>();
+	const pathSegments = (params["*"] ?? "")
+		.split("/")
+		.map((segment) => segment.trim())
+		.filter(Boolean);
+
 	const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 	const { store, addDiagram, updateDiagram, deleteDiagram, getUserDiagrams } = useDiagramStore();
 
 	const userDiagrams = getUserDiagrams();
+	const routeKind = pathSegments[0] ?? "list";
+	const routeId = pathSegments[1] ?? null;
 
-	// ── Navigation helpers ───────────────────────────────────────────────────
+	const pageView: PageView =
+		routeKind === "patterns"
+			? "patterns"
+			: routeKind === "view"
+				? "view"
+				: routeKind === "edit"
+					? "edit"
+					: "list";
+
+	const stateDiagram = (location.state as { diagram?: Diagram } | null)?.diagram;
+	const allViewableDiagrams = useMemo(() => [...userDiagrams, ...allPatterns], [userDiagrams]);
+	const viewingDiagram =
+		pageView === "view" && routeId
+			? allViewableDiagrams.find((diagram) => diagram.id === routeId)
+			: undefined;
+	const editingDiagram =
+		pageView === "edit" && routeId
+			? userDiagrams.find((diagram) => diagram.id === routeId)
+			: undefined;
 
 	const handleNewDiagram = () => {
-		setEditingDiagram(undefined);
-		setView("edit");
+		navigate("/whiteboard/edit/new");
 	};
 
 	const handleViewDiagram = (diagram: Diagram) => {
-		setViewingDiagram(diagram);
-		setView("view");
+		navigate(`/whiteboard/view/${diagram.id}`);
 	};
 
 	const handleEditDiagram = (diagram: Diagram) => {
-		setEditingDiagram(diagram);
-		setView("edit");
+		navigate(`/whiteboard/edit/${diagram.id}`);
 	};
 
-	/** Clone a diagram (built-in or user) and open the editor */
 	const handleEditCopy = (pattern: Diagram) => {
 		const cloned: Diagram = {
 			...pattern,
@@ -44,24 +86,21 @@ export function WhiteboardPage() {
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
 		};
-		setEditingDiagram(cloned);
-		setView("edit");
+		navigate(`/whiteboard/edit/${cloned.id}`, { state: { diagram: cloned } });
 	};
 
 	const handleSaveDiagram = (diagram: Diagram) => {
-		const existing = store.diagrams.find((d) => d.id === diagram.id);
-		if (existing) {
+		const existing = store.diagrams.find((current) => current.id === diagram.id);
+		if (existing && !BUILT_IN_IDS.has(diagram.id)) {
 			updateDiagram(diagram);
 		} else {
 			addDiagram(diagram);
 		}
-		setView("list");
-		setEditingDiagram(undefined);
+		navigate("/whiteboard");
 	};
 
 	const handleCancelEdit = () => {
-		setView("list");
-		setEditingDiagram(undefined);
+		navigate("/whiteboard");
 	};
 
 	const handleDeleteDiagram = (id: string) => {
@@ -76,19 +115,15 @@ export function WhiteboardPage() {
 	};
 
 	const handleBackFromView = () => {
-		setViewingDiagram(undefined);
-		// Return to whichever tab was active (patterns if it was a built-in, list otherwise)
-		setView(viewingDiagram?.isBuiltIn ? "patterns" : "list");
+		navigate(viewingDiagram?.isBuiltIn ? "/whiteboard/patterns" : "/whiteboard");
 	};
-
-	// ── Diagram navigation (left/right arrows) ─────────────────────────────────
 
 	const getCurrentDiagramList = (): Diagram[] => {
 		return viewingDiagram?.isBuiltIn ? allPatterns : userDiagrams;
 	};
 
 	const currentDiagramIndex = viewingDiagram
-		? getCurrentDiagramList().findIndex((d) => d.id === viewingDiagram.id)
+		? getCurrentDiagramList().findIndex((diagram) => diagram.id === viewingDiagram.id)
 		: -1;
 
 	const hasPrevious = currentDiagramIndex > 0;
@@ -98,18 +133,26 @@ export function WhiteboardPage() {
 	const handlePreviousDiagram = () => {
 		if (!viewingDiagram || !hasPrevious) return;
 		const list = getCurrentDiagramList();
-		setViewingDiagram(list[currentDiagramIndex - 1]);
+		navigate(`/whiteboard/view/${list[currentDiagramIndex - 1].id}`);
 	};
 
 	const handleNextDiagram = () => {
 		if (!viewingDiagram || !hasNext) return;
 		const list = getCurrentDiagramList();
-		setViewingDiagram(list[currentDiagramIndex + 1]);
+		navigate(`/whiteboard/view/${list[currentDiagramIndex + 1].id}`);
 	};
 
-	// ── Views ────────────────────────────────────────────────────────────────
+	if (routeKind === "view" && !viewingDiagram) {
+		return <Navigate to="/whiteboard" replace />;
+	}
 
-	if (view === "view" && viewingDiagram) {
+	if (routeKind === "edit" && routeId && routeId !== "new" && !editingDiagram) {
+		if (!stateDiagram || stateDiagram.id !== routeId) {
+			return <Navigate to="/whiteboard" replace />;
+		}
+	}
+
+	if (pageView === "view" && viewingDiagram) {
 		return (
 			<div className="space-y-5">
 				<DiagramViewer
@@ -126,17 +169,20 @@ export function WhiteboardPage() {
 		);
 	}
 
-	if (view === "edit") {
+	if (pageView === "edit") {
+		const routedDiagram = routeId === "new" ? undefined : editingDiagram;
+		const diagramToEdit = routedDiagram ?? stateDiagram;
+
 		return (
 			<div className="space-y-5">
 				<header className="space-y-2">
 					<p className="gb-page-kicker">Diagram Editor</p>
-					<h1 className="gb-page-title">{editingDiagram?.id ? "Edit Diagram" : "New Diagram"}</h1>
+					<h1 className="gb-page-title">{routeId === "new" ? "New Diagram" : "Edit Diagram"}</h1>
 				</header>
 
 				<section className="gb-panel p-4 md:p-5">
 					<DiagramEditor
-						diagram={editingDiagram}
+						diagram={diagramToEdit}
 						onSave={handleSaveDiagram}
 						onCancel={handleCancelEdit}
 					/>
@@ -144,8 +190,6 @@ export function WhiteboardPage() {
 			</div>
 		);
 	}
-
-	// ── List / Patterns tabs ─────────────────────────────────────────────────
 
 	return (
 		<div className="space-y-6">
@@ -160,38 +204,80 @@ export function WhiteboardPage() {
 				<Button onClick={handleNewDiagram}>New Diagram</Button>
 			</header>
 
+			<section className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+				<div className="gb-panel p-5">
+					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+						How to use it
+					</p>
+					<h2 className="mt-2 text-xl font-semibold text-[var(--gb-text)]">
+						Sketch, save, and refine your own fretboard ideas
+					</h2>
+					<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
+						Use My Diagrams for your own shapes and the library when you want a starting template.
+					</p>
+				</div>
+
+				<div className="gb-panel p-5">
+					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+						Workspace snapshot
+					</p>
+					<div className="mt-3 grid grid-cols-2 gap-3">
+						<div className="rounded-[var(--gb-radius-card)] bg-[var(--gb-bg-panel)] px-4 py-3">
+							<div className="text-xs uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
+								My diagrams
+							</div>
+							<div className="mt-1 text-2xl font-extrabold text-[var(--gb-text)]">
+								{userDiagrams.length}
+							</div>
+						</div>
+						<div className="rounded-[var(--gb-radius-card)] bg-[var(--gb-bg-panel)] px-4 py-3">
+							<div className="text-xs uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
+								Built-in ideas
+							</div>
+							<div className="mt-1 text-2xl font-extrabold text-[var(--gb-text)]">
+								{allPatterns.length}
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
 			<TabBar
 				tabs={[
 					{
 						label: `My Diagrams (${userDiagrams.length})`,
-						active: view === "list",
-						onClick: () => setView("list"),
+						active: pageView === "list",
+						onClick: () => navigate("/whiteboard"),
 					},
 					{
 						label: "Pattern Library",
-						active: view === "patterns",
-						onClick: () => setView("patterns"),
+						active: pageView === "patterns",
+						onClick: () => navigate("/whiteboard/patterns"),
 					},
 				]}
 			/>
 
-			{/* My Diagrams tab */}
-			{view === "list" && (
+			{pageView === "list" && (
 				<div>
 					{userDiagrams.length === 0 ? (
 						<section className="gb-panel py-12 text-center">
-							<p className="mb-4 text-[var(--gb-text-muted)]">
-								No diagrams yet. Create your first diagram!
+							<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+								My diagrams
+							</p>
+							<h2 className="mt-2 text-2xl font-semibold text-[var(--gb-text)]">No diagrams yet</h2>
+							<p className="mx-auto mb-4 mt-2 max-w-xl text-[var(--gb-text-muted)]">
+								Create your first diagram to save fingerings, shape studies, and custom note maps.
 							</p>
 							<Button onClick={handleNewDiagram}>Create Diagram</Button>
 						</section>
 					) : (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 							{userDiagrams.map((diagram) => (
 								<div
 									key={diagram.id}
-									className="gb-panel p-4 flex flex-col gap-3 transition-shadow hover:shadow-[var(--gb-shadow)]"
+									className="gb-panel flex flex-col gap-3 p-4 transition-shadow hover:shadow-[var(--gb-shadow)]"
 								>
+									<DiagramPreview diagram={diagram} />
 									<div className="flex-1">
 										<h3 className="text-base font-semibold text-[var(--gb-text)]">
 											{diagram.name}
@@ -228,8 +314,7 @@ export function WhiteboardPage() {
 				</div>
 			)}
 
-			{/* Pattern Library tab */}
-			{view === "patterns" && (
+			{pageView === "patterns" && (
 				<PatternLibrary
 					patterns={allPatterns}
 					onViewPattern={handleViewDiagram}

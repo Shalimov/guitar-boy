@@ -108,7 +108,7 @@ export function SessionSummary({
 						}}
 						className="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-80 focus-visible:outline-none"
 					>
-						Return to Dashboard
+						Back to Quiz Setup
 					</button>
 				</div>
 			</div>
