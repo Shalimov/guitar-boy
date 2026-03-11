@@ -219,17 +219,72 @@ export function DashboardPage() {
 			)}
 
 			{sessionHistory.length === 0 && (
-				<section className="gb-panel px-6 py-8 text-center">
-					<h2 className="text-2xl font-semibold text-[var(--gb-text)]">New Here? Start A Warmup</h2>
-					<p className="mx-auto mt-2 max-w-xl text-sm text-[var(--gb-text-muted)]">
-						Pick a guided lesson to build confidence, or sketch on the whiteboard to explore note
-						shapes freely.
-					</p>
-					<div className="mt-5 flex flex-wrap justify-center gap-3">
-						<Button onClick={() => navigate("/learn")}>Start Learning</Button>
-						<Button variant="secondary" onClick={() => navigate("/whiteboard")}>
-							Explore Whiteboard
-						</Button>
+				<section className="gb-panel px-6 py-10 md:px-10">
+					<div className="max-w-3xl mx-auto text-center space-y-3">
+						<p className="gb-page-kicker !text-[var(--gb-accent)]">Getting Started</p>
+						<h2 className="text-3xl font-bold text-[var(--gb-text)]">Your Learning Roadmap</h2>
+						<p className="text-[var(--gb-text-muted)]">
+							We recommend this sequence to build an intuitive mental map of the guitar.
+						</p>
+					</div>
+
+					<div className="mt-8 grid gap-4 max-w-4xl mx-auto md:grid-cols-2">
+						{[
+							{
+								level: "Phase 1",
+								title: "Natural Notes",
+								desc: "Find all C, D, E, F, G, A, B notes without thinking.",
+								action: () => navigate("/learn"),
+								label: "Start Drills",
+							},
+							{
+								level: "Phase 2",
+								title: "Core Scales",
+								desc: "Master Major, Minor, and Pentatonic shapes across the neck.",
+								action: () => navigate("/whiteboard/patterns"),
+								label: "View Patterns",
+							},
+							{
+								level: "Phase 3",
+								title: "Intervals",
+								desc: "Connect notes by their relationships (3rds, 5ths, etc).",
+								action: () => navigate("/quiz"),
+								label: "Practice Now",
+							},
+							{
+								level: "Phase 4",
+								title: "Ear Training",
+								desc: "Translate what you hear into what you play.",
+								action: () => navigate("/ear-training"),
+								label: "Start Training",
+							},
+						].map((phase) => (
+							<button
+								type="button"
+								key={phase.level}
+								className="group flex flex-col justify-between text-left p-5 rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] hover:shadow-[var(--gb-shadow-soft)] transition-all cursor-pointer"
+								onClick={phase.action}
+							>
+								<div>
+									<span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gb-accent)]">
+										{phase.level}
+									</span>
+									<h3 className="mt-1 text-lg font-bold">{phase.title}</h3>
+									<p className="mt-1.5 text-sm text-[var(--gb-text-muted)] leading-relaxed">
+										{phase.desc}
+									</p>
+								</div>
+								<div className="mt-4 flex items-center text-xs font-bold text-[var(--gb-accent)] group-hover:translate-x-1 transition-transform">
+									{phase.label} →
+								</div>
+							</button>
+						))}
+					</div>
+
+					<div className="mt-10 pt-8 border-t border-[var(--gb-border)] text-center">
+						<p className="text-sm text-[var(--gb-text-muted)] italic">
+							"Small, consistent efforts create massive results. Start Phase 1 today."
+						</p>
 					</div>
 				</section>
 			)}

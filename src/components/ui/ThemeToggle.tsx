@@ -19,7 +19,7 @@ export function ThemeToggle({ theme, onThemeChange }: ThemeToggleProps) {
 					key={t.value}
 					type="button"
 					onClick={() => onThemeChange(t.value)}
-					className={`rounded-[var(--gb-radius-pill)] px-3 py-1.5 text-sm font-medium transition ${
+					className={`rounded-[var(--gb-radius-pill)] flex items-center justify-center h-8 w-8 text-sm font-medium transition ${
 						theme === t.value
 							? "bg-[var(--gb-accent)] text-[#fff7ef] shadow-sm"
 							: "text-[var(--gb-text-muted)] hover:text-[var(--gb-text)]"
@@ -27,8 +27,7 @@ export function ThemeToggle({ theme, onThemeChange }: ThemeToggleProps) {
 					title={t.label}
 					aria-label={`Switch to ${t.label} theme`}
 				>
-					<span className="mr-1">{t.icon}</span>
-					<span className="hidden sm:inline">{t.label}</span>
+					<span>{t.icon}</span>
 				</button>
 			))}
 		</div>
