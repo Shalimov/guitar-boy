@@ -149,7 +149,7 @@ export function ExplorerPanel() {
 			return;
 		}
 
-		void playFretPosition(hoveredPosition, "4n");
+		void playFretPosition(hoveredPosition, "2n");
 	}, [hoveredPosition]);
 
 	return (

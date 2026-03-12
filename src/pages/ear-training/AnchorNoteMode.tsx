@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
+import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -51,7 +52,7 @@ export function AnchorNoteMode() {
 		const randomIndex = Math.floor(Math.random() * notePositions.length);
 		const position = notePositions[randomIndex];
 		setCurrentPosition(position);
-		await playFretPosition(position);
+		await playFretPosition(position, "2n");
 		setIsPlaying(false);
 	}, [notePositions]);
 
@@ -184,6 +185,10 @@ export function AnchorNoteMode() {
 							showNoteNames={true}
 							targetPositions={currentPosition ? [currentPosition] : []}
 						/>
+					</div>
+
+					<div className="mx-auto mt-6 w-full max-w-md">
+						<AudioEqualizer />
 					</div>
 
 					{sessionActive && !isPlaying && (

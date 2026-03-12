@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
+import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { playFretPosition } from "@/lib/audio";
@@ -32,7 +33,7 @@ export function ToneMeditationMode() {
 
 	const playPosition = useCallback(async (position: FretPosition) => {
 		setCurrentPosition(position);
-		await playFretPosition(position);
+		await playFretPosition(position, "2n");
 	}, []);
 
 	const handleStart = useCallback(() => {
@@ -122,6 +123,10 @@ export function ToneMeditationMode() {
 						■ Stop
 					</Button>
 				)}
+			</div>
+
+			<div className="mx-auto mt-6 w-full max-w-md">
+				<AudioEqualizer />
 			</div>
 
 			{isPlaying && (

@@ -3,6 +3,41 @@ import { Button } from "@/components/ui";
 import { sm2Update } from "@/lib/srs";
 import type { SRSCard } from "@/types";
 
+const RATING_CONFIG = [
+	{
+		value: 0,
+		label: "No idea",
+		description: "Completely blanked — reset and revisit soon",
+		color: "#dc2626", // red-600
+		bgColor: "#fef2f2", // red-50
+		borderColor: "#fca5a5", // red-300
+	},
+	{
+		value: 1,
+		label: "Got it wrong, but I see it now",
+		description: "The answer makes sense in hindsight",
+		color: "#ea580c", // orange-600
+		bgColor: "#fff7ed", // orange-50
+		borderColor: "#fdba74", // orange-300
+	},
+	{
+		value: 2,
+		label: "Got it right, had to think",
+		description: "Correct but it took effort to recall",
+		color: "#ca8a04", // yellow-600
+		bgColor: "#fefce8", // yellow-50
+		borderColor: "#fde047", // yellow-300
+	},
+	{
+		value: 3,
+		label: "Knew it instantly",
+		description: "No hesitation — this one is solid",
+		color: "#16a34a", // green-600
+		bgColor: "#f0fdf4", // green-50
+		borderColor: "#86efac", // green-300
+	},
+] as const;
+
 interface ReviewResult {
 	cardId: string;
 	rating: number;
@@ -134,40 +169,45 @@ export function ReviewMode({ cards, onComplete, onCancel }: ReviewModeProps) {
 					style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
 				>
 					<p className="font-medium" style={{ color: "var(--gb-text)" }}>
-						How well did you remember this?
+						How did it go?
 					</p>
-					<ul className="space-y-0.5 text-xs" style={{ color: "var(--gb-text-muted)" }}>
-						<li>0 — Wrong (reset card)</li>
-						<li>1 — Hard (more practice needed)</li>
-						<li>2 — Good (remembered)</li>
-						<li>3 — Easy (well known)</li>
-					</ul>
 				</div>
 
-				<div className="flex gap-2 flex-wrap">
-					{[0, 1, 2, 3].map((r) => (
-						<button
-							key={r}
-							type="button"
-							onClick={() => handleRatingSelect(r)}
-							style={
-								rating === r
-									? {
-											background: "var(--gb-accent)",
-											color: "#fff8ee",
-											borderColor: "var(--gb-accent)",
-										}
-									: {
-											background: "var(--gb-bg-panel)",
-											color: "var(--gb-text)",
-											borderColor: "var(--gb-border)",
-										}
-							}
-							className="px-4 py-2 rounded-full border font-medium text-sm transition-all hover:opacity-90 focus-visible:outline-none"
-						>
-							{r} — {["Wrong", "Hard", "Good", "Easy"][r]}
-						</button>
-					))}
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					{RATING_CONFIG.map((config) => {
+						const isSelected = rating === config.value;
+						return (
+							<button
+								key={config.value}
+								type="button"
+								onClick={() => handleRatingSelect(config.value)}
+								style={
+									isSelected
+										? {
+												background: config.color,
+												color: "#fff",
+												borderColor: config.color,
+											}
+										: {
+												background: "var(--gb-bg-panel)",
+												color: "var(--gb-text)",
+												borderColor: "var(--gb-border)",
+											}
+								}
+								className="rounded-xl border-2 p-3 text-left transition-all hover:shadow-sm focus-visible:outline-none"
+							>
+								<div className="text-sm font-semibold">{config.label}</div>
+								<div
+									className="mt-0.5 text-xs"
+									style={{
+										color: isSelected ? "rgba(255,255,255,0.8)" : "var(--gb-text-muted)",
+									}}
+								>
+									{config.description}
+								</div>
+							</button>
+						);
+					})}
 				</div>
 
 				<div className="flex justify-end gap-2">

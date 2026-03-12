@@ -5,6 +5,11 @@ import { QuizRunner } from "./QuizRunner";
 
 jest.mock("@/lib/audio", () => ({
 	playFretPosition: jest.fn(() => Promise.resolve()),
+	getEqualizerLevels: jest.fn(() => Array.from({ length: 22 }, () => 0.2)),
+	subscribeToPlaybackState: jest.fn((listener: (isPlaying: boolean) => void) => {
+		listener(false);
+		return jest.fn();
+	}),
 }));
 
 describe("QuizRunner", () => {
@@ -20,6 +25,7 @@ describe("QuizRunner", () => {
 				timerSeconds={15}
 				onComplete={jest.fn()}
 				onCancel={jest.fn()}
+				deepPractice={false}
 			/>,
 		);
 
@@ -45,6 +51,7 @@ describe("QuizRunner", () => {
 				timerSeconds={15}
 				onComplete={jest.fn()}
 				onCancel={jest.fn()}
+				deepPractice={false}
 			/>,
 		);
 

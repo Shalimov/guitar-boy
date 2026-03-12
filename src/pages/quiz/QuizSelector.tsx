@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui";
+import { useProgressStore } from "@/hooks/useProgressStore";
+import { computeAdaptiveConfig } from "@/lib/adaptiveDifficulty";
 import type { CardCategory } from "@/types";
 
-export type QuizType = CardCategory | "note-guess" | "note-guess-sound";
+export type QuizType = CardCategory | "note-guess" | "note-guess-sound" | "pattern";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 export interface QuizSettings {
@@ -11,6 +13,8 @@ export interface QuizSettings {
 	questionCount: number;
 	timerEnabled: boolean;
 	timerSeconds: number;
+	deepPractice: boolean;
+	mode: "regular" | "speed";
 }
 
 interface QuizSelectorProps {
@@ -43,17 +47,55 @@ const QUIZ_TYPES = [
 		label: "Build Chord",
 		desc: "Place chord tones on the fretboard",
 	},
+	{
+		value: "pattern",
+		label: "Pattern Recognition",
+		desc: "Complete or identify scale and chord shapes",
+	},
 ] as const;
 
 export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
+	const { store } = useProgressStore();
 	const [type, setType] = useState<QuizType>("note");
 	const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
 	const [questionCount, setQuestionCount] = useState<number>(10);
 	const [timerEnabled, setTimerEnabled] = useState<boolean>(false);
 	const [timerSeconds, setTimerSeconds] = useState<number>(15);
+	const [deepPractice, setDeepPractice] = useState<boolean>(false);
+	const [mode, setMode] = useState<"regular" | "speed">("regular");
+
+	// Compute adaptive suggestion
+	const modeMapping: Record<
+		QuizType,
+		"quiz-note" | "quiz-interval" | "quiz-chord" | "quiz-pattern"
+	> = {
+		note: "quiz-note",
+		"note-guess": "quiz-note",
+		"note-guess-sound": "quiz-note",
+		interval: "quiz-interval",
+		chord: "quiz-chord",
+		pattern: "quiz-pattern",
+	};
+
+	const modeKey = modeMapping[type];
+	const currentFretMax = store.adaptiveState?.[modeKey]?.effectiveFretMax ?? 5;
+	const adaptive = computeAdaptiveConfig(store.sessionHistory, modeKey, currentFretMax);
+
+	useEffect(() => {
+		// Pre-select suggested difficulty when type changes
+		setDifficulty(adaptive.suggestedDifficulty);
+	}, [adaptive.suggestedDifficulty]);
 
 	const handleStart = () => {
-		onStartQuiz({ type, difficulty, questionCount, timerEnabled, timerSeconds });
+		onStartQuiz({
+			type,
+			difficulty,
+			questionCount,
+			timerEnabled,
+			timerSeconds,
+			deepPractice,
+			mode,
+		});
 	};
 
 	const selectedType = QUIZ_TYPES.find((option) => option.value === type) ?? QUIZ_TYPES[0];
@@ -68,14 +110,46 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 			/>
 
 			<div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-				<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)]/70 p-5">
-					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
-						Step 1
-					</p>
-					<h3 className="mt-2 text-lg font-semibold text-[var(--gb-text)]">Choose your drill</h3>
-					<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
-						Start with the skill you want to sharpen right now.
-					</p>
+				<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)]/70 p-5 space-y-4">
+					<div>
+						<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+							Step 1
+						</p>
+						<h3 className="mt-2 text-lg font-semibold text-[var(--gb-text)]">Choose your drill</h3>
+						<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
+							Start with the skill you want to sharpen right now.
+						</p>
+					</div>
+
+					<div className="pt-4 border-t border-[var(--gb-border)]/50">
+						<p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gb-text-muted)] mb-3">
+							Quiz Flow
+						</p>
+						<div className="flex bg-[var(--gb-bg-tab)] p-1 rounded-xl w-fit">
+							<button
+								type="button"
+								onClick={() => setMode("regular")}
+								className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+									mode === "regular"
+										? "bg-[var(--gb-bg-panel)] text-[var(--gb-accent-strong)] shadow-sm"
+										: "text-[var(--gb-text-muted)] hover:text-[var(--gb-text)]"
+								}`}
+							>
+								Regular
+							</button>
+							<button
+								type="button"
+								onClick={() => setMode("speed")}
+								className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+									mode === "speed"
+										? "bg-[var(--gb-bg-panel)] text-[var(--gb-accent-strong)] shadow-sm"
+										: "text-[var(--gb-text-muted)] hover:text-[var(--gb-text)]"
+								}`}
+							>
+								⚡ Speed Drill
+							</button>
+						</div>
+					</div>
 				</div>
 
 				<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow-soft)]">
@@ -85,25 +159,29 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 					<h3 className="mt-2 text-lg font-semibold text-[var(--gb-text)]">{selectedType.label}</h3>
 					<p className="mt-1 text-sm text-[var(--gb-text-muted)]">{selectedType.desc}</p>
 					<div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-						<div className="rounded-xl bg-[var(--gb-bg-panel)] px-3 py-2 text-center">
-							<div className="text-xs uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
+						<div className="flex flex-col items-center justify-center rounded-xl bg-[var(--gb-bg-panel)] px-3 py-3 text-center h-full">
+							<div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
 								Level
 							</div>
-							<div className="mt-1 font-semibold text-[var(--gb-text)]">
+							<div className="mt-1 font-semibold leading-tight text-[var(--gb-text)]">
 								{difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
 							</div>
 						</div>
-						<div className="rounded-xl bg-[var(--gb-bg-panel)] px-3 py-2 text-center">
-							<div className="text-xs uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
+						<div className="flex flex-col items-center justify-center rounded-xl bg-[var(--gb-bg-panel)] px-3 py-3 text-center h-full">
+							<div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
 								Questions
 							</div>
-							<div className="mt-1 font-semibold text-[var(--gb-text)]">{questionCount}</div>
+							<div className="mt-1 font-semibold leading-tight text-[var(--gb-text)]">
+								{questionCount}
+							</div>
 						</div>
-						<div className="rounded-xl bg-[var(--gb-bg-panel)] px-3 py-2 text-center">
-							<div className="text-xs uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
+						<div className="flex flex-col items-center justify-center rounded-xl bg-[var(--gb-bg-panel)] px-3 py-3 text-center h-full">
+							<div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--gb-text-muted)]">
 								Pace
 							</div>
-							<div className="mt-1 font-semibold text-[var(--gb-text)]">{timerSummary}</div>
+							<div className="mt-1 font-semibold leading-tight text-[var(--gb-text)]">
+								{timerSummary}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -166,9 +244,10 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 							Beginner keeps the neck tighter, advanced opens the full range.
 						</p>
 					</div>
-					<div className="flex gap-2 flex-wrap">
+					<div className="flex gap-2 flex-wrap items-center">
 						{(["beginner", "intermediate", "advanced"] as const).map((level) => {
 							const active = difficulty === level;
+							const isSuggested = adaptive.suggestedDifficulty === level;
 							return (
 								<button
 									key={level}
@@ -187,12 +266,21 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 													borderColor: "var(--gb-border)",
 												}
 									}
-									className="rounded-full border px-5 py-2 text-sm font-medium transition-all hover:opacity-90 focus-visible:outline-none"
+									className="relative rounded-full border px-5 py-2 text-sm font-medium transition-all hover:opacity-90 focus-visible:outline-none"
 								>
 									{level.charAt(0).toUpperCase() + level.slice(1)}
+									{isSuggested && (
+										<span className="absolute -top-1 -right-1 flex h-3 w-3">
+											<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--gb-accent)] opacity-75" />
+											<span className="relative inline-flex h-3 w-3 rounded-full bg-[var(--gb-accent)]" />
+										</span>
+									)}
 								</button>
 							);
 						})}
+						<p className="ml-2 text-[10px] font-bold uppercase tracking-widest text-[var(--gb-accent-strong)]">
+							Suggested based on {Math.round(adaptive.rollingAccuracy * 100)}% accuracy
+						</p>
 					</div>
 				</fieldset>
 
@@ -305,6 +393,34 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 									</div>
 								</>
 							)}
+						</div>
+					</div>
+
+					<div className="space-y-2 pt-2 border-t border-[var(--gb-border)]">
+						<p className="text-xs font-bold tracking-widest uppercase text-[var(--gb-text-muted)]">
+							Deep Practice
+						</p>
+						<div className="flex items-center gap-3">
+							<button
+								type="button"
+								role="switch"
+								aria-checked={deepPractice}
+								onClick={() => setDeepPractice((v) => !v)}
+								style={{
+									background: deepPractice ? "var(--gb-accent)" : "var(--gb-bg-tab)",
+								}}
+								className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none"
+							>
+								<span
+									className={`inline-block h-4 w-4 rounded-full shadow transition-transform ${
+										deepPractice ? "translate-x-6" : "translate-x-1"
+									}`}
+									style={{ background: "#fff8ee" }}
+								/>
+							</button>
+							<span className="text-sm text-[var(--gb-text-muted)]">
+								Chain follow-up questions to reinforce memory
+							</span>
 						</div>
 					</div>
 				</fieldset>

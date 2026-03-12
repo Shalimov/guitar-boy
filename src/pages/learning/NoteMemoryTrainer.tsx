@@ -238,7 +238,7 @@ export function NoteMemoryTrainer() {
 			return;
 		}
 
-		void playFretPosition(prompt.position, "4n");
+		void playFretPosition(prompt.position, "2n");
 	}, [mode, prompt, feedback]);
 
 	const handleReplay = useCallback(() => {
@@ -246,7 +246,7 @@ export function NoteMemoryTrainer() {
 			return;
 		}
 
-		void playFretPosition(prompt.position, "4n");
+		void playFretPosition(prompt.position, "2n");
 	}, [prompt]);
 
 	const handleCheckAnswer = useCallback(() => {

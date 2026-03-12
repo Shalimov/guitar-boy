@@ -5,6 +5,11 @@ import { EarTrainingPage } from "./EarTrainingPage";
 
 jest.mock("@/lib/audio", () => ({
 	playFretPosition: jest.fn(() => Promise.resolve()),
+	getEqualizerLevels: jest.fn(() => Array.from({ length: 22 }, () => 0.2)),
+	subscribeToPlaybackState: jest.fn((listener: (isPlaying: boolean) => void) => {
+		listener(false);
+		return jest.fn();
+	}),
 }));
 
 function renderEarTrainingPage() {

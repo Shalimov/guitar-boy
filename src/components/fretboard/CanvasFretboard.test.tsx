@@ -6,6 +6,11 @@ import * as renderModule from "./canvas/render";
 
 jest.mock("@/lib/audio", () => ({
 	playFretPosition: jest.fn(() => Promise.resolve()),
+	getEqualizerLevels: jest.fn(() => Array.from({ length: 22 }, () => 0.2)),
+	subscribeToPlaybackState: jest.fn((listener: (isPlaying: boolean) => void) => {
+		listener(false);
+		return jest.fn();
+	}),
 }));
 
 jest.mock("./canvas/render", () => {

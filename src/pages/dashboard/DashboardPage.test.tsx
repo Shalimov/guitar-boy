@@ -42,20 +42,21 @@ describe("DashboardPage", () => {
 
 	it("renders four progress cards", () => {
 		renderWithRouter(<DashboardPage />);
-		expect(screen.getByText("Notes")).toBeInTheDocument();
-		expect(screen.getByText("Intervals")).toBeInTheDocument();
-		expect(screen.getByText("Chords")).toBeInTheDocument();
+		// Use getAllByText because these terms appear in the roadmap too
+		expect(screen.getAllByText("Notes").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("Intervals").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("Chords").length).toBeGreaterThan(0);
 		expect(screen.getByText("Due for Review")).toBeInTheDocument();
 	});
 
 	it("displays onboarding panel when no sessions", () => {
 		renderWithRouter(<DashboardPage />);
-		expect(screen.getByText(/new here\? start a warmup/i)).toBeInTheDocument();
+		expect(screen.getByText(/Your Learning Roadmap/i)).toBeInTheDocument();
 	});
 
-	it("has Start Learning button", () => {
+	it("has Start Daily Practice button", () => {
 		renderWithRouter(<DashboardPage />);
-		expect(screen.getByRole("button", { name: /start learning/i })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /start daily practice/i })).toBeInTheDocument();
 	});
 
 	it("has Explore Whiteboard button", () => {

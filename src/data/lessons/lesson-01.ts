@@ -101,6 +101,18 @@ const lesson: Lesson = {
 				lines: [],
 			},
 		},
+		{
+			type: "teach-back",
+			instruction: "Label all the open string notes from memory. Start from the thickest string.",
+			expectedLabels: [
+				{ position: { string: 0, fret: 0 }, label: "E" },
+				{ position: { string: 1, fret: 0 }, label: "A" },
+				{ position: { string: 2, fret: 0 }, label: "D" },
+				{ position: { string: 3, fret: 0 }, label: "G" },
+				{ position: { string: 4, fret: 0 }, label: "B" },
+				{ position: { string: 5, fret: 0 }, label: "E" },
+			],
+		},
 	],
 };
 

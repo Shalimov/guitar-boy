@@ -21,7 +21,7 @@ const renderWithRouter = (component: React.ReactElement, route = "/") => {
 describe("Layout", () => {
 	it("renders app title", () => {
 		renderWithRouter(<Layout />);
-		expect(screen.getByText("Guitar Boy")).toBeInTheDocument();
+		expect(screen.getAllByText("Guitar Boy").length).toBeGreaterThan(0);
 	});
 
 	it("renders navigation links", () => {

@@ -38,4 +38,6 @@ export type AppMode =
 	| "quiz-note"
 	| "quiz-interval"
 	| "quiz-chord"
-	| "review";
+	| "quiz-pattern"
+	| "review"
+	| "daily-practice";

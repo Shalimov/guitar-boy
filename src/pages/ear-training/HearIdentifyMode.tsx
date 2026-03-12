@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
+import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { playFretPosition } from "@/lib/audio";
@@ -50,26 +51,6 @@ const LEVELS: LevelConfig[] = [
 const NATURAL_NOTES_ONLY = ["C", "D", "E", "F", "G", "A", "B"] as const;
 const ALL_NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
-const NOTE_EQUIVALENTS: Record<string, string> = {
-	C: "C",
-	"C#": "C#/Db",
-	Db: "C#/Db",
-	D: "D",
-	"D#": "D#/Eb",
-	Eb: "D#/Eb",
-	E: "E",
-	F: "F",
-	"F#": "F#/Gb",
-	Gb: "F#/Gb",
-	G: "G",
-	"G#": "G#/Ab",
-	Ab: "G#/Ab",
-	A: "A",
-	"A#": "A#/Bb",
-	Bb: "A#/Bb",
-	B: "B",
-};
-
 function getPossibleNotes(config: LevelConfig): string[] {
 	if (config.naturalOnly) {
 		return [...NATURAL_NOTES_ONLY];
@@ -78,11 +59,31 @@ function getPossibleNotes(config: LevelConfig): string[] {
 }
 
 function getRandomPosition(config: LevelConfig): FretPosition {
-	const stringIndex = Math.floor(Math.random() * config.strings.length);
-	const string = config.strings[stringIndex];
 	const [minFret, maxFret] = config.fretRange;
-	const fret = Math.floor(Math.random() * (maxFret - minFret + 1)) + minFret;
-	return { string, fret };
+	const candidates: FretPosition[] = [];
+
+	for (const string of config.strings) {
+		for (let fret = minFret; fret <= maxFret; fret += 1) {
+			if (!config.naturalOnly) {
+				candidates.push({ string, fret });
+				continue;
+			}
+
+			const note = getNoteAtFret({ string, fret }).split("/")[0];
+			if (NATURAL_NOTES_ONLY.includes(note as (typeof NATURAL_NOTES_ONLY)[number])) {
+				candidates.push({ string, fret });
+			}
+		}
+	}
+
+	if (candidates.length === 0) {
+		const stringIndex = Math.floor(Math.random() * config.strings.length);
+		const string = config.strings[stringIndex];
+		const fret = Math.floor(Math.random() * (maxFret - minFret + 1)) + minFret;
+		return { string, fret };
+	}
+
+	return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 function NoteButton({
@@ -132,19 +133,15 @@ export function HearIdentifyMode() {
 	const generateNewQuestion = useCallback(() => {
 		const position = getRandomPosition(currentLevelConfig);
 		const note = getNoteAtFret(position);
-		const normalizedNote = NOTE_EQUIVALENTS[note.split("/")[0]] || note;
-		const sharpNote =
-			Object.entries(NOTE_EQUIVALENTS).find(([_k, v]) => v === normalizedNote)?.[0] ||
-			normalizedNote;
 		setCurrentPosition(position);
-		setCurrentNote(sharpNote);
+		setCurrentNote(note.split("/")[0]);
 		setSelectedNote(null);
 		setShowFeedback(false);
 	}, [currentLevelConfig]);
 
 	const playCurrentNote = useCallback(async () => {
 		if (currentPosition) {
-			await playFretPosition(currentPosition);
+			await playFretPosition(currentPosition, "2n");
 		}
 	}, [currentPosition]);
 
@@ -208,6 +205,10 @@ export function HearIdentifyMode() {
 				<Button onClick={playCurrentNote} variant="secondary" className="mb-6">
 					🔊 Play Again
 				</Button>
+
+				<div className="mb-6 w-full max-w-md">
+					<AudioEqualizer />
+				</div>
 
 				<div className="mb-6 flex w-full max-w-2xl flex-wrap items-center justify-between gap-3 rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)]/70 px-4 py-3">
 					<div>

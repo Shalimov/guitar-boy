@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router";
 import { useDarkMode } from "../../hooks/useDarkMode";
-import { Button } from "../ui/Button";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { OnboardingWizard } from "./OnboardingWizard";
 
@@ -46,6 +45,7 @@ export function Layout() {
 									to={item.to}
 									end={item.to === "/"}
 									title={item.label}
+									aria-label={item.label}
 									className={({ isActive }) =>
 										`flex items-center justify-center h-10 w-10 text-lg transition-all rounded-full ${
 											isActive

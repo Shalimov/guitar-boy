@@ -64,10 +64,12 @@ export function generateQuestions(
 	difficulty: Difficulty,
 	questionCount: number,
 	rng: { random: () => number } = defaultRNG(),
+	fretRange?: { min: number; max: number },
 ): Question[] {
 	const generated: Question[] = [];
-	const maxFret = difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24;
-	const minFret = 1;
+	const maxFret =
+		fretRange?.max ?? (difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24);
+	const minFret = fretRange?.min ?? 1;
 
 	for (let i = 0; i < questionCount; i++) {
 		if (type === "note") {

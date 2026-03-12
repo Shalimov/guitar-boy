@@ -1,27 +1,53 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button, Card, CardContent, CardHeader } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
+import { EMPTY_MISTAKE_LOG } from "@/lib/mistakeAnalysis";
+import { scheduleReminder } from "@/lib/reminders";
 import { getDueCards } from "@/lib/srs";
+import { computeStreak, getActiveDays } from "@/lib/streak";
+import type { SessionRecord } from "@/types";
+import { OverdueBanner } from "./OverdueBanner";
+import { ReminderSettings } from "./ReminderSettings";
+import { StreakDisplay } from "./StreakDisplay";
+import { WeakSpotsPanel } from "./WeakSpotsPanel";
 
 export function DashboardPage() {
 	const navigate = useNavigate();
 	const { store } = useProgressStore();
+	const [bannerDismissed, setBannerDismissed] = useState(false);
 
 	const dueCards = getDueCards(store.cards);
-	const sessionHistory = store.sessionHistory;
+	const sessionHistory: SessionRecord[] = store.sessionHistory;
+
+	const activeDays = getActiveDays(sessionHistory);
+	const { currentStreak, longestStreak } = computeStreak(
+		sessionHistory.map((s: SessionRecord) => s.date),
+	);
+
+	useEffect(() => {
+		const { reminder } = store.settings;
+		if (!reminder?.enabled) return;
+		const cleanup = scheduleReminder(reminder.time, dueCards.length);
+		return cleanup;
+	}, [store.settings, dueCards.length]);
+
 	const sessionsToday = sessionHistory.filter(
-		(session) => new Date(session.date).toDateString() === new Date().toDateString(),
+		(session: SessionRecord) => new Date(session.date).toDateString() === new Date().toDateString(),
 	).length;
 	const recentSessions = sessionHistory.slice(0, 3);
 
-	const notesSessions = sessionHistory.filter((s) => s.mode === "quiz-note");
-	const intervalSessions = sessionHistory.filter((s) => s.mode === "quiz-interval");
-	const chordSessions = sessionHistory.filter((s) => s.mode === "quiz-chord");
+	const notesSessions = sessionHistory.filter((s: SessionRecord) => s.mode === "quiz-note");
+	const intervalSessions = sessionHistory.filter((s: SessionRecord) => s.mode === "quiz-interval");
+	const chordSessions = sessionHistory.filter((s: SessionRecord) => s.mode === "quiz-chord");
 
-	const calculateAccuracy = (sessions: typeof sessionHistory) => {
+	const calculateAccuracy = (sessions: SessionRecord[]) => {
 		if (sessions.length === 0) return 0;
-		const totalCorrect = sessions.reduce((sum, s) => sum + s.correct, 0);
-		const totalQuestions = sessions.reduce((sum, s) => sum + s.totalQuestions, 0);
+		const totalCorrect = sessions.reduce((sum: number, s: SessionRecord) => sum + s.correct, 0);
+		const totalQuestions = sessions.reduce(
+			(sum: number, s: SessionRecord) => sum + s.totalQuestions,
+			0,
+		);
 		return totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 	};
 
@@ -59,8 +85,18 @@ export function DashboardPage() {
 	];
 
 	const weakestArea = [...progressByMode].sort((a, b) => a.accuracy - b.accuracy)[0];
-	const primaryAction =
-		dueCards.length > 0
+	const hasDoneToday = sessionHistory.some(
+		(s) =>
+			new Date(s.date).toDateString() === new Date().toDateString() && s.mode === "daily-practice",
+	);
+
+	const primaryAction = !hasDoneToday
+		? {
+				label: "Start daily practice",
+				description: "A personalized 5-minute session mixing review, quizzes, and ear training.",
+				action: () => navigate("/practice"),
+			}
+		: dueCards.length > 0
 			? {
 					label: "Review due cards",
 					description: `${dueCards.length} card${dueCards.length === 1 ? "" : "s"} ready for spaced repetition.`,
@@ -79,9 +115,11 @@ export function DashboardPage() {
 					};
 
 	const secondaryAction =
-		sessionHistory.length === 0
-			? { label: "Explore whiteboard", action: () => navigate("/whiteboard") }
-			: { label: "Open ear training", action: () => navigate("/ear-training") };
+		hasDoneToday && dueCards.length === 0
+			? { label: "Open ear training", action: () => navigate("/ear-training") }
+			: sessionHistory.length === 0
+				? { label: "Explore whiteboard", action: () => navigate("/whiteboard") }
+				: { label: "Open ear training", action: () => navigate("/ear-training") };
 
 	const formatModeLabel = (mode: (typeof sessionHistory)[number]["mode"]) => {
 		switch (mode) {
@@ -92,7 +130,9 @@ export function DashboardPage() {
 			case "quiz-chord":
 				return "Chord quiz";
 			case "review":
-				return "Review session";
+				return "SRS review";
+			case "daily-practice":
+				return "Daily practice";
 			case "learning":
 				return "Learning session";
 			case "whiteboard":
@@ -112,6 +152,22 @@ export function DashboardPage() {
 					focused session.
 				</p>
 			</header>
+
+			{dueCards.length > 0 && !bannerDismissed && (
+				<OverdueBanner
+					dueCount={dueCards.length}
+					onStartReview={() => navigate("/quiz/review")}
+					onDismiss={() => setBannerDismissed(true)}
+				/>
+			)}
+
+			{sessionHistory.length > 0 && (
+				<StreakDisplay
+					currentStreak={currentStreak}
+					longestStreak={longestStreak}
+					activeDays={activeDays}
+				/>
+			)}
 
 			<section className="gb-panel overflow-hidden">
 				<div className="grid gap-5 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-7">
@@ -198,7 +254,7 @@ export function DashboardPage() {
 					</div>
 
 					<div className="mt-5 grid gap-3 md:grid-cols-3">
-						{recentSessions.map((session) => (
+						{recentSessions.map((session: SessionRecord) => (
 							<div
 								key={`${session.date}-${session.mode}`}
 								className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)]/65 p-4"
@@ -217,6 +273,8 @@ export function DashboardPage() {
 					</div>
 				</section>
 			)}
+
+			<WeakSpotsPanel mistakeLog={store.mistakeLog ?? EMPTY_MISTAKE_LOG} />
 
 			{sessionHistory.length === 0 && (
 				<section className="gb-panel px-6 py-10 md:px-10">
@@ -288,6 +346,8 @@ export function DashboardPage() {
 					</div>
 				</section>
 			)}
+
+			<ReminderSettings />
 		</div>
 	);
 }

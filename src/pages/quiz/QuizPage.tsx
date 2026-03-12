@@ -1,10 +1,12 @@
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import { Button, PageHeader } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
+import { PatternDrillRunner } from "./PatternDrillRunner";
 import { QuizRunner } from "./QuizRunner";
 import type { QuizSettings } from "./QuizSelector";
 import { QuizSelector } from "./QuizSelector";
 import { ReviewMode } from "./ReviewMode";
+import { SpeedDrillRunner } from "./SpeedDrillRunner";
 
 export function QuizPage() {
 	const navigate = useNavigate();
@@ -17,7 +19,7 @@ export function QuizPage() {
 	const currentMode = pathSegments[0] ?? "selector";
 	const quizSettings = location.state as QuizSettings | undefined;
 
-	const { getDueCards, updateCard } = useProgressStore();
+	const { getDueCards, updateCard, store, updatePersonalBest } = useProgressStore();
 	const dueCards = getDueCards();
 
 	const handleStartQuiz = (settings: QuizSettings) => {
@@ -52,6 +54,41 @@ export function QuizPage() {
 			return <Navigate to="/quiz" replace />;
 		}
 
+		if (quizSettings.mode === "speed") {
+			type SpeedCategory = "note" | "chord" | "interval" | "pattern";
+			const category: SpeedCategory =
+				quizSettings.type === "chord" ||
+				quizSettings.type === "interval" ||
+				quizSettings.type === "pattern"
+					? quizSettings.type
+					: "note";
+			const pb = store.personalBests?.[category] ?? null;
+
+			return (
+				<SpeedDrillRunner
+					category={category}
+					difficulty={quizSettings.difficulty}
+					personalBest={pb}
+					onComplete={(score: number) => {
+						updatePersonalBest(category, score);
+						handleComplete();
+					}}
+					onCancel={handleComplete}
+				/>
+			);
+		}
+
+		if (quizSettings.type === "pattern") {
+			return (
+				<PatternDrillRunner
+					questionCount={quizSettings.questionCount}
+					questionType="mixed"
+					onComplete={handleComplete}
+					onCancel={handleComplete}
+				/>
+			);
+		}
+
 		return (
 			<QuizRunner
 				type={quizSettings.type}
@@ -59,6 +96,7 @@ export function QuizPage() {
 				questionCount={quizSettings.questionCount}
 				timerEnabled={quizSettings.timerEnabled}
 				timerSeconds={quizSettings.timerSeconds}
+				deepPractice={quizSettings.deepPractice}
 				onComplete={handleComplete}
 				onCancel={handleComplete}
 			/>

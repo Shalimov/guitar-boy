@@ -44,8 +44,8 @@ export function EarTrainingPage() {
 					description="Build note recognition with short drills that move from listening, to guessing, to confident recall."
 				/>
 
-				<section className="gb-panel p-5">
-					<div className="flex flex-wrap items-center justify-between gap-3">
+				<section className="gb-panel p-5 max-w-3xl">
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
 						<div>
 							<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
 								Choose a path
@@ -54,7 +54,7 @@ export function EarTrainingPage() {
 								Pick the kind of listening you want today
 							</h2>
 						</div>
-						<p className="max-w-lg text-sm text-[var(--gb-text-muted)]">
+						<p className="max-w-md text-sm text-[var(--gb-text-muted)]">
 							Short, repeatable sessions work best here. Start with the mode that matches your
 							energy.
 						</p>
@@ -66,12 +66,12 @@ export function EarTrainingPage() {
 						<Card key={mode.id} className="p-5">
 							<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 								<div>
-									<div className="flex flex-wrap items-center gap-2">
-										<h3 className="text-lg font-semibold">{mode.title}</h3>
-										<span className="rounded-full bg-[var(--gb-bg-panel)] px-3 py-1 text-xs font-semibold text-[var(--gb-text-muted)]">
+									<h3 className="text-lg font-semibold">{mode.title}</h3>
+									<div className="mt-1 flex flex-wrap items-center gap-2">
+										<span className="inline-flex items-center rounded-full bg-[var(--gb-bg-panel)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--gb-text-muted)] border border-[var(--gb-border)]">
 											{MODE_META[mode.id].badge}
 										</span>
-										<span className="rounded-full bg-[var(--gb-bg-panel)] px-3 py-1 text-xs font-semibold text-[var(--gb-text-muted)]">
+										<span className="inline-flex items-center rounded-full bg-[var(--gb-bg-panel)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--gb-text-muted)] border border-[var(--gb-border)]">
 											{MODE_META[mode.id].time}
 										</span>
 									</div>

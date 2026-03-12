@@ -15,6 +15,9 @@ const QuizPage = lazy(() => import("./pages/quiz/QuizPage").then((m) => ({ defau
 const EarTrainingPage = lazy(() =>
 	import("./pages/ear-training/EarTrainingPage").then((m) => ({ default: m.EarTrainingPage })),
 );
+const DailySessionPage = lazy(() =>
+	import("./pages/daily-session/DailySessionPage").then((m) => ({ default: m.DailySessionPage })),
+);
 
 function PageLoader() {
 	return (
@@ -35,6 +38,7 @@ export function App() {
 						<Route path="learn/*" element={<LearningPage />} />
 						<Route path="quiz/*" element={<QuizPage />} />
 						<Route path="ear-training" element={<EarTrainingPage />} />
+						<Route path="practice" element={<DailySessionPage />} />
 					</Route>
 				</Routes>
 			</Suspense>

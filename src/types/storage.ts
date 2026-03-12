@@ -1,3 +1,4 @@
+import type { MistakeLog } from "@/lib/mistakeAnalysis";
 import type { SessionRecord, SRSCard } from "./srs";
 
 /** User preferences for display and interaction */
@@ -8,6 +9,12 @@ export interface UserSettings {
 	fretRange: {
 		min: number;
 		max: number;
+	};
+	/** Practice reminder settings */
+	reminder?: {
+		enabled: boolean;
+		/** HH:mm format, e.g. "09:00" */
+		time: string;
 	};
 }
 
@@ -21,6 +28,24 @@ export interface ProgressStore {
 	sessionHistory: SessionRecord[];
 	/** User preferences */
 	settings: UserSettings;
+	/** Adaptive difficulty state per quiz category */
+	adaptiveState?: {
+		"quiz-note"?: { effectiveFretMax: number };
+		"quiz-interval"?: { effectiveFretMax: number };
+		"quiz-chord"?: { effectiveFretMax: number };
+		"quiz-pattern"?: { effectiveFretMax: number };
+	};
+	/** Tracked errors by fretboard position */
+	mistakeLog?: MistakeLog;
+	/** IDs of tips the user has dismissed */
+	dismissedTips?: string[];
+	/** Personal bests in Speed Drill mode */
+	personalBests?: {
+		note: number | null;
+		interval: number | null;
+		chord: number | null;
+		pattern: number | null;
+	};
 }
 
 import type { Diagram } from "./diagram";

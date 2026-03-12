@@ -5,6 +5,11 @@ import { ExplorerPanel } from "./ExplorerPanel";
 
 jest.mock("@/lib/audio", () => ({
 	playFretPosition: jest.fn(() => Promise.resolve()),
+	getEqualizerLevels: jest.fn(() => Array.from({ length: 22 }, () => 0.2)),
+	subscribeToPlaybackState: jest.fn((listener: (isPlaying: boolean) => void) => {
+		listener(false);
+		return jest.fn();
+	}),
 }));
 
 beforeEach(() => {
@@ -94,6 +99,6 @@ describe("ExplorerPanel", () => {
 		await userEvent.hover(screen.getByRole("button", { name: /fret 3, note c/i }));
 		await userEvent.click(screen.getByRole("button", { name: /play note/i }));
 
-		expect(playFretPosition).toHaveBeenCalledWith({ string: 1, fret: 3 }, "4n");
+		expect(playFretPosition).toHaveBeenCalledWith({ string: 1, fret: 3 }, "2n");
 	});
 });

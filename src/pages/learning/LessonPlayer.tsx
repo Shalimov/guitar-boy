@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, ProgressBar } from "@/components/ui";
 import type { Lesson } from "@/types/lesson";
 import { StepExplain } from "./StepExplain";
+import { StepTeachBack } from "./StepTeachBack";
 import { StepVerify } from "./StepVerify";
 
 interface LessonPlayerProps {
@@ -69,8 +70,10 @@ export function LessonPlayer({ lesson, onComplete, onExit }: LessonPlayerProps) 
 			>
 				{currentStep.type === "explain" ? (
 					<StepExplain step={currentStep} />
-				) : (
+				) : currentStep.type === "verify" ? (
 					<StepVerify key={currentStepIndex} step={currentStep} onComplete={handleNext} />
+				) : (
+					<StepTeachBack key={currentStepIndex} step={currentStep} onComplete={handleNext} />
 				)}
 			</div>
 

@@ -230,4 +230,22 @@ export const scalePatterns: Diagram[] = [
 		},
 		isBuiltIn: true,
 	},
+	{
+		id: "caged-c-shape",
+		name: "C Shape (CAGED)",
+		description: "The open C major chord shape moved up the neck.",
+		createdAt: now,
+		updatedAt: now,
+		fretboardState: {
+			dots: [
+				{ position: { string: 1, fret: 3 }, label: "R", color: ROOT_COLOR },
+				{ position: { string: 2, fret: 2 }, label: "3", color: THIRD_COLOR },
+				{ position: { string: 3, fret: 0 }, label: "5", color: NOTE_COLOR },
+				{ position: { string: 4, fret: 1 }, label: "R", color: ROOT_COLOR },
+				{ position: { string: 5, fret: 0 }, label: "3", color: THIRD_COLOR },
+			],
+			lines: [],
+		},
+		isBuiltIn: true,
+	},
 ];

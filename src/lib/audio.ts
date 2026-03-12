@@ -5,6 +5,66 @@ import type { FretPosition, NoteName } from "@/types";
 type NoteDuration = string;
 
 let synth: Tone.PolySynth<Tone.Synth> | null = null;
+let analyser: Tone.Analyser | null = null;
+let analyserMode: "fft" | "waveform" = "waveform";
+const playbackListeners = new Set<(isPlaying: boolean) => void>();
+const playbackTimeouts = new Set<ReturnType<typeof setTimeout>>();
+let activePlaybackCount = 0;
+
+function getAnalyser() {
+	if (analyser) {
+		return analyser;
+	}
+
+	analyserMode = "waveform";
+	analyser = new Tone.Analyser("waveform", 256);
+	return analyser;
+}
+
+function emitPlaybackState() {
+	const isPlaying = activePlaybackCount > 0;
+	for (const listener of playbackListeners) {
+		listener(isPlaying);
+	}
+}
+
+function parseDurationToMs(duration: NoteDuration) {
+	const noteMatch = duration.match(/^(\d+(?:\.\d+)?)n$/);
+	if (noteMatch) {
+		const denominator = Number(noteMatch[1]);
+		if (denominator > 0) {
+			return 2000 / denominator;
+		}
+	}
+
+	const measureMatch = duration.match(/^(\d+(?:\.\d+)?)m$/);
+	if (measureMatch) {
+		const measures = Number(measureMatch[1]);
+		if (measures > 0) {
+			return measures * 2000;
+		}
+	}
+
+	const seconds = Number(duration);
+	if (!Number.isNaN(seconds) && seconds > 0) {
+		return seconds * 1000;
+	}
+
+	return 250;
+}
+
+function trackPlayback(duration: NoteDuration) {
+	activePlaybackCount += 1;
+	emitPlaybackState();
+
+	const timeoutId = setTimeout(() => {
+		playbackTimeouts.delete(timeoutId);
+		activePlaybackCount = Math.max(0, activePlaybackCount - 1);
+		emitPlaybackState();
+	}, parseDurationToMs(duration));
+
+	playbackTimeouts.add(timeoutId);
+}
 
 function getSynth() {
 	if (synth) {
@@ -21,7 +81,10 @@ function getSynth() {
 			sustain: 0.18,
 			release: 0.5,
 		},
-	}).toDestination();
+	});
+
+	synth.connect(getAnalyser());
+	synth.toDestination();
 
 	return synth;
 }
@@ -38,11 +101,13 @@ function toPlayablePitch(note: NoteName, octave = 4) {
 
 export async function playNote(note: NoteName, duration: NoteDuration = "8n") {
 	await ensureAudioReady();
+	trackPlayback(duration);
 	getSynth().triggerAttackRelease(toPlayablePitch(note), duration);
 }
 
 export async function playFrequency(frequency: number, duration: NoteDuration = "8n") {
 	await ensureAudioReady();
+	trackPlayback(duration);
 	getSynth().triggerAttackRelease(frequency, duration);
 }
 
@@ -50,6 +115,58 @@ export async function playFretPosition(position: FretPosition, duration: NoteDur
 	await playFrequency(getFrequencyAtFret(position), duration);
 }
 
+export function subscribeToPlaybackState(listener: (isPlaying: boolean) => void) {
+	playbackListeners.add(listener);
+	listener(activePlaybackCount > 0);
+
+	return () => {
+		playbackListeners.delete(listener);
+	};
+}
+
+export function getEqualizerLevels(barCount = 22) {
+	if (!analyser || barCount <= 0) {
+		return Array.from({ length: Math.max(1, barCount) }, () => 0);
+	}
+
+	const values = analyser.getValue();
+	const spectrum = Array.isArray(values) ? values : Array.from(values);
+	const bucketSize = Math.max(1, Math.floor(spectrum.length / barCount));
+
+	return Array.from({ length: barCount }, (_, index) => {
+		const start = index * bucketSize;
+		const end = Math.min(spectrum.length, start + bucketSize);
+		let total = 0;
+		let count = 0;
+
+		for (let i = start; i < end; i += 1) {
+			const value = Number(spectrum[i]);
+			if (!Number.isFinite(value)) {
+				continue;
+			}
+
+			if (analyserMode === "waveform") {
+				const normalized = Math.min(1, Math.abs(value));
+				total += normalized;
+			} else {
+				const normalized = Math.min(1, Math.max(0, (value + 100) / 100));
+				total += normalized * normalized;
+			}
+			count += 1;
+		}
+
+		return count > 0 ? total / count : 0;
+	});
+}
+
 export function __resetAudioForTests() {
 	synth = null;
+	analyser = null;
+	analyserMode = "waveform";
+	activePlaybackCount = 0;
+	for (const timeoutId of playbackTimeouts) {
+		clearTimeout(timeoutId);
+	}
+	playbackTimeouts.clear();
+	playbackListeners.clear();
 }

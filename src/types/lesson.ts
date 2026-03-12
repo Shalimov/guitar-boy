@@ -1,7 +1,7 @@
 import type { FretboardState } from "./fretboard";
 import type { FretPosition } from "./music";
 
-export type LessonStepType = "explain" | "verify";
+export type LessonStepType = "explain" | "verify" | "teach-back";
 
 export interface ExplainStep {
 	type: "explain";
@@ -17,7 +17,20 @@ export interface VerifyStep {
 	fretboardState?: FretboardState;
 }
 
-export type LessonStep = ExplainStep | VerifyStep;
+export interface TeachBackStep {
+	type: "teach-back";
+	/** Instruction for the user, e.g. "Label all open string notes from memory" */
+	instruction: string;
+	/** The correct labels the user should produce */
+	expectedLabels: Array<{
+		position: FretPosition;
+		label: string;
+	}>;
+	/** Optional fretboard state for context (e.g., show string labels) */
+	fretboardState?: FretboardState;
+}
+
+export type LessonStep = ExplainStep | VerifyStep | TeachBackStep;
 
 export interface Lesson {
 	id: string;

@@ -75,6 +75,19 @@ const lesson: Lesson = {
 				lines: [],
 			},
 		},
+		{
+			type: "teach-back",
+			instruction: "Recall all 'C' and 'G' positions in the first five frets from memory.",
+			expectedLabels: [
+				{ position: { string: 1, fret: 3 }, label: "C" },
+				{ position: { string: 3, fret: 5 }, label: "C" },
+				{ position: { string: 4, fret: 1 }, label: "C" },
+				{ position: { string: 0, fret: 3 }, label: "G" },
+				{ position: { string: 2, fret: 5 }, label: "G" },
+				{ position: { string: 3, fret: 0 }, label: "G" },
+				{ position: { string: 5, fret: 3 }, label: "G" },
+			],
+		},
 	],
 };
 

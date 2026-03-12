@@ -30,7 +30,7 @@ function ColorSwatch({
 	label: string;
 }) {
 	return (
-		<div className="flex items-center gap-1.5">
+		<div className="flex flex-col gap-1.5 items-start">
 			<label htmlFor={id} className={labelCls} style={labelStyle}>
 				{label}
 			</label>
@@ -81,10 +81,10 @@ export function AnnotationToolbar({
 					</p>
 				</div>
 
-				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+				<div className="flex flex-wrap items-end gap-x-4 gap-y-4">
 					<ColorSwatch id="dot-color" label="Color" value={dotColor} onChange={onDotColorChange} />
 
-					<div className="flex items-center gap-1.5">
+					<div className="flex flex-col gap-1.5 items-start">
 						<label htmlFor="dot-label" className={labelCls} style={labelStyle}>
 							Label
 						</label>
@@ -105,7 +105,7 @@ export function AnnotationToolbar({
 						/>
 					</div>
 
-					<div className="flex items-center gap-1.5">
+					<div className="flex flex-col gap-1.5 items-start">
 						<label htmlFor="dot-shape" className={labelCls} style={labelStyle}>
 							Shape
 						</label>
@@ -145,7 +145,7 @@ export function AnnotationToolbar({
 					</p>
 				</div>
 
-				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+				<div className="flex flex-wrap items-end gap-x-4 gap-y-4">
 					<button
 						type="button"
 						onClick={onGroupSelectionModeChange}

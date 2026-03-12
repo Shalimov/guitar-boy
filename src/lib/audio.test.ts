@@ -1,5 +1,12 @@
 import * as Tone from "tone";
-import { __resetAudioForTests, playFrequency, playFretPosition, playNote } from "./audio";
+import {
+	__resetAudioForTests,
+	getEqualizerLevels,
+	playFrequency,
+	playFretPosition,
+	playNote,
+	subscribeToPlaybackState,
+} from "./audio";
 import { getFrequencyAtFret } from "./music";
 
 const toneMock = Tone as typeof Tone & {
@@ -11,8 +18,13 @@ const toneMock = Tone as typeof Tone & {
 
 describe("audio helpers", () => {
 	beforeEach(() => {
+		jest.useFakeTimers();
 		toneMock.__toneMock.reset();
 		__resetAudioForTests();
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
 	});
 
 	it("plays note names using sharp pitch labels", async () => {
@@ -37,5 +49,29 @@ describe("audio helpers", () => {
 
 		const synth = toneMock.__toneMock.getLastPolySynth();
 		expect(synth.triggerAttackRelease).toHaveBeenCalledWith(expectedFrequency, "8n");
+	});
+
+	it("emits playback state during note playback", async () => {
+		const listener = jest.fn();
+		const unsubscribe = subscribeToPlaybackState(listener);
+
+		await playFrequency(440, "4n");
+
+		expect(listener).toHaveBeenNthCalledWith(1, false);
+		expect(listener).toHaveBeenNthCalledWith(2, true);
+
+		jest.advanceTimersByTime(500);
+
+		expect(listener).toHaveBeenNthCalledWith(3, false);
+		unsubscribe();
+	});
+
+	it("returns equalizer bars from analyser data", async () => {
+		await playFrequency(440, "8n");
+
+		const bars = getEqualizerLevels(12);
+
+		expect(bars).toHaveLength(12);
+		expect(bars.every((value) => value >= 0 && value <= 1)).toBe(true);
 	});
 });

@@ -5,6 +5,11 @@ import { NoteMemoryTrainer } from "./NoteMemoryTrainer";
 
 jest.mock("@/lib/audio", () => ({
 	playFretPosition: jest.fn(() => Promise.resolve()),
+	getEqualizerLevels: jest.fn(() => Array.from({ length: 22 }, () => 0.2)),
+	subscribeToPlaybackState: jest.fn((listener: (isPlaying: boolean) => void) => {
+		listener(false);
+		return jest.fn();
+	}),
 }));
 
 beforeEach(() => {
@@ -65,7 +70,7 @@ describe("NoteMemoryTrainer", () => {
 		expect(playFretPosition).toHaveBeenCalledTimes(1);
 		expect(playFretPosition).toHaveBeenCalledWith(
 			expect.objectContaining({ string: expect.any(Number), fret: expect.any(Number) }),
-			"4n",
+			"2n",
 		);
 	});
 

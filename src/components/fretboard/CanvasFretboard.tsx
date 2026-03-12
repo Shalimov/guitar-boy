@@ -950,8 +950,8 @@ export function CanvasFretboard({
 	}, [onFretHoverChange]);
 
 	return (
-		<div className="inline-block">
-			<div className="flex items-start gap-3">
+		<div className="max-w-full overflow-x-auto pb-4">
+			<div className="inline-flex min-w-max items-start gap-3">
 				{showStringLabels && (
 					<div
 						className="grid text-right text-xs text-[var(--gb-text-muted)]"

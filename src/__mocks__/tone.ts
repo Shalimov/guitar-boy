@@ -19,9 +19,16 @@ export class Synth {}
 
 export class PolySynth {
 	public toDestination = jest.fn(() => this);
+	public connect = jest.fn(() => this);
 	public triggerAttackRelease = jest.fn();
 
 	constructor(..._args: unknown[]) {
 		polySynthInstances.push(this);
 	}
+}
+
+export class Analyser {
+	constructor(_type: "fft", _size: number) {}
+
+	public getValue = jest.fn(() => new Float32Array(128).fill(-100));
 }
