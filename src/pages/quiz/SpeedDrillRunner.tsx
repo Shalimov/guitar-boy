@@ -29,11 +29,10 @@ export function SpeedDrillRunner({
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [score, setScore] = useState(0);
 	const [timeLeft, setTimeLeft] = useState(60);
-	const [selectedPositions, setSelectedPositions] = useState<FretPosition[]>([]);
-	const [selectedNote, setSelectedNote] = useState<string | null>(null);
-	const [selectedInterval, setSelectedInterval] = useState<string | null>(null);
+	const [clickedPosition, setClickedPosition] = useState<FretPosition | null>(null);
 	const [isFinished, setIsFinished] = useState(false);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Initial pool
 	useEffect(() => {
@@ -61,6 +60,7 @@ export function SpeedDrillRunner({
 
 		return () => {
 			if (timerRef.current) clearInterval(timerRef.current);
+			if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
 		};
 	}, []);
 
@@ -90,10 +90,13 @@ export function SpeedDrillRunner({
 				setScore((prev) => prev + 1);
 			}
 
-			// Instant advance
-			setSelectedPositions([]);
-			setSelectedNote(null);
-			setSelectedInterval(null);
+			// Clear any pending feedback timer
+			if (feedbackTimerRef.current) {
+				clearTimeout(feedbackTimerRef.current);
+			}
+
+			// Show clicked position briefly before advancing
+			setClickedPosition(null);
 
 			if (currentIndex < questions.length - 1) {
 				setCurrentIndex((prev) => prev + 1);
@@ -108,17 +111,13 @@ export function SpeedDrillRunner({
 	const handleFretClick = (pos: FretPosition) => {
 		const current = questions[currentIndex];
 		if (current.type === "note" || current.type === "chord") {
-			// For note/chord, we need a submit?
-			// Speed mode rule 3: "clicking an option immediately checks"
-			// But note/chord might have multiple positions.
-			// Re-reading Step 3: "simplified — just the fretboard or options, no extra chrome"
-			// Let's make "note" and "chord" single-click for speed mode?
-			// Actually, just for "note-guess" it's easy.
-			// Let's stick to the instant advance for single-option questions.
-			// For note/chord we'll have a small "Next" or just handle one position correctly.
+			// Show visual feedback immediately
+			setClickedPosition(pos);
 
-			// For speed drill, let's treat "find the note" as "find ONE position".
-			handleAnswer([pos]);
+			// Delay answer handling briefly so user sees what they clicked
+			feedbackTimerRef.current = setTimeout(() => {
+				handleAnswer([pos]);
+			}, 150);
 		}
 	};
 
@@ -211,12 +210,33 @@ export function SpeedDrillRunner({
 			<div className="gb-panel p-8 min-h-[400px] flex flex-col items-center justify-center space-y-8">
 				<div className="text-center space-y-2">
 					<h3 className="text-2xl font-black text-[var(--gb-text)]">
-						{currentQuestion.type === "note" && `Find ${currentQuestion.targetNote}`}
+						{currentQuestion.type === "note" && (
+							<>
+								Find <span className="text-[var(--gb-accent)]">{currentQuestion.targetNote}</span>
+								{currentQuestion.targetStringLabel && (
+									<span className="text-lg font-medium text-[var(--gb-text-muted)] ml-2">
+										on the {currentQuestion.targetStringLabel} string
+									</span>
+								)}
+							</>
+						)}
 						{(currentQuestion.type === "note-guess" ||
 							currentQuestion.type === "note-guess-sound") &&
 							"Identify the Note"}
 						{currentQuestion.type === "interval" && "What Interval?"}
-						{currentQuestion.type === "chord" && `Build ${currentQuestion.targetChord}`}
+						{currentQuestion.type === "chord" && (
+							<>
+								Place{" "}
+								<span className="text-[var(--gb-accent)]">
+									{currentQuestion.chordTone || "Root"}
+								</span>
+								{currentQuestion.targetStringLabel && (
+									<span className="text-lg font-medium text-[var(--gb-text-muted)] ml-2">
+										on the {currentQuestion.targetStringLabel} string
+									</span>
+								)}
+							</>
+						)}
 						{(currentQuestion.type === "pattern-complete" ||
 							currentQuestion.type === "pattern-name") &&
 							"Identify the Pattern"}
@@ -232,6 +252,7 @@ export function SpeedDrillRunner({
 								onFretClick={handleFretClick}
 								state={{ dots: [], lines: [] }}
 								fretRange={difficulty === "advanced" ? [1, 22] : [1, 12]}
+								selectedPositions={clickedPosition ? [clickedPosition] : []}
 							/>
 						</div>
 					) : currentQuestion.type === "note-guess" ||

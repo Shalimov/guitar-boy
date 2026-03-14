@@ -1,6 +1,17 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router";
 import { Layout } from "./components/layout/Layout";
+
+function ScrollToTop() {
+	const { pathname } = useLocation();
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is required to detect route changes
+	useEffect(() => {
+		window.scrollTo(0, 0);
+	}, [pathname]);
+
+	return null;
+}
 
 const DashboardPage = lazy(() =>
 	import("./pages/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })),
@@ -30,6 +41,7 @@ function PageLoader() {
 export function App() {
 	return (
 		<BrowserRouter>
+			<ScrollToTop />
 			<Suspense fallback={<PageLoader />}>
 				<Routes>
 					<Route element={<Layout />}>

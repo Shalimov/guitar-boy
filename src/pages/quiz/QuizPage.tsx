@@ -1,11 +1,9 @@
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
-import { Button, PageHeader } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
-import { PatternDrillRunner } from "./PatternDrillRunner";
 import { QuizRunner } from "./QuizRunner";
 import type { QuizSettings } from "./QuizSelector";
 import { QuizSelector } from "./QuizSelector";
-import { ReviewMode } from "./ReviewMode";
 import { SpeedDrillRunner } from "./SpeedDrillRunner";
 
 export function QuizPage() {
@@ -19,35 +17,15 @@ export function QuizPage() {
 	const currentMode = pathSegments[0] ?? "selector";
 	const quizSettings = location.state as QuizSettings | undefined;
 
-	const { getDueCards, updateCard, store, updatePersonalBest } = useProgressStore();
-	const dueCards = getDueCards();
+	const { store, updatePersonalBest } = useProgressStore();
 
 	const handleStartQuiz = (settings: QuizSettings) => {
 		navigate("/quiz/play", { state: settings });
 	};
 
-	const handleStartReview = () => {
-		navigate("/quiz/review");
-	};
-
 	const handleComplete = () => {
 		navigate("/quiz");
 	};
-
-	if (currentMode === "review") {
-		return (
-			<ReviewMode
-				cards={dueCards}
-				onComplete={(results) => {
-					for (const result of results) {
-						updateCard(result.updatedCard);
-					}
-					handleComplete();
-				}}
-				onCancel={handleComplete}
-			/>
-		);
-	}
 
 	if (currentMode === "play") {
 		if (!quizSettings) {
@@ -55,11 +33,9 @@ export function QuizPage() {
 		}
 
 		if (quizSettings.mode === "speed") {
-			type SpeedCategory = "note" | "chord" | "interval" | "pattern";
+			type SpeedCategory = "note" | "chord" | "interval";
 			const category: SpeedCategory =
-				quizSettings.type === "chord" ||
-				quizSettings.type === "interval" ||
-				quizSettings.type === "pattern"
+				quizSettings.type === "chord" || quizSettings.type === "interval"
 					? quizSettings.type
 					: "note";
 			const pb = store.personalBests?.[category] ?? null;
@@ -73,17 +49,6 @@ export function QuizPage() {
 						updatePersonalBest(category, score);
 						handleComplete();
 					}}
-					onCancel={handleComplete}
-				/>
-			);
-		}
-
-		if (quizSettings.type === "pattern") {
-			return (
-				<PatternDrillRunner
-					questionCount={quizSettings.questionCount}
-					questionType="mixed"
-					onComplete={handleComplete}
 					onCancel={handleComplete}
 				/>
 			);
@@ -115,45 +80,15 @@ export function QuizPage() {
 				description="Choose a drill for active recall, then decide whether today is a short warm-up or a focused challenge."
 			/>
 
-			<div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
-				<div
-					className="rounded-[var(--gb-radius-card)] border border-[var(--gb-accent-soft)] p-6"
-					style={{
-						background: "color-mix(in srgb, var(--gb-accent-soft) 12%, var(--gb-bg-elev) 88%)",
-						boxShadow: "var(--gb-shadow-soft)",
-					}}
-				>
-					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
-						Daily review
-					</p>
-					<h3 className="mt-2 text-xl font-semibold text-[var(--gb-text)]">Review Due Cards</h3>
-					<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
-						{dueCards.length > 0
-							? `You have ${dueCards.length} card${dueCards.length === 1 ? "" : "s"} ready for spaced repetition.`
-							: "No cards are due right now. Start a fresh quiz to generate more review material."}
-					</p>
-					<div className="mt-4 flex items-center gap-3">
-						<Button onClick={handleStartReview} disabled={dueCards.length === 0}>
-							{dueCards.length > 0 ? "Start Review" : "No Cards Due"}
-						</Button>
-						{dueCards.length === 0 && (
-							<span className="text-sm text-[var(--gb-text-muted)]">
-								Try a quiz session instead.
-							</span>
-						)}
-					</div>
-				</div>
-
-				<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-6 shadow-[var(--gb-shadow-soft)]">
-					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
-						Quick guide
-					</p>
-					<ul className="mt-3 space-y-2 text-sm text-[var(--gb-text-muted)]">
-						<li>Use quizzes for new recall reps.</li>
-						<li>Use review mode to protect long-term retention.</li>
-						<li>Keep sessions short when accuracy starts to dip.</li>
-					</ul>
-				</div>
+			<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-6 shadow-[var(--gb-shadow-soft)]">
+				<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+					Quick guide
+				</p>
+				<ul className="mt-3 space-y-2 text-sm text-[var(--gb-text-muted)]">
+					<li>Use quizzes for new recall reps.</li>
+					<li>Keep sessions short when accuracy starts to dip.</li>
+					<li>Focus on one skill area at a time for best results.</li>
+				</ul>
 			</div>
 
 			<QuizSelector onStartQuiz={handleStartQuiz} />

@@ -1,9 +1,11 @@
 import {
+	calculateHeatMapStats,
 	EMPTY_MISTAKE_LOG,
 	fromErrorKey,
 	generateHeatMap,
 	getTopProblemAreas,
 	heatColor,
+	heatLevelLabel,
 	recordErrors,
 	toErrorKey,
 } from "./mistakeAnalysis";
@@ -62,14 +64,61 @@ describe("mistakeAnalysis", () => {
 	});
 
 	describe("heatColor", () => {
-		it("maps heat level endpoints to expected palettes", () => {
-			expect(heatColor(0)).toBe("#22c55e30");
-			expect(heatColor(1)).toBe("#dc2626c0");
+		it("returns transparent for no heat (level 0)", () => {
+			expect(heatColor(0)).toBe("transparent");
 		});
 
-		it("maps mid ranges to green/yellow", () => {
-			expect(heatColor(0.2)).toBe("#22c55e80");
-			expect(heatColor(0.5)).toBe("#ca8a04a0");
+		it("returns color-mix values for different heat levels using app design tokens", () => {
+			expect(heatColor(0.1)).toBe("color-mix(in srgb, var(--gb-accent) 15%, transparent)");
+			expect(heatColor(0.24)).toBe("color-mix(in srgb, var(--gb-accent) 15%, transparent)");
+			expect(heatColor(0.25)).toBe("color-mix(in srgb, var(--gb-accent) 35%, transparent)");
+			expect(heatColor(0.49)).toBe("color-mix(in srgb, var(--gb-accent) 35%, transparent)");
+			expect(heatColor(0.5)).toBe("color-mix(in srgb, var(--gb-accent-strong) 50%, transparent)");
+			expect(heatColor(0.74)).toBe("color-mix(in srgb, var(--gb-accent-strong) 50%, transparent)");
+			expect(heatColor(0.75)).toBe("color-mix(in srgb, var(--gb-accent-strong) 75%, transparent)");
+			expect(heatColor(1)).toBe("color-mix(in srgb, var(--gb-accent-strong) 75%, transparent)");
+		});
+	});
+
+	describe("heatLevelLabel", () => {
+		it("returns correct labels for heat levels", () => {
+			expect(heatLevelLabel(0)).toBe("Solid");
+			expect(heatLevelLabel(0.1)).toBe("Minor");
+			expect(heatLevelLabel(0.24)).toBe("Minor");
+			expect(heatLevelLabel(0.25)).toBe("Moderate");
+			expect(heatLevelLabel(0.5)).toBe("Significant");
+			expect(heatLevelLabel(0.74)).toBe("Significant");
+			expect(heatLevelLabel(0.75)).toBe("Critical");
+			expect(heatLevelLabel(1)).toBe("Critical");
+		});
+	});
+
+	describe("calculateHeatMapStats", () => {
+		it("returns zero stats for empty log", () => {
+			const stats = calculateHeatMapStats(EMPTY_MISTAKE_LOG, [0, 2]);
+			expect(stats.totalPositions).toBe(0);
+			expect(stats.positionsWithErrors).toBe(0);
+			expect(stats.averageErrorsPerPosition).toBe(0);
+			expect(stats.totalCells).toBe(18); // 6 strings * 3 frets
+			expect(stats.coveragePercent).toBe(0);
+			expect(stats.worstString).toBeNull();
+		});
+
+		it("calculates stats correctly for log with errors", () => {
+			const log = recordErrors(EMPTY_MISTAKE_LOG, [
+				{ string: 0, fret: 1 },
+				{ string: 0, fret: 1 },
+				{ string: 0, fret: 2 },
+				{ string: 1, fret: 1 },
+			]);
+			const stats = calculateHeatMapStats(log, [0, 2]);
+			expect(stats.totalPositions).toBe(3);
+			expect(stats.positionsWithErrors).toBe(3);
+			expect(stats.averageErrorsPerPosition).toBe(4 / 3);
+			expect(stats.coveragePercent).toBe(17); // 3 out of 18 positions
+			expect(stats.worstString).not.toBeNull();
+			expect(stats.worstString?.string).toBe(0);
+			expect(stats.worstString?.errorCount).toBe(3);
 		});
 	});
 });

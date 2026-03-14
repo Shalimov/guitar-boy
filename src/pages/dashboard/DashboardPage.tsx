@@ -1,36 +1,21 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Button, Card, CardContent, CardHeader } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
 import { EMPTY_MISTAKE_LOG } from "@/lib/mistakeAnalysis";
-import { scheduleReminder } from "@/lib/reminders";
-import { getDueCards } from "@/lib/srs";
 import { computeStreak, getActiveDays } from "@/lib/streak";
 import type { SessionRecord } from "@/types";
-import { OverdueBanner } from "./OverdueBanner";
-import { ReminderSettings } from "./ReminderSettings";
 import { StreakDisplay } from "./StreakDisplay";
 import { WeakSpotsPanel } from "./WeakSpotsPanel";
 
 export function DashboardPage() {
 	const navigate = useNavigate();
 	const { store } = useProgressStore();
-	const [bannerDismissed, setBannerDismissed] = useState(false);
-
-	const dueCards = getDueCards(store.cards);
 	const sessionHistory: SessionRecord[] = store.sessionHistory;
 
 	const activeDays = getActiveDays(sessionHistory);
 	const { currentStreak, longestStreak } = computeStreak(
 		sessionHistory.map((s: SessionRecord) => s.date),
 	);
-
-	useEffect(() => {
-		const { reminder } = store.settings;
-		if (!reminder?.enabled) return;
-		const cleanup = scheduleReminder(reminder.time, dueCards.length);
-		return cleanup;
-	}, [store.settings, dueCards.length]);
 
 	const sessionsToday = sessionHistory.filter(
 		(session: SessionRecord) => new Date(session.date).toDateString() === new Date().toDateString(),
@@ -51,33 +36,6 @@ export function DashboardPage() {
 		return totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 	};
 
-	const cards = [
-		{
-			title: "Notes",
-			accuracy: calculateAccuracy(notesSessions),
-			description: "Note recognition progress",
-			action: () => navigate("/quiz"),
-		},
-		{
-			title: "Intervals",
-			accuracy: calculateAccuracy(intervalSessions),
-			description: "Interval training progress",
-			action: () => navigate("/quiz"),
-		},
-		{
-			title: "Chords",
-			accuracy: calculateAccuracy(chordSessions),
-			description: "Chord building progress",
-			action: () => navigate("/quiz"),
-		},
-		{
-			title: "Due for Review",
-			accuracy: null,
-			description: `${dueCards.length} cards due today`,
-			action: dueCards.length > 0 ? () => navigate("/quiz") : undefined,
-		},
-	];
-
 	const progressByMode = [
 		{ label: "Notes", accuracy: calculateAccuracy(notesSessions) },
 		{ label: "Intervals", accuracy: calculateAccuracy(intervalSessions) },
@@ -96,26 +54,20 @@ export function DashboardPage() {
 				description: "A personalized 5-minute session mixing review, quizzes, and ear training.",
 				action: () => navigate("/practice"),
 			}
-		: dueCards.length > 0
+		: sessionHistory.length === 0
 			? {
-					label: "Review due cards",
-					description: `${dueCards.length} card${dueCards.length === 1 ? "" : "s"} ready for spaced repetition.`,
-					action: () => navigate("/quiz"),
+					label: "Start your first lesson",
+					description: "Build a foundation with a guided walkthrough before jumping into drills.",
+					action: () => navigate("/learn"),
 				}
-			: sessionHistory.length === 0
-				? {
-						label: "Start your first lesson",
-						description: "Build a foundation with a guided walkthrough before jumping into drills.",
-						action: () => navigate("/learn"),
-					}
-				: {
-						label: `Sharpen ${weakestArea.label.toLowerCase()}`,
-						description: `${weakestArea.label} is your lowest accuracy area right now. A short quiz will tighten it up.`,
-						action: () => navigate("/quiz"),
-					};
+			: {
+					label: `Sharpen ${weakestArea.label.toLowerCase()}`,
+					description: `${weakestArea.label} is your lowest accuracy area right now. A short quiz will tighten it up.`,
+					action: () => navigate("/quiz"),
+				};
 
 	const secondaryAction =
-		hasDoneToday && dueCards.length === 0
+		hasDoneToday && sessionHistory.length > 0
 			? { label: "Open ear training", action: () => navigate("/ear-training") }
 			: sessionHistory.length === 0
 				? { label: "Explore whiteboard", action: () => navigate("/whiteboard") }
@@ -130,7 +82,7 @@ export function DashboardPage() {
 			case "quiz-chord":
 				return "Chord quiz";
 			case "review":
-				return "SRS review";
+				return "Review";
 			case "daily-practice":
 				return "Daily practice";
 			case "learning":
@@ -152,14 +104,6 @@ export function DashboardPage() {
 					focused session.
 				</p>
 			</header>
-
-			{dueCards.length > 0 && !bannerDismissed && (
-				<OverdueBanner
-					dueCount={dueCards.length}
-					onStartReview={() => navigate("/quiz/review")}
-					onDismiss={() => setBannerDismissed(true)}
-				/>
-			)}
 
 			{sessionHistory.length > 0 && (
 				<StreakDisplay
@@ -190,11 +134,14 @@ export function DashboardPage() {
 						</div>
 					</div>
 
-					<div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+					<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
 						{[
-							{ label: "Due now", value: dueCards.length, detail: "cards ready" },
 							{ label: "Sessions today", value: sessionsToday, detail: "practice blocks" },
-							{ label: "Tracked sessions", value: sessionHistory.length, detail: "recent history" },
+							{
+								label: "Tracked sessions",
+								value: sessionHistory.length,
+								detail: "recent history",
+							},
 						].map((stat) => (
 							<div
 								key={stat.label}
@@ -212,34 +159,6 @@ export function DashboardPage() {
 					</div>
 				</div>
 			</section>
-
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-				{cards.map((card) => (
-					<Card
-						key={card.title}
-						onClick={card.action}
-						className={card.action ? "group relative overflow-hidden" : "opacity-90"}
-					>
-						<div
-							aria-hidden
-							className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-[radial-gradient(circle,_rgba(232,180,141,0.42),_transparent_70%)]"
-						/>
-						<CardHeader className="relative text-base tracking-[0.01em]">{card.title}</CardHeader>
-						<CardContent>
-							{card.accuracy !== null ? (
-								<div className="text-4xl font-extrabold text-[var(--gb-accent)]">
-									{card.accuracy}%
-								</div>
-							) : (
-								<div className="text-4xl font-extrabold text-[var(--gb-accent)]">
-									{dueCards.length}
-								</div>
-							)}
-							<p className="mt-1 text-sm text-[var(--gb-text-muted)]">{card.description}</p>
-						</CardContent>
-					</Card>
-				))}
-			</div>
 
 			{recentSessions.length > 0 && (
 				<section className="gb-panel p-6">
@@ -346,8 +265,6 @@ export function DashboardPage() {
 					</div>
 				</section>
 			)}
-
-			<ReminderSettings />
 		</div>
 	);
 }

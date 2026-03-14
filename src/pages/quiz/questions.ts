@@ -8,6 +8,8 @@ export interface NoteQuestion {
 	type: "note";
 	targetPositions: FretPosition[];
 	targetNote: string;
+	targetString?: number; // For speed drills - specifies which string to find the note on
+	targetStringLabel?: string; // String name (E, A, D, G, B, e)
 }
 
 export interface NoteGuessQuestion {
@@ -31,6 +33,9 @@ export interface ChordQuestion {
 	type: "chord";
 	targetPositions: FretPosition[];
 	targetChord: string;
+	targetString?: number; // For speed drills - specifies which string to place the root on
+	targetStringLabel?: string; // String name (E, A, D, G, B, e)
+	chordTone?: string; // For speed drills - which tone to place (Root, 3rd, 5th)
 }
 
 export type Question = NoteQuestion | NoteGuessQuestion | IntervalQuestion | ChordQuestion;
@@ -74,8 +79,19 @@ export function generateQuestions(
 	for (let i = 0; i < questionCount; i++) {
 		if (type === "note") {
 			const targetNote = NATURAL_NOTES[Math.floor(rng.random() * NATURAL_NOTES.length)];
-			const targetPositions = getAllPositionsOfNote(targetNote, [minFret, maxFret]);
-			generated.push({ id: `note-${i}`, type: "note", targetPositions, targetNote });
+			const allPositions = getAllPositionsOfNote(targetNote, [minFret, maxFret]);
+			// For speed drills, pick one specific string to make it clearer
+			const targetString = Math.floor(rng.random() * 6);
+			const targetPositions = allPositions.filter((p) => p.string === targetString);
+			const stringLabels = ["E", "A", "D", "G", "B", "e"];
+			generated.push({
+				id: `note-${i}`,
+				type: "note",
+				targetPositions: targetPositions.length > 0 ? targetPositions : allPositions,
+				targetNote,
+				targetString,
+				targetStringLabel: stringLabels[targetString],
+			});
 		} else if (type === "note-guess" || type === "note-guess-sound") {
 			let shownPosition: FretPosition;
 			let targetNote: NoteName;
@@ -125,11 +141,15 @@ export function generateQuestions(
 			const rootString = Math.floor(rng.random() * 6);
 			const rootFret = Math.floor(rng.random() * maxFret) + minFret;
 			const rootNote = getNoteAtFret({ string: rootString, fret: rootFret });
+			const stringLabels = ["E", "A", "D", "G", "B", "e"];
 			generated.push({
 				id: `chord-${i}`,
 				type: "chord",
 				targetPositions: [{ string: rootString, fret: rootFret }],
 				targetChord: `${rootNote} major`,
+				targetString: rootString,
+				targetStringLabel: stringLabels[rootString],
+				chordTone: "Root",
 			});
 		}
 	}

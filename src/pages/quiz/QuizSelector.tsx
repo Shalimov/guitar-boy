@@ -4,7 +4,7 @@ import { useProgressStore } from "@/hooks/useProgressStore";
 import { computeAdaptiveConfig } from "@/lib/adaptiveDifficulty";
 import type { CardCategory } from "@/types";
 
-export type QuizType = CardCategory | "note-guess" | "note-guess-sound" | "pattern";
+export type QuizType = CardCategory | "note-guess" | "note-guess-sound";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 export interface QuizSettings {
@@ -47,11 +47,6 @@ const QUIZ_TYPES = [
 		label: "Build Chord",
 		desc: "Place chord tones on the fretboard",
 	},
-	{
-		value: "pattern",
-		label: "Pattern Recognition",
-		desc: "Complete or identify scale and chord shapes",
-	},
 ] as const;
 
 export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
@@ -65,16 +60,12 @@ export function QuizSelector({ onStartQuiz }: QuizSelectorProps) {
 	const [mode, setMode] = useState<"regular" | "speed">("regular");
 
 	// Compute adaptive suggestion
-	const modeMapping: Record<
-		QuizType,
-		"quiz-note" | "quiz-interval" | "quiz-chord" | "quiz-pattern"
-	> = {
+	const modeMapping: Record<QuizType, "quiz-note" | "quiz-interval" | "quiz-chord"> = {
 		note: "quiz-note",
 		"note-guess": "quiz-note",
 		"note-guess-sound": "quiz-note",
 		interval: "quiz-interval",
 		chord: "quiz-chord",
-		pattern: "quiz-pattern",
 	};
 
 	const modeKey = modeMapping[type];

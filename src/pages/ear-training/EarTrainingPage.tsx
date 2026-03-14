@@ -44,7 +44,7 @@ export function EarTrainingPage() {
 					description="Build note recognition with short drills that move from listening, to guessing, to confident recall."
 				/>
 
-				<section className="gb-panel p-5 max-w-3xl">
+				<section className="gb-panel p-5">
 					<div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
 						<div>
 							<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
@@ -61,7 +61,7 @@ export function EarTrainingPage() {
 					</div>
 				</section>
 
-				<div className="grid max-w-3xl gap-4">
+				<div className="grid gap-4">
 					{MODES.map((mode) => (
 						<Card key={mode.id} className="p-5">
 							<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

@@ -103,14 +103,74 @@ export function getTopProblemAreas(log: MistakeLog, count = 5): HeatMapEntry[] {
 }
 
 /**
- * Map a heat level (0–1) to a color.
- * 0 = green (#16a34a), 0.5 = yellow (#ca8a04), 1 = red (#dc2626)
+ * Map a heat level (0–1) to a color using app's design system.
+ * Uses CSS custom properties for consistent theming in light/dark modes.
+ * 0 = transparent/no heat, 0.5 = medium heat, 1 = high heat
  */
 export function heatColor(level: number): string {
-	if (level === 0) return "#22c55e30"; // green with low opacity (no errors)
-	if (level < 0.33) return "#22c55e80";
-	if (level < 0.66) return "#ca8a04a0";
-	return "#dc2626c0";
+	// Use gb-accent color family with varying opacity for heat intensity
+	// This maintains consistency with the app's warm color palette
+	if (level === 0) return "transparent";
+	if (level < 0.25) return "color-mix(in srgb, var(--gb-accent) 15%, transparent)";
+	if (level < 0.5) return "color-mix(in srgb, var(--gb-accent) 35%, transparent)";
+	if (level < 0.75) return "color-mix(in srgb, var(--gb-accent-strong) 50%, transparent)";
+	return "color-mix(in srgb, var(--gb-accent-strong) 75%, transparent)";
+}
+
+/**
+ * Get a descriptive label for a heat level.
+ */
+export function heatLevelLabel(level: number): string {
+	if (level === 0) return "Solid";
+	if (level < 0.25) return "Minor";
+	if (level < 0.5) return "Moderate";
+	if (level < 0.75) return "Significant";
+	return "Critical";
+}
+
+/**
+ * Calculate statistics from the heat map for display.
+ */
+export function calculateHeatMapStats(
+	log: MistakeLog,
+	fretRange: [number, number] = [0, 12],
+): {
+	totalPositions: number;
+	positionsWithErrors: number;
+	averageErrorsPerPosition: number;
+	totalCells: number;
+	coveragePercent: number;
+	worstString: { string: number; errorCount: number } | null;
+} {
+	const entries = generateHeatMap(log, fretRange);
+	const positionsWithErrors = entries.filter((e) => e.errorCount > 0);
+
+	// Calculate errors by string
+	const stringErrors = new Map<number, number>();
+	for (const entry of positionsWithErrors) {
+		const current = stringErrors.get(entry.position.string) ?? 0;
+		stringErrors.set(entry.position.string, current + entry.errorCount);
+	}
+
+	let worstString: { string: number; errorCount: number } | null = null;
+	for (const [stringIndex, errorCount] of stringErrors) {
+		if (!worstString || errorCount > worstString.errorCount) {
+			worstString = { string: stringIndex, errorCount };
+		}
+	}
+
+	const totalErrors = positionsWithErrors.reduce((sum, e) => sum + e.errorCount, 0);
+	const totalCells = entries.length;
+
+	return {
+		totalPositions: positionsWithErrors.length,
+		positionsWithErrors: positionsWithErrors.length,
+		averageErrorsPerPosition:
+			positionsWithErrors.length > 0 ? totalErrors / positionsWithErrors.length : 0,
+		totalCells,
+		coveragePercent: Math.round((positionsWithErrors.length / totalCells) * 100),
+		worstString,
+	};
 }
 
 export const EMPTY_MISTAKE_LOG: MistakeLog = { errors: {}, totalErrors: 0 };
