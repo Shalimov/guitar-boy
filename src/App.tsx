@@ -37,7 +37,7 @@ function PageLoader() {
 
 export function App() {
 	return (
-		<BrowserRouter>
+		<BrowserRouter basename={process.env.PUBLIC_URL || "/"}>
 			<ScrollToTop />
 			<Suspense fallback={<PageLoader />}>
 				<Routes>

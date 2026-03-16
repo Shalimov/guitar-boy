@@ -1,6 +1,9 @@
 import { defineConfig } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 
+const isProduction = process.env.NODE_ENV === "production";
+const baseUrl = isProduction ? "/guitar-boy/" : "/";
+
 export default defineConfig({
 	plugins: [pluginReact()],
 	resolve: {
@@ -12,6 +15,9 @@ export default defineConfig({
 		entry: {
 			index: "./src/index.tsx",
 		},
+		define: {
+			"process.env.PUBLIC_URL": JSON.stringify(baseUrl),
+		},
 	},
 	server: {
 		port: 5168,
@@ -21,6 +27,6 @@ export default defineConfig({
 		title: "Guitar Boy — Fretboard Learning App",
 	},
 	output: {
-		assetPrefix: "/guitar-boy/",
+		assetPrefix: baseUrl,
 	},
 });
