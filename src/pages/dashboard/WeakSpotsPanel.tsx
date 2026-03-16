@@ -1,3 +1,4 @@
+import { Tooltip } from "@/components/ui/Tooltip";
 import {
 	calculateHeatMapStats,
 	generateHeatMap,
@@ -119,12 +120,12 @@ export function WeakSpotsPanel({ mistakeLog }: WeakSpotsPanelProps) {
 			</div>
 
 			{/* Grid-based heat map with string labels */}
-			<div className="overflow-x-auto pb-2">
-				<div className="min-w-[700px]">
+			<div className="overflow-x-auto pb-8">
+				<div className="min-w-[700px] pt-10">
 					{/* String labels row */}
 					<div
-						className="grid gap-1 mb-1"
-						style={{ gridTemplateColumns: "100px repeat(13, minmax(2.5rem, 1fr))" }}
+						className="grid gap-2 mb-2"
+						style={{ gridTemplateColumns: "100px repeat(13, 40px)" }}
 					>
 						<div aria-hidden="true" /> {/* Empty corner */}
 						{FRET_NUMBERS.map((fretNum) => (
@@ -141,8 +142,8 @@ export function WeakSpotsPanel({ mistakeLog }: WeakSpotsPanelProps) {
 					{STRING_INDICES.map((stringIndex) => (
 						<div
 							key={`string-row-${stringIndex}`}
-							className="grid gap-1 mb-1"
-							style={{ gridTemplateColumns: "100px repeat(13, minmax(2.5rem, 1fr))" }}
+							className="grid gap-2 mb-2"
+							style={{ gridTemplateColumns: "100px repeat(13, 40px)" }}
 						>
 							<div className="flex items-center justify-end pr-3">
 								<span className="text-xs font-semibold text-[var(--gb-text-muted)]">
@@ -163,22 +164,24 @@ export function WeakSpotsPanel({ mistakeLog }: WeakSpotsPanelProps) {
 								const tooltipText = `${noteName} on ${STRING_NAMES[stringIndex]}, Fret ${fret}: ${entry.errorCount} mistake${entry.errorCount === 1 ? "" : "s"} (${percentageOfTotal}% of total)`;
 
 								return (
-									<div
-										key={`cell-${stringIndex}-${fret}`}
-										className="aspect-square rounded-lg flex flex-col items-center justify-center text-[9px] font-bold transition-all hover:scale-110 hover:shadow-md cursor-help border border-[var(--gb-border)]/30"
-										style={{
-											background: heatColor(entry.heatLevel),
-											color: entry.heatLevel > 0.5 ? "var(--gb-bg-elev)" : "var(--gb-text-muted)",
-										}}
-										title={tooltipText}
-									>
-										{entry.errorCount > 0 && (
-											<>
-												<span>{entry.errorCount}</span>
-												<span className="text-[7px] opacity-75 block">{noteName}</span>
-											</>
-										)}
-									</div>
+									<Tooltip key={`cell-${stringIndex}-${fret}`} content={tooltipText}>
+										<div
+											className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all hover:scale-110 hover:shadow-md cursor-help border"
+											style={{
+												background: heatColor(entry.heatLevel),
+												color: entry.heatLevel > 0.5 ? "var(--gb-bg-elev)" : "var(--gb-text-muted)",
+												borderColor: entry.errorCount > 0 ? "var(--gb-accent)" : "var(--gb-border)",
+												borderWidth: entry.errorCount > 0 ? "2px" : "1px",
+											}}
+										>
+											{entry.errorCount > 0 && (
+												<>
+													<span>{entry.errorCount}</span>
+													<span className="text-[8px] opacity-75 block">{noteName}</span>
+												</>
+											)}
+										</div>
+									</Tooltip>
 								);
 							})}
 						</div>

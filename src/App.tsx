@@ -23,9 +23,6 @@ const LearningPage = lazy(() =>
 	import("./pages/learning/LearningPage").then((m) => ({ default: m.LearningPage })),
 );
 const QuizPage = lazy(() => import("./pages/quiz/QuizPage").then((m) => ({ default: m.QuizPage })));
-const EarTrainingPage = lazy(() =>
-	import("./pages/ear-training/EarTrainingPage").then((m) => ({ default: m.EarTrainingPage })),
-);
 const DailySessionPage = lazy(() =>
 	import("./pages/daily-session/DailySessionPage").then((m) => ({ default: m.DailySessionPage })),
 );
@@ -49,7 +46,6 @@ export function App() {
 						<Route path="whiteboard/*" element={<WhiteboardPage />} />
 						<Route path="learn/*" element={<LearningPage />} />
 						<Route path="quiz/*" element={<QuizPage />} />
-						<Route path="ear-training" element={<EarTrainingPage />} />
 						<Route path="practice" element={<DailySessionPage />} />
 					</Route>
 				</Routes>

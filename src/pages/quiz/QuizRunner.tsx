@@ -385,9 +385,16 @@ export function QuizRunner({
 								Click all positions of{" "}
 								<span className="font-bold" style={{ color: "var(--gb-accent)" }}>
 									{currentQuestion.targetNote}
-								</span>{" "}
-								({currentQuestion.targetPositions.length} position
-								{currentQuestion.targetPositions.length !== 1 ? "s" : ""})
+								</span>
+								{currentQuestion.targetStringLabel && (
+									<span className="text-sm font-medium text-[var(--gb-text-muted)] ml-2">
+										on the {currentQuestion.targetStringLabel} string
+									</span>
+								)}
+								<span className="text-sm text-[var(--gb-text-muted)] ml-2">
+									({currentQuestion.targetPositions.length} position
+									{currentQuestion.targetPositions.length !== 1 ? "s" : ""})
+								</span>
 							</>
 						)}
 						{currentQuestion.type === "note-guess" && <>What note is shown on the fretboard?</>}

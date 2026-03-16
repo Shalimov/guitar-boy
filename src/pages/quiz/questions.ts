@@ -74,7 +74,7 @@ export function generateQuestions(
 	const generated: Question[] = [];
 	const maxFret =
 		fretRange?.max ?? (difficulty === "beginner" ? 5 : difficulty === "intermediate" ? 12 : 24);
-	const minFret = fretRange?.min ?? 1;
+	const minFret = fretRange?.min ?? 0;
 
 	for (let i = 0; i < questionCount; i++) {
 		if (type === "note") {

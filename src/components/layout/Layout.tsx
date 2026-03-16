@@ -8,7 +8,6 @@ const navItems = [
 	{ to: "/", label: "Dashboard", icon: "🏠" },
 	{ to: "/whiteboard", label: "Whiteboard", icon: "🎨" },
 	{ to: "/learn", label: "Learn", icon: "📖" },
-	{ to: "/ear-training", label: "Ear Training", icon: "🎧" },
 	{ to: "/quiz", label: "Quiz", icon: "⚡" },
 ] as const;
 

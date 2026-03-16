@@ -68,10 +68,10 @@ export function DashboardPage() {
 
 	const secondaryAction =
 		hasDoneToday && sessionHistory.length > 0
-			? { label: "Open ear training", action: () => navigate("/ear-training") }
+			? { label: "Open quiz studio", action: () => navigate("/quiz") }
 			: sessionHistory.length === 0
 				? { label: "Explore whiteboard", action: () => navigate("/whiteboard") }
-				: { label: "Open ear training", action: () => navigate("/ear-training") };
+				: { label: "Open quiz studio", action: () => navigate("/quiz") };
 
 	const formatModeLabel = (mode: (typeof sessionHistory)[number]["mode"]) => {
 		switch (mode) {
@@ -232,7 +232,7 @@ export function DashboardPage() {
 								level: "Phase 4",
 								title: "Ear Training",
 								desc: "Translate what you hear into what you play.",
-								action: () => navigate("/ear-training"),
+								action: () => navigate("/quiz"),
 								label: "Start Training",
 							},
 						].map((phase) => (

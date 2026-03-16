@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AnchorNoteMode } from "./AnchorNoteMode";
 import { HearIdentifyMode } from "./HearIdentifyMode";
@@ -8,29 +7,39 @@ import { ToneMeditationMode } from "./ToneMeditationMode";
 
 type EarTrainingMode = "hear-identify" | "tone-meditation" | "anchor-note";
 
-const MODES: { id: EarTrainingMode; title: string; description: string }[] = [
+const MODES: {
+	id: EarTrainingMode;
+	title: string;
+	description: string;
+	icon: string;
+	badge: string;
+	time: string;
+}[] = [
 	{
 		id: "hear-identify",
 		title: "Hear & Identify",
 		description: "Listen to a note and identify its name",
+		icon: "👂",
+		badge: "Ear-first",
+		time: "2-4 min",
 	},
 	{
 		id: "tone-meditation",
 		title: "Tone Meditation",
 		description: "Passive listening to build note familiarity",
+		icon: "🎵",
+		badge: "Passive focus",
+		time: "3-6 min",
 	},
 	{
 		id: "anchor-note",
 		title: "Anchor Note",
 		description: "Master one note at a time",
+		icon: "⚓",
+		badge: "Best for beginners",
+		time: "4-7 min",
 	},
 ];
-
-const MODE_META: Record<EarTrainingMode, { badge: string; time: string }> = {
-	"hear-identify": { badge: "Ear-first", time: "2-4 min" },
-	"tone-meditation": { badge: "Passive focus", time: "3-6 min" },
-	"anchor-note": { badge: "Best for beginners", time: "4-7 min" },
-};
 
 export function EarTrainingPage() {
 	const [selectedMode, setSelectedMode] = useState<EarTrainingMode | null>(null);
@@ -61,40 +70,46 @@ export function EarTrainingPage() {
 					</div>
 				</section>
 
-				<div className="grid gap-4">
+				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
 					{MODES.map((mode) => (
-						<Card key={mode.id} className="p-5">
-							<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-								<div>
-									<h3 className="text-lg font-semibold">{mode.title}</h3>
-									<div className="mt-1 flex flex-wrap items-center gap-2">
-										<span className="inline-flex items-center rounded-full bg-[var(--gb-bg-panel)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--gb-text-muted)] border border-[var(--gb-border)]">
-											{MODE_META[mode.id].badge}
-										</span>
-										<span className="inline-flex items-center rounded-full bg-[var(--gb-bg-panel)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--gb-text-muted)] border border-[var(--gb-border)]">
-											{MODE_META[mode.id].time}
-										</span>
-									</div>
-									<p className="mt-2 text-sm text-[var(--gb-text-muted)]">{mode.description}</p>
-								</div>
-								<Button onClick={() => setSelectedMode(mode.id)} variant="secondary">
-									Start
-								</Button>
+						<button
+							key={mode.id}
+							type="button"
+							onClick={() => setSelectedMode(mode.id)}
+							className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] hover:border-[var(--gb-accent)] hover:shadow-md transition-all text-left"
+						>
+							<span className="text-2xl">{mode.icon}</span>
+							<span className="text-sm font-medium text-[var(--gb-text)]">{mode.title}</span>
+							<div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
+								<span className="inline-flex items-center rounded-full bg-[var(--gb-bg-panel)] px-2 py-0.5 text-[10px] font-semibold text-[var(--gb-text-muted)] border border-[var(--gb-border)]">
+									{mode.badge}
+								</span>
 							</div>
-						</Card>
+						</button>
 					))}
 				</div>
 			</div>
 		);
 	}
 
+	const currentMode = MODES.find((m) => m.id === selectedMode);
+
 	return (
 		<div className="p-6">
 			<div className="mb-6">
 				<Button variant="ghost" onClick={() => setSelectedMode(null)}>
-					Back to modes
+					← Back to modes
 				</Button>
 			</div>
+
+			{currentMode && (
+				<div className="mb-6">
+					<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
+						{currentMode.title}
+					</p>
+					<p className="mt-1 text-sm text-[var(--gb-text-muted)]">{currentMode.description}</p>
+				</div>
+			)}
 
 			{selectedMode === "hear-identify" && <HearIdentifyMode />}
 			{selectedMode === "tone-meditation" && <ToneMeditationMode />}

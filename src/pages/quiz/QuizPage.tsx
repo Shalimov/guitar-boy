@@ -1,10 +1,19 @@
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import { PageHeader } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
+import { AnchorNoteMode } from "@/pages/ear-training/AnchorNoteMode";
+import { HearIdentifyMode } from "@/pages/ear-training/HearIdentifyMode";
+import { ToneMeditationMode } from "@/pages/ear-training/ToneMeditationMode";
 import { QuizRunner } from "./QuizRunner";
-import type { QuizSettings } from "./QuizSelector";
+import type { EarTrainingMode, QuizSettings } from "./QuizSelector";
 import { QuizSelector } from "./QuizSelector";
 import { SpeedDrillRunner } from "./SpeedDrillRunner";
+
+const EAR_TRAINING_COMPONENTS: Record<EarTrainingMode, React.ReactNode> = {
+	"hear-identify": <HearIdentifyMode />,
+	"tone-meditation": <ToneMeditationMode />,
+	"anchor-note": <AnchorNoteMode />,
+};
 
 export function QuizPage() {
 	const navigate = useNavigate();
@@ -16,6 +25,7 @@ export function QuizPage() {
 		.filter(Boolean);
 	const currentMode = pathSegments[0] ?? "selector";
 	const quizSettings = location.state as QuizSettings | undefined;
+	const earTrainingMode = location.state as EarTrainingMode | undefined;
 
 	const { store, updatePersonalBest } = useProgressStore();
 
@@ -23,9 +33,30 @@ export function QuizPage() {
 		navigate("/quiz/play", { state: settings });
 	};
 
+	const handleStartEarTraining = (mode: EarTrainingMode) => {
+		navigate(`/quiz/ear-training/${mode}`, { state: mode });
+	};
+
 	const handleComplete = () => {
 		navigate("/quiz");
 	};
+
+	// Handle ear training mode display
+	if (currentMode === "ear-training" && earTrainingMode) {
+		const EarTrainingComponent = EAR_TRAINING_COMPONENTS[earTrainingMode];
+		return (
+			<div className="p-6">
+				<button
+					type="button"
+					onClick={() => navigate("/quiz")}
+					className="text-sm font-medium text-[var(--gb-text-muted)] hover:text-[var(--gb-text)] mb-4"
+				>
+					← Back to Quiz Studio
+				</button>
+				{EarTrainingComponent}
+			</div>
+		);
+	}
 
 	if (currentMode === "play") {
 		if (!quizSettings) {
@@ -73,25 +104,14 @@ export function QuizPage() {
 	}
 
 	return (
-		<div className="max-w-4xl mx-auto p-6 space-y-5">
+		<div className="max-w-3xl mx-auto p-6 space-y-6">
 			<PageHeader
 				kicker="Practice"
 				title="Quiz Studio"
-				description="Choose a drill for active recall, then decide whether today is a short warm-up or a focused challenge."
+				description="Choose a quick-start preset or set up your own custom quiz."
 			/>
 
-			<div className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-6 shadow-[var(--gb-shadow-soft)]">
-				<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
-					Quick guide
-				</p>
-				<ul className="mt-3 space-y-2 text-sm text-[var(--gb-text-muted)]">
-					<li>Use quizzes for new recall reps.</li>
-					<li>Keep sessions short when accuracy starts to dip.</li>
-					<li>Focus on one skill area at a time for best results.</li>
-				</ul>
-			</div>
-
-			<QuizSelector onStartQuiz={handleStartQuiz} />
+			<QuizSelector onStartQuiz={handleStartQuiz} onStartEarTraining={handleStartEarTraining} />
 		</div>
 	);
 }

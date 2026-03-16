@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { addDays, getToday } from "@/lib/date";
 
 interface StreakDisplayProps {
@@ -9,27 +10,30 @@ interface StreakDisplayProps {
 }
 
 export function StreakDisplay({ currentStreak, longestStreak, activeDays }: StreakDisplayProps) {
-	const last28Days = useMemo(() => {
+	const last364Days = useMemo(() => {
 		const days = [];
 		const today = getToday();
-		// Start from 27 days ago to today (total 28 days)
-		for (let i = 27; i >= 0; i--) {
+		// Start from 363 days ago to today (total 364 days = 52 weeks = 1 year)
+		for (let i = 363; i >= 0; i--) {
 			days.push(addDays(today, -i));
 		}
 		return days;
 	}, []);
 
-	const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-
-	// Group days into weeks (starting from Monday if possible, or just chunks of 7)
-	const weeks = [];
-	for (let i = 0; i < last28Days.length; i += 7) {
-		weeks.push(last28Days.slice(i, i + 7));
+	// Group days into columns (weeks), where each column has 7 rows (days)
+	const columns = [];
+	for (let i = 0; i < last364Days.length; i += 7) {
+		columns.push(last364Days.slice(i, i + 7));
 	}
+
+	const formatDate = (dateStr: string) => {
+		const date = new Date(dateStr);
+		return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+	};
 
 	return (
 		<div
-			className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow-soft)] overflow-hidden relative"
+			className="rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 shadow-[var(--gb-shadow-soft)] relative"
 			data-testid="streak-display"
 		>
 			<div
@@ -38,50 +42,44 @@ export function StreakDisplay({ currentStreak, longestStreak, activeDays }: Stre
 			/>
 
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-				<div className="space-y-1">
-					<div className="flex items-center gap-2">
-						<span className="text-3xl" role="img" aria-label="flame">
-							🔥
-						</span>
-						<span className="text-3xl font-extrabold text-[var(--gb-accent)]">{currentStreak}</span>
-						<span className="text-sm font-bold uppercase tracking-wider text-[var(--gb-text-muted)] self-end mb-1">
-							Day Streak
-						</span>
+				<div className="flex items-center gap-3 shrink-0">
+					<span className="text-2xl" role="img" aria-label="flame">
+						🔥
+					</span>
+					<div>
+						<div className="flex items-baseline gap-2">
+							<span className="text-2xl font-extrabold text-[var(--gb-accent)]">
+								{currentStreak}
+							</span>
+							<span className="text-xs font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+								Day Streak
+							</span>
+						</div>
+						<p className="text-xs font-medium text-[var(--gb-text-muted)]">
+							Best: <span className="text-[var(--gb-text)]">{longestStreak} days</span>
+						</p>
 					</div>
-					<p className="text-xs font-medium text-[var(--gb-text-muted)]">
-						Best: <span className="text-[var(--gb-text)]">{longestStreak} days</span>
-					</p>
 				</div>
 
-				<div className="space-y-2">
-					<div className="grid grid-cols-7 gap-1">
-						{dayLabels.map((label, i) => (
-							<div
-								// biome-ignore lint/suspicious/noArrayIndexKey: Static labels that never change order
-								key={`${label}-${i}`}
-								className="text-[10px] font-bold text-center text-[var(--gb-text-muted)] w-4"
-							>
-								{label}
-							</div>
-						))}
-						{last28Days.map((date) => {
-							const isActive = activeDays.includes(date);
-							return (
-								<div
-									key={date}
-									title={date}
-									className="w-4 h-4 rounded-sm transition-colors"
-									style={{
-										background: isActive ? "var(--gb-accent)" : "var(--gb-bg-panel)",
-										opacity: isActive ? 1 : 0.4,
-									}}
-								/>
-							);
-						})}
-					</div>
-					<p className="text-[10px] text-right font-bold uppercase tracking-widest text-[var(--gb-text-muted)]">
-						Last 28 Days
-					</p>
+				<div className="flex items-center gap-1.5 justify-end flex-1">
+					{columns.map((column, _colIndex) => (
+						<div key={column[0]} className="flex flex-col gap-1">
+							{column.map((date) => {
+								const isActive = activeDays.includes(date);
+								return (
+									<Tooltip key={date} content={formatDate(date)}>
+										<div
+											className="w-3.5 h-3.5 rounded-[4px] transition-colors cursor-help"
+											style={{
+												background: isActive ? "var(--gb-accent)" : "var(--gb-bg-panel)",
+												opacity: isActive ? 1 : 0.6,
+											}}
+										/>
+									</Tooltip>
+								);
+							})}
+						</div>
+					))}
 				</div>
 			</div>
 		</div>
