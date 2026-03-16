@@ -20,4 +20,7 @@ export default defineConfig({
 	html: {
 		title: "Guitar Boy — Fretboard Learning App",
 	},
+	output: {
+		assetPrefix: "/guitar-boy/",
+	},
 });
