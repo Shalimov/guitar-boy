@@ -1,4 +1,73 @@
-import type { Diagram } from "@/types";
+import type { Diagram, FretboardState } from "@/types";
+
+function PatternPreview({ state }: { state: FretboardState }) {
+	const stringCount = 6;
+	const fretCount = 12;
+	const cellWidth = 24;
+	const cellHeight = 18;
+
+	const hasDot = (stringIndex: number, fretIndex: number): boolean => {
+		return state.dots.some(
+			(dot) => dot.position.string === stringIndex && dot.position.fret === fretIndex,
+		);
+	};
+
+	const getDotColor = (stringIndex: number, fretIndex: number): string | undefined => {
+		const dot = state.dots.find(
+			(d) => d.position.string === stringIndex && d.position.fret === fretIndex,
+		);
+		return dot?.color;
+	};
+
+	const dotKey = (stringIndex: number, fretIndex: number, idx: number) =>
+		`dot-${stringIndex}-${fretIndex}-${idx}`;
+
+	return (
+		<div className="relative rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg)] p-1 overflow-hidden">
+			<svg
+				width={fretCount * cellWidth + 30}
+				height={stringCount * cellHeight + 10}
+				className="block"
+			>
+				{Array.from({ length: fretCount + 1 }).map((_, fretIndex) => (
+					<line
+						key={`fret-${fretIndex}`}
+						x1={30 + fretIndex * cellWidth}
+						y1={5}
+						x2={30 + fretIndex * cellWidth}
+						y2={5 + stringCount * cellHeight}
+						stroke="var(--gb-border)"
+						strokeWidth={fretIndex === 0 ? 3 : 1}
+					/>
+				))}
+				{Array.from({ length: stringCount - 1 }).map((_, stringIndex) => (
+					<line
+						key={`string-${stringIndex}`}
+						x1={30}
+						y1={5 + (stringIndex + 1) * cellHeight}
+						x2={30 + fretCount * cellWidth}
+						y2={5 + (stringIndex + 1) * cellHeight}
+						stroke="var(--gb-border)"
+						strokeWidth={1}
+						strokeDasharray="2,2"
+						opacity={0.5}
+					/>
+				))}
+				{state.dots
+					.filter((dot) => dot.position.fret <= fretCount)
+					.map((dot, idx) => (
+						<circle
+							key={dotKey(dot.position.string, dot.position.fret, idx)}
+							cx={30 + (dot.position.fret - 1) * cellWidth + cellWidth / 2}
+							cy={5 + dot.position.string * cellHeight + cellHeight / 2}
+							r={6}
+							fill={dot.color || "var(--gb-accent)"}
+						/>
+					))}
+			</svg>
+		</div>
+	);
+}
 
 // Group patterns by their id prefix (e.g. "caged", "pentatonic", "major-scale", etc.)
 function getCategory(id: string): string {
@@ -46,6 +115,7 @@ export function PatternLibrary({ patterns, onViewPattern, onEditCopy }: PatternL
 									boxShadow: "var(--gb-shadow-soft)",
 								}}
 							>
+								<PatternPreview key={pattern.id} state={pattern.fretboardState} />
 								<div className="flex-1">
 									<h3 className="font-semibold text-sm" style={{ color: "var(--gb-text)" }}>
 										{pattern.name}

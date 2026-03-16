@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Fretboard } from "@/components/fretboard";
 import { PageHeader } from "@/components/ui";
 import type { Diagram } from "@/types";
@@ -31,6 +32,23 @@ export function DiagramViewer({
 	hasNext,
 }: DiagramViewerProps) {
 	const showNavigation = onPrevious || onNext;
+
+	useEffect(() => {
+		if (!showNavigation) return;
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "ArrowLeft" && hasPrevious) {
+				e.preventDefault();
+				onPrevious?.();
+			} else if (e.key === "ArrowRight" && hasNext) {
+				e.preventDefault();
+				onNext?.();
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [showNavigation, hasPrevious, hasNext, onPrevious, onNext]);
 
 	return (
 		<div className="space-y-5">
