@@ -53,19 +53,17 @@ describe("NoteMemoryTrainer", () => {
 	it("renders the practice controls and note options", () => {
 		render(<NoteMemoryTrainer />);
 
-		expect(
-			screen.getByRole("heading", { name: /train note memory two ways/i }),
-		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /name the note/i })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /hear then name/i })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "C" })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "B" })).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: /practice loop/i })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /visual/i })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /sound/i })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /^C/ })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /^B/ })).toBeInTheDocument();
 	});
 
 	it("plays the prompt automatically in sound mode", async () => {
 		render(<NoteMemoryTrainer />);
 
-		await userEvent.click(screen.getByRole("button", { name: /hear then name/i }));
+		await userEvent.click(screen.getByRole("button", { name: /sound/i }));
 
 		expect(playFretPosition).toHaveBeenCalledTimes(1);
 		expect(playFretPosition).toHaveBeenCalledWith(
@@ -77,8 +75,7 @@ describe("NoteMemoryTrainer", () => {
 	it("checks an answer and lets the user continue", async () => {
 		render(<NoteMemoryTrainer />);
 
-		await userEvent.click(screen.getByRole("button", { name: "C" }));
-		await userEvent.click(screen.getByRole("button", { name: /check answer/i }));
+		await userEvent.click(screen.getByRole("button", { name: /^C/ }));
 
 		expect(screen.getByText(/correct\. say it once more|not quite\. this is/i)).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: /next prompt/i })).toBeInTheDocument();
@@ -113,8 +110,7 @@ describe("NoteMemoryTrainer", () => {
 
 		render(<NoteMemoryTrainer />);
 
-		await userEvent.click(screen.getByRole("button", { name: "D" }));
-		await userEvent.click(screen.getByRole("button", { name: /check answer/i }));
+		await userEvent.click(screen.getByRole("button", { name: /^D/ }));
 
 		expect(screen.getByText(/this is c\./i)).toBeInTheDocument();
 	});

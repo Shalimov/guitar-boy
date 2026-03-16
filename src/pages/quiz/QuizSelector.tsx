@@ -28,6 +28,9 @@ interface QuickStartPreset {
 	id: string;
 	name: string;
 	icon: string;
+	description?: string;
+	badge?: string;
+	time?: string;
 	settings: QuizSettings | null;
 	earTrainingMode?: EarTrainingMode;
 }
@@ -93,6 +96,9 @@ const QUICK_START_PRESETS: QuickStartPreset[] = [
 		id: "hear-identify",
 		name: "Hear & ID",
 		icon: "👂",
+		description: "Listen to a note and identify its name",
+		badge: "Ear-first",
+		time: "2-4 min",
 		earTrainingMode: "hear-identify",
 		settings: null,
 	},
@@ -100,6 +106,9 @@ const QUICK_START_PRESETS: QuickStartPreset[] = [
 		id: "tone-meditation",
 		name: "Tone Med.",
 		icon: "🎵",
+		description: "Passive listening to build note familiarity",
+		badge: "Passive focus",
+		time: "3-6 min",
 		earTrainingMode: "tone-meditation",
 		settings: null,
 	},
@@ -107,12 +116,15 @@ const QUICK_START_PRESETS: QuickStartPreset[] = [
 		id: "anchor-note",
 		name: "Anchor",
 		icon: "⚓",
+		description: "Master one note at a time",
+		badge: "Best for beginners",
+		time: "4-7 min",
 		earTrainingMode: "anchor-note",
 		settings: null,
 	},
 	{
 		id: "custom",
-		name: "Custom",
+		name: "Custom Setup",
 		icon: "⚙️",
 		settings: null,
 	},
@@ -236,7 +248,7 @@ export function QuizSelector({ onStartQuiz, onStartEarTraining }: QuizSelectorPr
 				{EAR_TRAINING_PRESETS.length > 0 && (
 					<div>
 						<h3 className="text-lg font-semibold text-[var(--gb-text)] mb-4">Train Your Ears</h3>
-						<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+						<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 							{EAR_TRAINING_PRESETS.map((preset) => (
 								<button
 									key={preset.id}

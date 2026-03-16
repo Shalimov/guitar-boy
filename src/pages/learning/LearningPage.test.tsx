@@ -60,9 +60,7 @@ describe("LearningPage", () => {
 		await screen.findByRole("heading", { name: /note memory trainer/i });
 
 		expect(screen.getByRole("heading", { name: /note memory trainer/i })).toBeInTheDocument();
-		expect(
-			screen.getByRole("heading", { name: /train note memory two ways/i }),
-		).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: /practice loop/i })).toBeInTheDocument();
 		expect(router.state.location.pathname).toBe("/learn/trainer");
 	});
 

@@ -45,7 +45,7 @@ export function QuizPage() {
 	if (currentMode === "ear-training" && earTrainingMode) {
 		const EarTrainingComponent = EAR_TRAINING_COMPONENTS[earTrainingMode];
 		return (
-			<div className="p-6">
+			<div className="mx-auto max-w-5xl p-6">
 				<button
 					type="button"
 					onClick={() => navigate("/quiz")}

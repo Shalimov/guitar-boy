@@ -1,10 +1,44 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
-import { Button } from "@/components/ui";
+import {
+	Button,
+	FeedbackPanel,
+	KeyboardShortcutsBar,
+	NoteButtonGrid,
+	TinyStat,
+} from "@/components/ui";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
+import { buildNoteShortcutItems } from "@/lib/shortcuts";
 import type { FretPosition, NoteName } from "@/types";
+
+const NOTE_KEY_MAP: Record<string, string> = {
+	q: "C",
+	w: "D",
+	e: "E",
+	r: "F",
+	t: "G",
+	y: "A",
+	u: "B",
+	Q: "C",
+	W: "D",
+	E: "E",
+	R: "F",
+	T: "G",
+	Y: "A",
+	U: "B",
+};
+
+const KEY_TO_DISPLAY: Record<string, string> = {
+	C: "Q",
+	D: "W",
+	E: "E",
+	F: "R",
+	G: "T",
+	A: "Y",
+	B: "U",
+};
 
 type TrainerMode = "visual" | "sound";
 type TrainerRangeKey = "first-position" | "octave";
@@ -134,18 +168,6 @@ function createPrompt(
 	};
 }
 
-function StatCard({ label, value, statKey }: { label: string; value: string; statKey: string }) {
-	return (
-		<div
-			className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4"
-			data-testid={`trainer-stat-${statKey}`}
-		>
-			<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">{label}</p>
-			<p className="mt-2 text-2xl font-semibold text-[var(--gb-text)]">{value}</p>
-		</div>
-	);
-}
-
 function ProblemNotesCard({
 	mistakesByPosition,
 }: {
@@ -153,48 +175,26 @@ function ProblemNotesCard({
 }) {
 	const problemPositions = useMemo(() => {
 		const entries = Object.entries(mistakesByPosition) as [PositionKey, number][];
-		return entries.sort((a, b) => b[1] - a[1]).slice(0, 4);
+		return entries.sort((a, b) => b[1] - a[1]).slice(0, 3);
 	}, [mistakesByPosition]);
 
-	if (problemPositions.length === 0) {
-		return (
-			<div
-				className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4"
-				data-testid="trainer-stat-problem-notes"
-			>
-				<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">
-					Focus Areas
-				</p>
-				<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
-					No mistakes yet — keep practicing!
-				</p>
-			</div>
-		);
-	}
+	if (problemPositions.length === 0) return null;
 
 	return (
-		<div
-			className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4"
-			data-testid="trainer-stat-problem-notes"
-		>
-			<p className="text-xs uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">Focus Areas</p>
-			<div className="mt-3 flex flex-wrap gap-2">
-				{problemPositions.map(([key, count]) => {
-					const pos = keyToPosition(key);
-					const note = getNoteAtFret(pos);
-					return (
-						<span
-							key={key}
-							className="inline-flex items-center gap-1.5 rounded-full border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-2.5 py-1 text-sm font-medium text-[var(--gb-text)]"
-						>
-							<span>
-								{note} @ {pos.string}-{pos.fret}
-							</span>
-							<span className="text-xs text-[var(--gb-text-muted)]">({count})</span>
-						</span>
-					);
-				})}
-			</div>
+		<div className="flex flex-wrap items-center gap-2" data-testid="trainer-stat-problem-notes">
+			<span className="text-[10px] font-bold uppercase tracking-wider text-red-500/80">Focus:</span>
+			{problemPositions.map(([key, count]) => {
+				const pos = keyToPosition(key);
+				const note = getNoteAtFret(pos);
+				return (
+					<span
+						key={key}
+						className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50/50 px-2 py-0.5 text-[11px] font-medium text-red-700"
+					>
+						{note} ({pos.string}-{pos.fret})<span className="opacity-60">{count}</span>
+					</span>
+				);
+			})}
 		</div>
 	);
 }
@@ -249,143 +249,186 @@ export function NoteMemoryTrainer() {
 		void playFretPosition(prompt.position, "2n");
 	}, [prompt]);
 
-	const handleCheckAnswer = useCallback(() => {
-		if (!prompt || !selectedNote) {
-			return;
-		}
+	const handleSubmitAnswer = useCallback(
+		(note: string) => {
+			if (!prompt || feedback) {
+				return;
+			}
 
-		const isCorrect = selectedNote === prompt.note;
-		setFeedback({
-			correct: isCorrect,
-			message: isCorrect
-				? "Correct. Say it once more, then replay it to lock in the sound."
-				: `Not quite. This is ${prompt.note}. Replay it and connect the pitch to the spot on the neck.`,
-		});
-		setStats((current) => {
-			const nextStats = normalizeTrainerStats(current);
-			const nextStreak = isCorrect ? nextStats.streak + 1 : 0;
-			const positionKey = positionToKey(prompt.position);
+			setSelectedNote(note);
+			const isCorrect = note === prompt.note;
+			setFeedback({
+				correct: isCorrect,
+				message: isCorrect
+					? "Correct. Say it once more, then replay it to lock in the sound."
+					: `Not quite. This is ${prompt.note}. Replay it and connect the pitch to the spot on the neck.`,
+			});
+			setStats((current) => {
+				const nextStats = normalizeTrainerStats(current);
+				const nextStreak = isCorrect ? nextStats.streak + 1 : 0;
+				const positionKey = positionToKey(prompt.position);
 
-			return {
-				attempts: nextStats.attempts + 1,
-				correct: nextStats.correct + (isCorrect ? 1 : 0),
-				streak: nextStreak,
-				bestStreak: Math.max(nextStats.bestStreak, nextStreak),
-				mistakesByPosition: isCorrect
-					? nextStats.mistakesByPosition
-					: {
-							...nextStats.mistakesByPosition,
-							[positionKey]: (nextStats.mistakesByPosition[positionKey] ?? 0) + 1,
-						},
-			};
-		});
-	}, [prompt, selectedNote, setStats]);
+				return {
+					attempts: nextStats.attempts + 1,
+					correct: nextStats.correct + (isCorrect ? 1 : 0),
+					streak: nextStreak,
+					bestStreak: Math.max(nextStats.bestStreak, nextStreak),
+					mistakesByPosition: isCorrect
+						? nextStats.mistakesByPosition
+						: {
+								...nextStats.mistakesByPosition,
+								[positionKey]: (nextStats.mistakesByPosition[positionKey] ?? 0) + 1,
+							},
+				};
+			});
+		},
+		[feedback, prompt, setStats],
+	);
 
 	const handleResetStats = useCallback(() => {
 		setStats(INITIAL_TRAINER_STATS);
 	}, [setStats]);
 
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+				return;
+			}
+
+			const note = NOTE_KEY_MAP[event.key];
+			if (note && NATURAL_NOTES.includes(note as NoteName) && !feedback) {
+				handleSubmitAnswer(note);
+				return;
+			}
+
+			if (event.key === "Enter" && feedback) {
+				event.preventDefault();
+				queueNextPrompt();
+				return;
+			}
+
+			if (event.key === " ") {
+				event.preventDefault();
+				if (feedback) {
+					queueNextPrompt();
+				} else if (mode === "sound" && prompt) {
+					handleReplay();
+				}
+				return;
+			}
+
+			if ((event.key === "r" || event.key === "R") && mode === "sound" && prompt) {
+				handleReplay();
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [feedback, handleSubmitAnswer, queueNextPrompt, handleReplay, mode, prompt]);
+
 	const accuracy =
 		normalizedStats.attempts === 0
 			? "--"
 			: `${Math.round((normalizedStats.correct / normalizedStats.attempts) * 100)}%`;
-	const canCheck = selectedNote !== null && feedback === null;
 	const revealedDotColor = feedback?.correct ? "#16a34a" : "#dc2626";
+	const shortcuts = buildNoteShortcutItems({
+		notes: NATURAL_NOTES,
+		keyDisplayMap: KEY_TO_DISPLAY,
+		includeSpaceAction: mode === "sound" ? "replay" : "next",
+		includeEnterAction: "next",
+		extra: mode === "sound" ? [{ id: "r", keyLabel: "R", action: "replay" }] : [],
+	});
 
 	return (
 		<div className="space-y-6">
-			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-5 shadow-[var(--gb-shadow-soft)]">
-				<div className="mb-5">
-					<p className="gb-page-kicker mb-1">Practice Loop</p>
-					<h2 className="text-2xl font-semibold text-[var(--gb-text)]">
-						Train note memory two ways
-					</h2>
-					<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
-						Alternate between seeing a fretboard note and hearing it with no visual cue. That
-						eye-to-ear flip is one of the fastest ways to make note names stick.
-					</p>
-				</div>
-
-				<div className="grid gap-5 xl:grid-cols-[1.2fr,0.8fr]">
-					<div className="space-y-5">
-						<div>
-							<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">Exercise mode</p>
-							<div className="flex flex-wrap gap-2">
-								<Button
-									variant={mode === "visual" ? "primary" : "secondary"}
-									size="sm"
-									onClick={() => setMode("visual")}
-								>
-									Name the note
-								</Button>
-								<Button
-									variant={mode === "sound" ? "primary" : "secondary"}
-									size="sm"
-									onClick={() => setMode("sound")}
-								>
-									Hear then name
-								</Button>
-							</div>
-						</div>
-
-						<div>
-							<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">Fret window</p>
-							<div className="flex flex-wrap gap-2">
-								{(
-									Object.entries(RANGE_CONFIG) as [
-										TrainerRangeKey,
-										(typeof RANGE_CONFIG)[TrainerRangeKey],
-									][]
-								).map(([key, config]) => (
-									<Button
-										key={key}
-										variant={rangeKey === key ? "primary" : "secondary"}
-										size="sm"
-										onClick={() => setRangeKey(key)}
-									>
-										{config.label}
-									</Button>
-								))}
-							</div>
-							<p className="mt-2 text-xs text-[var(--gb-text-muted)]">{rangeConfig.description}</p>
-						</div>
-
-						<label className="flex items-center gap-3 rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-4 py-3 text-sm text-[var(--gb-text)]">
-							<input
-								type="checkbox"
-								checked={includeOpenStrings}
-								onChange={(event) => setIncludeOpenStrings(event.target.checked)}
-							/>
-							<span>Include open strings so you keep hearing the tuning anchors too.</span>
-						</label>
-
-						<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 text-sm text-[var(--gb-text-muted)]">
-							<p className="font-semibold text-[var(--gb-text)]">Best results</p>
-							<p className="mt-2">1. Say the note before you click.</p>
-							<p>2. In sound mode, sing or hum it once before answering.</p>
-							<p>3. Stay in one fret window until you hit a short streak.</p>
-							<p>4. Replay misses immediately so the neck location and pitch reconnect.</p>
-						</div>
+			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-4 shadow-[var(--gb-shadow-soft)] lg:p-5">
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+					<div>
+						<p className="gb-page-kicker mb-0.5">Note Memory Trainer</p>
+						<h2 className="text-xl font-semibold text-[var(--gb-text)]">Practice Loop</h2>
 					</div>
 
-					<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-						<StatCard
+					<div className="flex flex-wrap items-center gap-2">
+						<TinyStat
 							label="Attempts"
 							value={String(normalizedStats.attempts)}
 							statKey="attempts"
 						/>
-						<StatCard label="Accuracy" value={accuracy} statKey="accuracy" />
-						<StatCard label="Streak" value={String(normalizedStats.streak)} statKey="streak" />
-						<StatCard
-							label="Best streak"
+						<TinyStat label="Accuracy" value={accuracy} statKey="accuracy" />
+						<TinyStat label="Streak" value={String(normalizedStats.streak)} statKey="streak" />
+						<TinyStat
+							label="Best"
 							value={String(normalizedStats.bestStreak)}
 							statKey="best-streak"
 						/>
 						<ProblemNotesCard mistakesByPosition={normalizedStats.mistakesByPosition} />
-						<Button variant="ghost" size="sm" onClick={handleResetStats}>
-							Reset stats
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleResetStats}
+							className="h-8 px-2 text-xs"
+						>
+							Reset Stats
 						</Button>
 					</div>
+				</div>
+
+				<hr className="my-3 border-[var(--gb-border)]" />
+
+				<div className="flex flex-wrap items-center gap-3 text-xs">
+					<span className="font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+						Mode
+					</span>
+					<div className="flex gap-1">
+						<Button
+							variant={mode === "visual" ? "primary" : "secondary"}
+							size="sm"
+							onClick={() => setMode("visual")}
+							className="h-7 px-2.5 text-xs"
+						>
+							Visual
+						</Button>
+						<Button
+							variant={mode === "sound" ? "primary" : "secondary"}
+							size="sm"
+							onClick={() => setMode("sound")}
+							className="h-7 px-2.5 text-xs"
+						>
+							Sound
+						</Button>
+					</div>
+					<span className="h-4 w-[1px] bg-[var(--gb-border)]" />
+					<span className="font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+						Window
+					</span>
+					<div className="flex gap-1">
+						{(
+							Object.entries(RANGE_CONFIG) as [
+								TrainerRangeKey,
+								(typeof RANGE_CONFIG)[TrainerRangeKey],
+							][]
+						).map(([key, config]) => (
+							<Button
+								key={key}
+								variant={rangeKey === key ? "primary" : "secondary"}
+								size="sm"
+								onClick={() => setRangeKey(key)}
+								className="h-7 px-2.5 text-xs"
+							>
+								{config.label}
+							</Button>
+						))}
+					</div>
+					<span className="h-4 w-[1px] bg-[var(--gb-border)]" />
+					<label className="flex items-center gap-1.5 text-[var(--gb-text-muted)]">
+						<input
+							type="checkbox"
+							checked={includeOpenStrings}
+							onChange={(event) => setIncludeOpenStrings(event.target.checked)}
+							className="rounded border-[var(--gb-border)]"
+						/>
+						<span>Open</span>
+					</label>
 				</div>
 			</section>
 
@@ -487,72 +530,34 @@ export function NoteMemoryTrainer() {
 								<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">
 									Choose the note name
 								</p>
-								<div className="grid grid-cols-4 gap-2">
-									{NATURAL_NOTES.map((note) => {
-										const isSelected = selectedNote === note;
-										const isCorrectAnswer = feedback && note === prompt.note;
-										const isWrongSelection = feedback && isSelected && note !== prompt.note;
-
-										return (
-											<button
-												key={note}
-												type="button"
-												onClick={() => setSelectedNote(note)}
-												disabled={feedback !== null}
-												style={
-													isCorrectAnswer
-														? { background: "#16a34a", color: "#fff" }
-														: isWrongSelection
-															? { background: "#dc2626", color: "#fff" }
-															: isSelected
-																? {
-																		background: "var(--gb-accent)",
-																		color: "#fff8ee",
-																	}
-																: {
-																		background: "var(--gb-bg-panel)",
-																		color: "var(--gb-text)",
-																		borderColor: "var(--gb-border)",
-																	}
-												}
-												className={`rounded-xl border py-3 text-lg font-bold transition-all focus-visible:outline-none ${feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"}`}
-											>
-												{note}
-											</button>
-										);
-									})}
-								</div>
+								<KeyboardShortcutsBar items={shortcuts} className="mb-3" />
+								<NoteButtonGrid
+									notes={NATURAL_NOTES}
+									selectedNote={selectedNote}
+									correctNote={prompt.note}
+									revealed={feedback !== null}
+									onSelect={handleSubmitAnswer}
+									keyDisplayMap={KEY_TO_DISPLAY}
+									disabled={feedback !== null}
+									buttonClassName="py-3 text-xl sm:py-3.5"
+									gridClassName="grid w-full max-w-[760px] grid-cols-4 gap-2 sm:grid-cols-7"
+								/>
 							</div>
 
 							{feedback ? (
-								<div
-									className="space-y-3 rounded-[18px] p-4"
-									style={{
-										background: feedback.correct
-											? "color-mix(in srgb, #16a34a 12%, var(--gb-bg-elev))"
-											: "color-mix(in srgb, #dc2626 8%, var(--gb-bg-elev))",
-										border: `1px solid ${feedback.correct ? "color-mix(in srgb, #16a34a 30%, var(--gb-border))" : "color-mix(in srgb, #dc2626 24%, var(--gb-border))"}`,
-									}}
-								>
-									<p
-										className="text-sm font-medium"
-										style={{ color: feedback.correct ? "#166534" : "#991b1b" }}
-									>
-										{feedback.message}
-									</p>
-									<div className="flex gap-2">
-										<Button size="sm" onClick={queueNextPrompt}>
-											Next prompt
-										</Button>
-										<Button variant="secondary" size="sm" onClick={handleReplay}>
-											Replay answer
-										</Button>
-									</div>
-								</div>
+								<FeedbackPanel
+									isCorrect={feedback.correct}
+									message={feedback.message}
+									onNext={queueNextPrompt}
+									nextLabel="Next prompt"
+									onReplay={handleReplay}
+									replayLabel="Replay answer"
+									className="opacity-100 translate-y-0"
+								/>
 							) : (
-								<Button onClick={handleCheckAnswer} disabled={!canCheck} className="w-full">
-									Check answer
-								</Button>
+								<div className="rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-3 py-2 text-xs text-[var(--gb-text-muted)]">
+									Waiting for answer. Click a note or use its keyboard shortcut.
+								</div>
 							)}
 						</div>
 					</div>

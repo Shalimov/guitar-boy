@@ -2,9 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
 import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
 import { Button } from "@/components/ui/Button";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { FeedbackPanel } from "@/components/ui/FeedbackPanel";
+import { KeyboardShortcutsBar } from "@/components/ui/KeyboardShortcutsBar";
+import { NoteButtonGrid } from "@/components/ui/NoteButtonGrid";
+import { TinyStat } from "@/components/ui/TinyStat";
 import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret } from "@/lib/music";
+import { buildNoteShortcutItems } from "@/lib/shortcuts";
 import type { FretPosition } from "@/types";
 
 type DifficultyLevel = 1 | 2 | 3 | 4;
@@ -51,6 +55,56 @@ const LEVELS: LevelConfig[] = [
 const NATURAL_NOTES_ONLY = ["C", "D", "E", "F", "G", "A", "B"] as const;
 const ALL_NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
+const NATURAL_KEY_MAP: Record<string, string> = {
+	q: "C",
+	w: "D",
+	e: "E",
+	r: "F",
+	t: "G",
+	y: "A",
+	u: "B",
+	Q: "C",
+	W: "D",
+	E: "E",
+	R: "F",
+	T: "G",
+	Y: "A",
+	U: "B",
+};
+
+const CHROMATIC_KEY_MAP: Record<string, string> = {
+	...NATURAL_KEY_MAP,
+	i: "C#",
+	o: "D#",
+	p: "F#",
+	"[": "G#",
+	"]": "A#",
+	I: "C#",
+	O: "D#",
+	P: "F#",
+	"{": "G#",
+	"}": "A#",
+};
+
+const NATURAL_KEY_DISPLAY: Record<string, string> = {
+	C: "Q",
+	D: "W",
+	E: "E",
+	F: "R",
+	G: "T",
+	A: "Y",
+	B: "U",
+};
+
+const CHROMATIC_KEY_DISPLAY: Record<string, string> = {
+	...NATURAL_KEY_DISPLAY,
+	"C#": "I",
+	"D#": "O",
+	"F#": "P",
+	"G#": "[",
+	"A#": "]",
+};
+
 function getPossibleNotes(config: LevelConfig): string[] {
 	if (config.naturalOnly) {
 		return [...NATURAL_NOTES_ONLY];
@@ -84,37 +138,6 @@ function getRandomPosition(config: LevelConfig): FretPosition {
 	}
 
 	return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
-function NoteButton({
-	note,
-	isSelected,
-	isCorrect,
-	isIncorrect,
-	onClick,
-}: {
-	note: string;
-	isSelected: boolean;
-	isCorrect: boolean;
-	isIncorrect: boolean;
-	onClick: () => void;
-}) {
-	const baseClasses = "px-4 py-3 rounded-lg font-medium transition-all text-sm";
-	let bgClasses = "bg-[var(--gb-bg-panel)] hover:bg-[var(--gb-bg-hover)]";
-
-	if (isCorrect) {
-		bgClasses = "bg-green-600 text-white";
-	} else if (isIncorrect) {
-		bgClasses = "bg-red-600 text-white";
-	} else if (isSelected) {
-		bgClasses = "bg-[var(--gb-accent)] text-white";
-	}
-
-	return (
-		<button type="button" onClick={onClick} className={`${baseClasses} ${bgClasses}`}>
-			{note}
-		</button>
-	);
 }
 
 export function HearIdentifyMode() {
@@ -155,119 +178,213 @@ export function HearIdentifyMode() {
 		}
 	}, [currentPosition, playCurrentNote]);
 
-	const handleNoteSelect = (note: string) => {
-		if (showFeedback || !currentNote) return;
+	const handleNoteSelect = useCallback(
+		(note: string) => {
+			if (showFeedback || !currentNote) return;
 
-		setSelectedNote(note);
-		setShowFeedback(true);
-		const correct = note === currentNote;
-		setIsCorrect(correct);
-		setSessionStats((prev) => ({
-			correct: prev.correct + (correct ? 1 : 0),
-			total: prev.total + 1,
-		}));
-	};
+			setSelectedNote(note);
+			setShowFeedback(true);
+			const correct = note === currentNote;
+			setIsCorrect(correct);
+			setSessionStats((prev) => ({
+				correct: prev.correct + (correct ? 1 : 0),
+				total: prev.total + 1,
+			}));
+		},
+		[showFeedback, currentNote],
+	);
 
-	const handleNext = () => {
+	const handleNext = useCallback(() => {
 		generateNewQuestion();
-	};
+	}, [generateNewQuestion]);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+				return;
+			}
+
+			const keyMap = currentLevelConfig.naturalOnly ? NATURAL_KEY_MAP : CHROMATIC_KEY_MAP;
+			const note = keyMap[event.key];
+
+			if (note && possibleNotes.includes(note) && !showFeedback) {
+				handleNoteSelect(note);
+				return;
+			}
+
+			if (event.key === " ") {
+				event.preventDefault();
+				void playCurrentNote();
+				return;
+			}
+
+			if ((event.key === "Enter" || event.key === "n" || event.key === "N") && showFeedback) {
+				event.preventDefault();
+				handleNext();
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [
+		currentLevelConfig.naturalOnly,
+		possibleNotes,
+		showFeedback,
+		playCurrentNote,
+		handleNoteSelect,
+		handleNext,
+	]);
 
 	const accuracy =
 		sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0;
+	const accuracyDisplay = sessionStats.total > 0 ? `${accuracy}%` : "--";
+	const keyDisplayMap = currentLevelConfig.naturalOnly
+		? NATURAL_KEY_DISPLAY
+		: CHROMATIC_KEY_DISPLAY;
+	const shortcutItems = buildNoteShortcutItems({
+		notes: possibleNotes,
+		keyDisplayMap,
+		includeSpaceAction: "replay",
+		includeEnterAction: "next",
+	});
 
 	return (
-		<div>
-			<PageHeader
-				kicker="Hear & Identify"
-				title="What note is this?"
-				description="Listen to the note and select its name"
-			/>
-
-			<div className="mt-6 flex items-center gap-4">
-				<label htmlFor="difficulty-select" className="text-sm font-medium">
-					Difficulty:
-				</label>
-				<select
-					id="difficulty-select"
-					value={level}
-					onChange={(e) => setLevel(Number(e.target.value) as DifficultyLevel)}
-					className="rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-3 py-2 text-sm"
-				>
-					{LEVELS.map((lvl) => (
-						<option key={lvl.id} value={lvl.id}>
-							{lvl.name}
-						</option>
-					))}
-				</select>
-			</div>
-
-			<div className="mt-8 flex flex-col items-center">
-				<Button onClick={playCurrentNote} variant="secondary" className="mb-6">
-					🔊 Play Again
-				</Button>
-
-				<div className="mb-6 w-full max-w-md">
-					<AudioEqualizer />
-				</div>
-
-				<div className="mb-6 flex w-full max-w-2xl flex-wrap items-center justify-between gap-3 rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)]/70 px-4 py-3">
+		<div className="space-y-6">
+			{/* ── Section 1: Header Panel ── */}
+			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-4 shadow-[var(--gb-shadow-soft)] lg:p-5">
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 					<div>
-						<p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--gb-text-muted)]">
-							Listen first
-						</p>
+						<p className="gb-page-kicker mb-0.5">Hear &amp; Identify</p>
+						<h2 className="text-xl font-semibold text-[var(--gb-text)]">What note is this?</h2>
 						<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
-							Choose the note name from sound alone, then reveal the fretboard position.
+							Listen to the pitch, then pick the correct note name.
 						</p>
 					</div>
-					<p className="text-sm font-semibold text-[var(--gb-accent-strong)]">
-						Accuracy: {sessionStats.correct}/{sessionStats.total} ({accuracy}%)
-					</p>
+
+					<div className="flex flex-wrap items-center gap-2">
+						<TinyStat label="Correct" value={String(sessionStats.correct)} statKey="correct" />
+						<TinyStat label="Total" value={String(sessionStats.total)} statKey="total" />
+						<TinyStat label="Accuracy" value={accuracyDisplay} statKey="accuracy" />
+					</div>
 				</div>
 
-				<div className="mb-8 w-full max-w-2xl">
-					<Fretboard
-						fretRange={currentLevelConfig.fretRange}
-						mode="view"
-						showNoteNames={showFeedback}
-						targetPositions={showFeedback && currentPosition ? [currentPosition] : []}
-						correctPositions={showFeedback && isCorrect && currentPosition ? [currentPosition] : []}
-						incorrectPositions={
-							showFeedback && !isCorrect && currentPosition ? [currentPosition] : []
-						}
-					/>
-				</div>
+				<hr className="my-3 border-[var(--gb-border)]" />
 
-				<div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-12">
-					{possibleNotes.map((note) => (
-						<NoteButton
-							key={note}
-							note={note}
-							isSelected={selectedNote === note}
-							isCorrect={showFeedback && note === currentNote}
-							isIncorrect={showFeedback && selectedNote === note && note !== currentNote}
-							onClick={() => handleNoteSelect(note)}
-						/>
-					))}
+				<div className="flex flex-wrap items-center gap-3 text-xs">
+					<span className="font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+						Level
+					</span>
+					<select
+						id="difficulty-select"
+						value={level}
+						onChange={(e) => setLevel(Number(e.target.value) as DifficultyLevel)}
+						className="rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-2.5 py-1.5 text-xs font-medium text-[var(--gb-text)]"
+					>
+						{LEVELS.map((lvl) => (
+							<option key={lvl.id} value={lvl.id}>
+								{lvl.name}
+							</option>
+						))}
+					</select>
 				</div>
+			</section>
 
-				{showFeedback && (
-					<div className="mt-8 flex flex-col items-center gap-4">
-						<p className={`text-lg font-semibold ${isCorrect ? "text-green-600" : "text-red-600"}`}>
-							{isCorrect ? "Correct!" : `Wrong! The answer was ${currentNote}`}
+			{/* ── Section 2: Drill Area ── */}
+			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow)]">
+				<div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+					<div>
+						<p className="gb-page-kicker mb-1">Current Prompt</p>
+						<h2 className="text-3xl font-semibold text-[var(--gb-text)]">Hear it, then name it</h2>
+						<p className="mt-2 max-w-2xl text-sm text-[var(--gb-text-muted)]">
+							Working with {currentLevelConfig.naturalOnly ? "natural notes" : "all notes"} in{" "}
+							{currentLevelConfig.name.toLowerCase()}. Use your ear first, then confirm.
 						</p>
-						<Button onClick={handleNext} variant="primary">
-							Next Note →
+					</div>
+					<div className="flex gap-2">
+						<Button variant="secondary" size="sm" onClick={playCurrentNote}>
+							Replay note
+						</Button>
+						<Button variant="ghost" size="sm" onClick={handleNext}>
+							Skip prompt
 						</Button>
 					</div>
-				)}
-			</div>
+				</div>
 
-			<div className="mt-12 border-t border-[var(--gb-border)] pt-6">
-				<p className="text-sm text-[var(--gb-text-muted)]">
-					Tip: replay the note once or twice before answering. Reveal the fretboard only after you
-					commit.
-				</p>
-			</div>
+				<div className="grid gap-5 xl:grid-cols-[1.15fr,0.85fr]">
+					{/* Left: Fretboard */}
+					<div className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 md:p-5">
+						<Fretboard
+							fretRange={currentLevelConfig.fretRange}
+							mode="view"
+							showNoteNames={showFeedback}
+							targetPositions={showFeedback && currentPosition ? [currentPosition] : []}
+							correctPositions={
+								showFeedback && isCorrect && currentPosition ? [currentPosition] : []
+							}
+							incorrectPositions={
+								showFeedback && !isCorrect && currentPosition ? [currentPosition] : []
+							}
+						/>
+						<div className="mt-3 flex items-end gap-3">
+							<p className="flex-1 text-xs text-[var(--gb-text-muted)]">
+								{showFeedback
+									? "The correct position is highlighted above. Replay it to lock in the sound."
+									: "Listen to the prompt and try to identify the note before it's revealed."}
+							</p>
+							<div className="w-40 shrink-0">
+								<AudioEqualizer />
+							</div>
+						</div>
+					</div>
+
+					{/* Right: Answer controls */}
+					<div className="space-y-4">
+						<div>
+							<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">
+								Choose the note name
+							</p>
+							<KeyboardShortcutsBar items={shortcutItems} className="mb-3" />
+							<NoteButtonGrid
+								notes={possibleNotes}
+								selectedNote={selectedNote}
+								correctNote={currentNote}
+								revealed={showFeedback}
+								onSelect={handleNoteSelect}
+								keyDisplayMap={keyDisplayMap}
+								disabled={showFeedback}
+								buttonClassName={
+									currentLevelConfig.naturalOnly ? "py-3 text-xl sm:py-3.5" : "py-2.5 text-lg"
+								}
+								gridClassName={
+									currentLevelConfig.naturalOnly
+										? "grid w-full max-w-[560px] grid-cols-4 gap-2 sm:grid-cols-7"
+										: "grid w-full max-w-[760px] grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-12"
+								}
+							/>
+						</div>
+
+						{showFeedback ? (
+							<FeedbackPanel
+								isCorrect={isCorrect}
+								message={
+									isCorrect
+										? "Correct! Replay the note to reinforce the connection."
+										: `Not quite. It was ${currentNote}. Replay it and listen carefully.`
+								}
+								onNext={handleNext}
+								nextLabel="Next prompt"
+								onReplay={playCurrentNote}
+								replayLabel="Replay answer"
+								className="opacity-100 translate-y-0"
+							/>
+						) : (
+							<div className="rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-3 py-2 text-xs text-[var(--gb-text-muted)]">
+								Waiting for answer. Click a note or use its keyboard shortcut.
+							</div>
+						)}
+					</div>
+				</div>
+			</section>
 		</div>
 	);
 }
