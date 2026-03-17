@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
-import { ConfirmDialog, PageHeader, TabBar } from "@/components/ui";
+import { ConfirmDialog, PageHeader, SectionCard, TabBar } from "@/components/ui";
 import { getLessonById } from "@/data/lessons";
 import type { Lesson } from "@/types/lesson";
 import { ExplorerPanel } from "./ExplorerPanel";
@@ -49,7 +49,7 @@ export function LearningPage() {
 					kicker: "Learn",
 					title: "Guided Lessons",
 					description:
-						"Structured lessons to help you learn note positions, intervals, and chords on the fretboard, now with playable note examples for ear-and-eye practice.",
+						"Structured lessons covering note positions, listening skills, how to build scales, and how to build chords — with a clickable fretboard so you learn by ear and eye together.",
 				};
 			case "trainer":
 				return {
@@ -96,15 +96,6 @@ export function LearningPage() {
 	if (selectedLesson) {
 		return (
 			<div className="mx-auto max-w-4xl p-6">
-				<div className="mb-4">
-					<button
-						type="button"
-						onClick={() => navigate("/learn")}
-						className="text-sm font-medium text-[var(--gb-text-muted)] transition-colors hover:opacity-70 focus-visible:outline-none"
-					>
-						Back to lesson list
-					</button>
-				</div>
 				<LessonPlayer
 					lesson={selectedLesson}
 					onComplete={handleLessonComplete}
@@ -127,32 +118,25 @@ export function LearningPage() {
 			<TabBar tabs={tabs} />
 
 			{activeTab === "lessons" ? (
-				<div className="gb-panel space-y-5 p-7">
+				<SectionCard className="space-y-5">
 					<PageHeader
 						kicker={activeTabMeta.kicker}
 						title={activeTabMeta.title}
 						description={activeTabMeta.description}
 					/>
 					<LessonList onSelectLesson={handleSelectLesson} />
-				</div>
+				</SectionCard>
 			) : activeTab === "trainer" ? (
-				<div className="gb-panel space-y-5 p-7">
+				<SectionCard className="space-y-5">
 					<PageHeader
 						kicker={activeTabMeta.kicker}
 						title={activeTabMeta.title}
 						description={activeTabMeta.description}
 					/>
 					<NoteMemoryTrainer />
-				</div>
+				</SectionCard>
 			) : (
-				<div className="gb-panel space-y-5 p-7">
-					<PageHeader
-						kicker={activeTabMeta.kicker}
-						title={activeTabMeta.title}
-						description={activeTabMeta.description}
-					/>
-					<ExplorerPanel />
-				</div>
+				<ExplorerPanel />
 			)}
 		</div>
 	);

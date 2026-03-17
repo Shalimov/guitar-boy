@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
+import { Button, ButtonGroup, FeedbackPanel, NoteButtonGroup, TinyStat } from "@/components/ui";
 import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
-import { Button } from "@/components/ui/Button";
-import { FeedbackPanel } from "@/components/ui/FeedbackPanel";
 import { KeyboardShortcutsBar } from "@/components/ui/KeyboardShortcutsBar";
-import { NoteButtonGrid } from "@/components/ui/NoteButtonGrid";
-import { TinyStat } from "@/components/ui/TinyStat";
 import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret } from "@/lib/music";
-import { buildNoteShortcutItems } from "@/lib/shortcuts";
+import {
+	buildNoteShortcutItems,
+	FLAT_KEY_DISPLAY,
+	NATURAL_KEY_DISPLAY,
+	SHARP_KEY_DISPLAY,
+} from "@/lib/shortcuts";
 import type { FretPosition } from "@/types";
 
 type DifficultyLevel = 1 | 2 | 3 | 4;
@@ -84,25 +86,6 @@ const CHROMATIC_KEY_MAP: Record<string, string> = {
 	P: "F#",
 	"{": "G#",
 	"}": "A#",
-};
-
-const NATURAL_KEY_DISPLAY: Record<string, string> = {
-	C: "Q",
-	D: "W",
-	E: "E",
-	F: "R",
-	G: "T",
-	A: "Y",
-	B: "U",
-};
-
-const CHROMATIC_KEY_DISPLAY: Record<string, string> = {
-	...NATURAL_KEY_DISPLAY,
-	"C#": "I",
-	"D#": "O",
-	"F#": "P",
-	"G#": "[",
-	"A#": "]",
 };
 
 function getPossibleNotes(config: LevelConfig): string[] {
@@ -238,15 +221,23 @@ export function HearIdentifyMode() {
 	const accuracy =
 		sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0;
 	const accuracyDisplay = sessionStats.total > 0 ? `${accuracy}%` : "--";
-	const keyDisplayMap = currentLevelConfig.naturalOnly
-		? NATURAL_KEY_DISPLAY
-		: CHROMATIC_KEY_DISPLAY;
-	const shortcutItems = buildNoteShortcutItems({
-		notes: possibleNotes,
-		keyDisplayMap,
-		includeSpaceAction: "replay",
-		includeEnterAction: "next",
-	});
+	const keyDisplayMap = useMemo(() => {
+		if (currentLevelConfig.naturalOnly) {
+			return NATURAL_KEY_DISPLAY;
+		}
+		return { ...NATURAL_KEY_DISPLAY, ...SHARP_KEY_DISPLAY, ...FLAT_KEY_DISPLAY };
+	}, [currentLevelConfig.naturalOnly]);
+
+	const shortcutItems = useMemo(
+		() =>
+			buildNoteShortcutItems({
+				notes: possibleNotes,
+				keyDisplayMap,
+				includeSpaceAction: "replay",
+				includeEnterAction: "next",
+			}),
+		[possibleNotes, keyDisplayMap],
+	);
 
 	return (
 		<div className="space-y-6">
@@ -270,22 +261,16 @@ export function HearIdentifyMode() {
 
 				<hr className="my-3 border-[var(--gb-border)]" />
 
-				<div className="flex flex-wrap items-center gap-3 text-xs">
-					<span className="font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
-						Level
-					</span>
-					<select
-						id="difficulty-select"
-						value={level}
-						onChange={(e) => setLevel(Number(e.target.value) as DifficultyLevel)}
-						className="rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-2.5 py-1.5 text-xs font-medium text-[var(--gb-text)]"
-					>
-						{LEVELS.map((lvl) => (
-							<option key={lvl.id} value={lvl.id}>
-								{lvl.name}
-							</option>
-						))}
-					</select>
+				<div className="mt-4">
+					<ButtonGroup
+						options={LEVELS.map((lvl) => ({
+							label: lvl.name,
+							value: String(lvl.id),
+						}))}
+						value={String(level)}
+						onChange={(value) => setLevel(Number(value) as DifficultyLevel)}
+						label="Select difficulty level"
+					/>
 				</div>
 			</section>
 
@@ -344,23 +329,204 @@ export function HearIdentifyMode() {
 								Choose the note name
 							</p>
 							<KeyboardShortcutsBar items={shortcutItems} className="mb-3" />
-							<NoteButtonGrid
-								notes={possibleNotes}
-								selectedNote={selectedNote}
-								correctNote={currentNote}
-								revealed={showFeedback}
-								onSelect={handleNoteSelect}
-								keyDisplayMap={keyDisplayMap}
-								disabled={showFeedback}
-								buttonClassName={
-									currentLevelConfig.naturalOnly ? "py-3 text-xl sm:py-3.5" : "py-2.5 text-lg"
-								}
-								gridClassName={
-									currentLevelConfig.naturalOnly
-										? "grid w-full max-w-[560px] grid-cols-4 gap-2 sm:grid-cols-7"
-										: "grid w-full max-w-[760px] grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-12"
-								}
-							/>
+							<div className="space-y-4">
+								{!currentLevelConfig.naturalOnly && (
+									<NoteButtonGroup label="Natural Notes">
+										{["A", "B", "C", "D", "E", "F", "G"].map((note) => {
+											const isSelected = selectedNote === note;
+											const isCorrectNote = currentNote && note === currentNote;
+											const isWrong = isSelected && !isCorrectNote;
+
+											let buttonStyle = {};
+											if (showFeedback && isCorrectNote) {
+												buttonStyle = {
+													background: "#16a34a",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isWrong) {
+												buttonStyle = {
+													background: "#dc2626",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isSelected) {
+												buttonStyle = {
+													background: "var(--gb-accent)",
+													color: "#fff8ee",
+													borderColor: "transparent",
+												};
+											} else {
+												buttonStyle = {
+													background: "var(--gb-bg-panel)",
+													color: "var(--gb-text)",
+													borderColor: "var(--gb-border)",
+												};
+											}
+
+											return (
+												<button
+													key={note}
+													type="button"
+													onClick={() => handleNoteSelect(note)}
+													disabled={showFeedback}
+													style={buttonStyle}
+													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
+												>
+													{note}
+												</button>
+											);
+										})}
+									</NoteButtonGroup>
+								)}
+								{!currentLevelConfig.naturalOnly && (
+									<NoteButtonGroup label="Sharps (Ctrl)">
+										{["A#", "C#", "D#", "F#", "G#"].map((note) => {
+											const isSelected = selectedNote === note;
+											const isCorrectNote = currentNote && note === currentNote;
+											const isWrong = isSelected && !isCorrectNote;
+
+											let buttonStyle = {};
+											if (showFeedback && isCorrectNote) {
+												buttonStyle = {
+													background: "#16a34a",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isWrong) {
+												buttonStyle = {
+													background: "#dc2626",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isSelected) {
+												buttonStyle = {
+													background: "var(--gb-accent)",
+													color: "#fff8ee",
+													borderColor: "transparent",
+												};
+											} else {
+												buttonStyle = {
+													background: "var(--gb-bg-panel)",
+													color: "var(--gb-text)",
+													borderColor: "var(--gb-border)",
+												};
+											}
+
+											return (
+												<button
+													key={note}
+													type="button"
+													onClick={() => handleNoteSelect(note)}
+													disabled={showFeedback}
+													style={buttonStyle}
+													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
+												>
+													{note}
+												</button>
+											);
+										})}
+									</NoteButtonGroup>
+								)}
+								{!currentLevelConfig.naturalOnly && (
+									<NoteButtonGroup label="Flats (Shift)">
+										{["Bb", "Db", "Eb", "Gb", "Ab"].map((note) => {
+											const isSelected = selectedNote === note;
+											const isCorrectNote = currentNote && note === currentNote;
+											const isWrong = isSelected && !isCorrectNote;
+
+											let buttonStyle = {};
+											if (showFeedback && isCorrectNote) {
+												buttonStyle = {
+													background: "#16a34a",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isWrong) {
+												buttonStyle = {
+													background: "#dc2626",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isSelected) {
+												buttonStyle = {
+													background: "var(--gb-accent)",
+													color: "#fff8ee",
+													borderColor: "transparent",
+												};
+											} else {
+												buttonStyle = {
+													background: "var(--gb-bg-panel)",
+													color: "var(--gb-text)",
+													borderColor: "var(--gb-border)",
+												};
+											}
+
+											return (
+												<button
+													key={note}
+													type="button"
+													onClick={() => handleNoteSelect(note)}
+													disabled={showFeedback}
+													style={buttonStyle}
+													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
+												>
+													{note}
+												</button>
+											);
+										})}
+									</NoteButtonGroup>
+								)}
+								{currentLevelConfig.naturalOnly && (
+									<NoteButtonGroup label="Natural Notes">
+										{["A", "B", "C", "D", "E", "F", "G"].map((note) => {
+											const isSelected = selectedNote === note;
+											const isCorrectNote = currentNote && note === currentNote;
+											const isWrong = isSelected && !isCorrectNote;
+
+											let buttonStyle = {};
+											if (showFeedback && isCorrectNote) {
+												buttonStyle = {
+													background: "#16a34a",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isWrong) {
+												buttonStyle = {
+													background: "#dc2626",
+													color: "#fff",
+													borderColor: "transparent",
+												};
+											} else if (isSelected) {
+												buttonStyle = {
+													background: "var(--gb-accent)",
+													color: "#fff8ee",
+													borderColor: "transparent",
+												};
+											} else {
+												buttonStyle = {
+													background: "var(--gb-bg-panel)",
+													color: "var(--gb-text)",
+													borderColor: "var(--gb-border)",
+												};
+											}
+
+											return (
+												<button
+													key={note}
+													type="button"
+													onClick={() => handleNoteSelect(note)}
+													disabled={showFeedback}
+													style={buttonStyle}
+													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
+												>
+													{note}
+												</button>
+											);
+										})}
+									</NoteButtonGroup>
+								)}
+							</div>
 						</div>
 
 						{showFeedback ? (

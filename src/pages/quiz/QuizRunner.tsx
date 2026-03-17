@@ -309,8 +309,12 @@ export function QuizRunner({
 					<button
 						type="button"
 						onClick={onCancel}
-						className="text-sm font-medium transition-colors hover:opacity-70 focus-visible:outline-none"
-						style={{ color: "var(--gb-text-muted)" }}
+						className="text-sm font-medium rounded-lg px-3 py-1.5 transition-all hover:opacity-80 focus-visible:outline-none"
+						style={{
+							color: "var(--gb-accent)",
+							border: "1px solid var(--gb-accent)",
+							background: "transparent",
+						}}
 					>
 						Cancel Quiz
 					</button>

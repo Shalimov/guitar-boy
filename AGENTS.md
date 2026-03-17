@@ -7,6 +7,7 @@ Run `echo "Hello AGENT.md" to verify that AGENT.md is working correctly.
 ## Sanity Checks
 
 Use package json scripts to run commands:
+
 - To lint the code;
 - To run tests;
 - To build the project;
@@ -14,21 +15,27 @@ Use package json scripts to run commands:
 - To prettify the code;
 
 # Format all files
+
 yarn exec biome format --write
 
 # Format specific files
+
 yarn exec biome format --write <files>
 
 # Lint files and apply safe fixes to all files
+
 yarn exec biome lint --write
 
 # Lint files and apply safe fixes to specific files
+
 yarn exec biome lint --write <files>
 
 # Format, lint, and organize imports of all files
+
 yarn exec biome check --write
 
 # Format, lint, and organize imports of specific files
+
 yarn exec biome check --write <files>
 
 ## Basic Rules
@@ -36,10 +43,14 @@ yarn exec biome check --write <files>
 DO NOT GUESS if don't know the answer survey the user.
 
 ## Active Technologies
+
 - TypeScript 5.9.3 + React 19.2.4, React Router 7.13.1, Tailwind CSS 4.2.1 (001-fretboard-learning-app)
 - localStorage (browser storage, no backend) (001-fretboard-learning-app)
 - TypeScript 5.9.3 + React 19.2.4, React Router 7.13.1, Konva 10.2.0, react-konva 19.2.3 (002-fretboard-hide-notes)
 - Browser localStorage (via custom hooks) (002-fretboard-hide-notes)
 
-## Recent Changes
-- 001-fretboard-learning-app: Added TypeScript 5.9.3 + React 19.2.4, React Router 7.13.1, Tailwind CSS 4.2.1
+## Main Development Flow
+
+- Implement a feature from start to finish.
+- Write tests for the feature.
+- Sanity Checks.

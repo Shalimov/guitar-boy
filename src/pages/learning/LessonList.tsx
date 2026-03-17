@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ButtonGroup } from "@/components/ui";
 import { getLessonsByCategory } from "@/data/lessons";
 import type { Lesson } from "@/types/lesson";
 
@@ -30,34 +31,15 @@ export function LessonList({ onSelectLesson }: LessonListProps) {
 	return (
 		<div className="space-y-5">
 			{/* Category filter pills */}
-			<div className="flex gap-2 flex-wrap">
-				{categories.map((category) => {
-					const active = selectedCategory === category;
-					return (
-						<button
-							key={category}
-							type="button"
-							onClick={() => setSelectedCategory(category)}
-							style={
-								active
-									? {
-											background: "var(--gb-accent)",
-											color: "#fff8ee",
-											borderColor: "var(--gb-accent)",
-										}
-									: {
-											background: "var(--gb-bg-panel)",
-											color: "var(--gb-text)",
-											borderColor: "var(--gb-border)",
-										}
-							}
-							className="px-4 py-1.5 rounded-full border font-medium text-sm transition-all hover:opacity-90 focus-visible:outline-none"
-						>
-							{category.charAt(0).toUpperCase() + category.slice(1)}
-						</button>
-					);
-				})}
-			</div>
+			<ButtonGroup
+				options={categories.map((category) => ({
+					label: category.charAt(0).toUpperCase() + category.slice(1),
+					value: category,
+				}))}
+				value={selectedCategory}
+				onChange={(value) => setSelectedCategory(value)}
+				label="Filter by category"
+			/>
 
 			{/* Lesson cards */}
 			<div className="grid gap-4 md:grid-cols-2">

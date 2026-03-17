@@ -100,7 +100,12 @@ export function PatternDrillRunner({
 				<button
 					type="button"
 					onClick={onCancel}
-					className="text-xs font-bold uppercase tracking-widest text-[var(--gb-text-muted)] hover:text-[var(--gb-text)] transition-colors"
+					className="text-xs font-bold uppercase tracking-widest rounded-lg px-3 py-1.5 transition-all hover:opacity-80"
+					style={{
+						color: "var(--gb-accent)",
+						border: "1px solid var(--gb-accent)",
+						background: "transparent",
+					}}
 				>
 					Exit Drill
 				</button>

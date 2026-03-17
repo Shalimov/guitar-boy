@@ -38,7 +38,7 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 		},
 		{
 			kicker: "Framework",
-			title: "What you can do",
+			title: "Three ways to learn",
 			content: (
 				<div className="grid gap-3 text-sm">
 					<div className="flex gap-3 items-start">
@@ -46,9 +46,11 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 							1
 						</span>
 						<div>
-							<p className="font-bold">Scale Explorer</p>
+							<p className="font-bold">Guided Lessons</p>
 							<p className="text-[var(--gb-text-muted)]">
-								Deep dive into any scale, chord, or interval with dynamic visualization.
+								Step-by-step lessons covering notes, listening skills, how to build scales, and
+								how to build chords — with a clickable fretboard so you learn by ear and eye
+								together.
 							</p>
 						</div>
 					</div>
@@ -57,10 +59,10 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 							2
 						</span>
 						<div>
-							<p className="font-bold">Pattern Library</p>
+							<p className="font-bold">Memory Quizzes</p>
 							<p className="text-[var(--gb-text-muted)]">
-								Access essential major, minor, and pentatonic patterns specifically curated for
-								growth.
+								Spaced repetition quizzes on notes, intervals, chords, and patterns to lock
+								what you've learned into long-term memory.
 							</p>
 						</div>
 					</div>
@@ -69,9 +71,10 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 							3
 						</span>
 						<div>
-							<p className="font-bold">Memory Quizzes</p>
+							<p className="font-bold">Fretboard Explorer</p>
 							<p className="text-[var(--gb-text-muted)]">
-								Use Spaced Repetition (SRS) to lock notes and patterns into your long-term memory.
+								An interactive theory lab to visualize any scale, chord, arpeggio, or interval
+								shape across the full neck.
 							</p>
 						</div>
 					</div>
@@ -88,16 +91,16 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 					</p>
 					<nav className="space-y-2">
 						{[
-							{ phase: "Beginner", task: "Memorize Natural Notes (C-D-E-F-G-A-B)" },
-							{ phase: "Intermediate", task: "Master Major & Minor Scale Patterns" },
-							{ phase: "Advanced", task: "Internalize Intervals & Blues Scale" },
-							{ phase: "Mastery", task: "Daily Ear Training & SRS Quizzes" },
+							{ phase: "Beginner", task: "Note names, string positions & listening fundamentals" },
+							{ phase: "Intermediate", task: "Build major & minor scales from the W–W–H formula" },
+							{ phase: "Advanced", task: "Construct chords from interval formulas (1–3–5)" },
+							{ phase: "Mastery", task: "Internalize intervals, blues scale & daily SRS review" },
 						].map((item) => (
 							<div
 								key={item.phase}
-								className="flex items-center justify-between p-2 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)]"
+								className="flex items-start gap-3 p-2 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)]"
 							>
-								<span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gb-accent)]">
+								<span className="shrink-0 w-24 text-[10px] font-bold uppercase tracking-widest text-[var(--gb-accent)] pt-0.5">
 									{item.phase}
 								</span>
 								<span className="text-sm font-medium">{item.task}</span>

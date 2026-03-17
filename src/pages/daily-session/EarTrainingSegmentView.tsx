@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
-import { Button } from "@/components/ui/Button";
+import { Button, NoteButtonGroup } from "@/components/ui";
+import { KeyboardShortcutsBar } from "@/components/ui/KeyboardShortcutsBar";
 import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret } from "@/lib/music";
+import {
+	buildNoteShortcutItems,
+	FLAT_KEY_DISPLAY,
+	getNoteFromKeyEvent,
+	NATURAL_KEY_DISPLAY,
+	SHARP_KEY_DISPLAY,
+} from "@/lib/shortcuts";
 import type { FretPosition } from "@/types";
 
 interface EarTrainingSegmentViewProps {
@@ -10,7 +18,7 @@ interface EarTrainingSegmentViewProps {
 	onComplete: (correct: number, total: number) => void;
 }
 
-const NOTES = ["C", "D", "E", "F", "G", "A", "B"];
+const ALL_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 export function EarTrainingSegmentView({ rounds, onComplete }: EarTrainingSegmentViewProps) {
 	const [roundIndex, setRoundIndex] = useState(0);
@@ -22,7 +30,7 @@ export function EarTrainingSegmentView({ rounds, onComplete }: EarTrainingSegmen
 
 	const generateRound = useCallback(() => {
 		const string = Math.floor(Math.random() * 6);
-		const fret = Math.floor(Math.random() * 6); // Keep it easy: 0-5
+		const fret = Math.floor(Math.random() * 13); // 0-12 for full chromatic range
 		const pos = { string, fret };
 		const note = getNoteAtFret(pos).split("/")[0];
 		setCurrentPosition(pos);
@@ -36,22 +44,68 @@ export function EarTrainingSegmentView({ rounds, onComplete }: EarTrainingSegmen
 		generateRound();
 	}, [generateRound]);
 
-	const handleNoteSelect = (note: string) => {
-		if (feedback !== null) return;
-		setSelectedNote(note);
-		const isCorrect = note === targetNote;
-		setFeedback(isCorrect);
-		if (isCorrect) setCorrectCount((prev) => prev + 1);
-	};
+	const handleNoteSelect = useCallback(
+		(note: string) => {
+			if (feedback !== null) return;
+			setSelectedNote(note);
+			const isCorrect = note === targetNote;
+			setFeedback(isCorrect);
+			if (isCorrect) setCorrectCount((prev) => prev + 1);
+		},
+		[feedback, targetNote],
+	);
 
-	const handleContinue = () => {
+	const handleContinue = useCallback(() => {
 		if (roundIndex === rounds - 1) {
 			onComplete(correctCount, rounds);
 		} else {
 			setRoundIndex((prev) => prev + 1);
 			generateRound();
 		}
-	};
+	}, [roundIndex, rounds, correctCount, onComplete, generateRound]);
+
+	const handleReplay = useCallback(() => {
+		if (currentPosition) {
+			void playFretPosition(currentPosition, "2n");
+		}
+	}, [currentPosition]);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+				return;
+			}
+
+			const note = getNoteFromKeyEvent(event, true);
+
+			if (note && ALL_NOTES.includes(note) && !feedback) {
+				handleNoteSelect(note);
+				return;
+			}
+
+			if (event.key === " ") {
+				event.preventDefault();
+				void handleReplay();
+				return;
+			}
+
+			if ((event.key === "Enter" || event.key === "n" || event.key === "N") && feedback) {
+				event.preventDefault();
+				handleContinue();
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [feedback, handleNoteSelect, handleContinue, handleReplay]);
+
+	const keyDisplayMap = { ...NATURAL_KEY_DISPLAY, ...SHARP_KEY_DISPLAY, ...FLAT_KEY_DISPLAY };
+	const shortcutItems = buildNoteShortcutItems({
+		notes: ALL_NOTES,
+		keyDisplayMap,
+		includeSpaceAction: "replay",
+		includeEnterAction: "next",
+	});
 
 	return (
 		<div className="mx-auto max-w-2xl space-y-6">
@@ -70,33 +124,115 @@ export function EarTrainingSegmentView({ rounds, onComplete }: EarTrainingSegmen
 						<p className="text-sm font-medium text-[var(--gb-text-muted)]">
 							Listen to the note and identify it
 						</p>
-						<Button
-							onClick={() => currentPosition && playFretPosition(currentPosition, "2n")}
-							variant="secondary"
-						>
+						<Button onClick={handleReplay} variant="secondary">
 							🔊 Replay Note
 						</Button>
 					</div>
 
-					<div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-						{NOTES.map((note) => (
-							<button
-								key={note}
-								type="button"
-								onClick={() => handleNoteSelect(note)}
-								className={`py-3 rounded-lg font-bold border transition-all ${
-									selectedNote === note
-										? feedback
-											? "bg-green-600 text-white border-transparent"
-											: feedback === false
-												? "bg-red-600 text-white border-transparent"
-												: "bg-[var(--gb-accent)] text-white border-transparent"
-										: "bg-[var(--gb-bg-panel)] text-[var(--gb-text)] border-[var(--gb-border)]"
-								}`}
-							>
-								{note}
-							</button>
-						))}
+					<KeyboardShortcutsBar items={shortcutItems} className="mb-3" />
+
+					<div className="space-y-4">
+						<NoteButtonGroup label="Natural Notes">
+							{["A", "B", "C", "D", "E", "F", "G"].map((note) => {
+								const isSelected = selectedNote === note;
+								const isCorrectNote = targetNote && note === targetNote;
+								const isWrong = isSelected && !isCorrectNote;
+
+								let buttonStyle = "";
+								if (feedback && isCorrectNote) {
+									buttonStyle = "bg-green-600 text-white border-transparent";
+								} else if (isWrong) {
+									buttonStyle = "bg-red-600 text-white border-transparent";
+								} else if (isSelected) {
+									buttonStyle = "bg-[var(--gb-accent)] text-white border-transparent";
+								} else {
+									buttonStyle =
+										"bg-[var(--gb-bg-panel)] text-[var(--gb-text)] border-[var(--gb-border)]";
+								}
+
+								return (
+									<button
+										key={note}
+										type="button"
+										onClick={() => handleNoteSelect(note)}
+										disabled={feedback !== null}
+										className={`py-3 px-4 rounded-lg font-bold border transition-all ${buttonStyle} ${
+											feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"
+										}`}
+									>
+										{note}
+									</button>
+								);
+							})}
+						</NoteButtonGroup>
+
+						<NoteButtonGroup label="Sharps (Ctrl)">
+							{["A#", "C#", "D#", "F#", "G#"].map((note) => {
+								const isSelected = selectedNote === note;
+								const isCorrectNote = targetNote && note === targetNote;
+								const isWrong = isSelected && !isCorrectNote;
+
+								let buttonStyle = "";
+								if (feedback && isCorrectNote) {
+									buttonStyle = "bg-green-600 text-white border-transparent";
+								} else if (isWrong) {
+									buttonStyle = "bg-red-600 text-white border-transparent";
+								} else if (isSelected) {
+									buttonStyle = "bg-[var(--gb-accent)] text-white border-transparent";
+								} else {
+									buttonStyle =
+										"bg-[var(--gb-bg-panel)] text-[var(--gb-text)] border-[var(--gb-border)]";
+								}
+
+								return (
+									<button
+										key={note}
+										type="button"
+										onClick={() => handleNoteSelect(note)}
+										disabled={feedback !== null}
+										className={`py-3 px-4 rounded-lg font-bold border transition-all ${buttonStyle} ${
+											feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"
+										}`}
+									>
+										{note}
+									</button>
+								);
+							})}
+						</NoteButtonGroup>
+
+						<NoteButtonGroup label="Flats (Shift)">
+							{["Bb", "Db", "Eb", "Gb", "Ab"].map((note) => {
+								const isSelected = selectedNote === note;
+								const isCorrectNote = targetNote && note === targetNote;
+								const isWrong = isSelected && !isCorrectNote;
+
+								let buttonStyle = "";
+								if (feedback && isCorrectNote) {
+									buttonStyle = "bg-green-600 text-white border-transparent";
+								} else if (isWrong) {
+									buttonStyle = "bg-red-600 text-white border-transparent";
+								} else if (isSelected) {
+									buttonStyle = "bg-[var(--gb-accent)] text-white border-transparent";
+								} else {
+									buttonStyle =
+										"bg-[var(--gb-bg-panel)] text-[var(--gb-text)] border-[var(--gb-border)]";
+								}
+
+								return (
+									<button
+										key={note}
+										type="button"
+										onClick={() => handleNoteSelect(note)}
+										disabled={feedback !== null}
+										className={`py-3 px-4 rounded-lg font-bold border transition-all ${buttonStyle} ${
+											feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"
+										}`}
+									>
+										{note}
+									</button>
+								);
+							})}
+						</NoteButtonGroup>
 					</div>
 
 					{feedback !== null && (
@@ -121,7 +257,7 @@ export function EarTrainingSegmentView({ rounds, onComplete }: EarTrainingSegmen
 												: [],
 										lines: [],
 									}}
-									fretRange={[0, 5]}
+									fretRange={[0, 12]}
 								/>
 							</div>
 						</div>

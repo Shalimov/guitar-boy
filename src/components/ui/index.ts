@@ -1,11 +1,16 @@
 export { Button } from "./Button";
+export { ButtonGroup } from "./ButtonGroup";
 export { Card, CardContent, CardHeader } from "./Card";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { FeedbackPanel } from "./FeedbackPanel";
 export { KeyboardShortcutsBar } from "./KeyboardShortcutsBar";
 export { NoteButtonGrid } from "./NoteButtonGrid";
+export { NoteButtonGroup } from "./NoteButtonGroup";
 export { PageHeader } from "./PageHeader";
 export { ProgressBar } from "./ProgressBar";
+export { SectionCard } from "./SectionCard";
+export { ShortcutButtons } from "./ShortcutButtons";
 export { TabBar } from "./TabBar";
 export { ThemeToggle } from "./ThemeToggle";
 export { TinyStat } from "./TinyStat";
+export { Toggle } from "./Toggle";

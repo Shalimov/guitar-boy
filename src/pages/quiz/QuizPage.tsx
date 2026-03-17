@@ -1,5 +1,5 @@
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, SectionCard } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
 import { AnchorNoteMode } from "@/pages/ear-training/AnchorNoteMode";
 import { HearIdentifyMode } from "@/pages/ear-training/HearIdentifyMode";
@@ -49,7 +49,12 @@ export function QuizPage() {
 				<button
 					type="button"
 					onClick={() => navigate("/quiz")}
-					className="text-sm font-medium text-[var(--gb-text-muted)] hover:text-[var(--gb-text)] mb-4"
+					className="text-sm font-medium rounded-lg px-3 py-1.5 transition-all hover:opacity-80 mb-4"
+					style={{
+						color: "var(--gb-accent)",
+						border: "1px solid var(--gb-accent)",
+						background: "transparent",
+					}}
 				>
 					← Back to Quiz Studio
 				</button>
@@ -105,13 +110,15 @@ export function QuizPage() {
 
 	return (
 		<div className="max-w-3xl mx-auto p-6 space-y-6">
-			<PageHeader
-				kicker="Practice"
-				title="Quiz Studio"
-				description="Choose a quick-start preset or set up your own custom quiz."
-			/>
+			<SectionCard className="space-y-5">
+				<PageHeader
+					kicker="Practice"
+					title="Quiz Studio"
+					description="Choose a quick-start preset or set up your own custom quiz."
+				/>
 
-			<QuizSelector onStartQuiz={handleStartQuiz} onStartEarTraining={handleStartEarTraining} />
+				<QuizSelector onStartQuiz={handleStartQuiz} onStartEarTraining={handleStartEarTraining} />
+			</SectionCard>
 		</div>
 	);
 }

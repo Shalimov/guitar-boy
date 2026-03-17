@@ -340,10 +340,12 @@ export function CanvasFretboard({
 	missedPositions,
 	incorrectPositions,
 }: FretboardProps) {
+	const containerRef = useRef<HTMLDivElement | null>(null);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const cellRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 	const pointerLineStartRef = useRef<FretPosition | null>(null);
 	const suppressNextClickRef = useRef(false);
+	const [containerWidth, setContainerWidth] = useState(0);
 	const [internalState, setInternalState] = useState<FretboardState>(() => state ?? EMPTY_STATE);
 	const [internalPatternPositions, setInternalPatternPositions] =
 		useState<FretPosition[]>(EMPTY_POSITIONS);
@@ -357,6 +359,20 @@ export function CanvasFretboard({
 	const resolvedCorrectPositions = correctPositions ?? EMPTY_POSITIONS;
 	const resolvedMissedPositions = missedPositions ?? EMPTY_POSITIONS;
 	const resolvedIncorrectPositions = incorrectPositions ?? EMPTY_POSITIONS;
+
+	useEffect(() => {
+		const element = containerRef.current;
+		if (!element) return;
+
+		const observer = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				setContainerWidth(entry.contentRect.width);
+			}
+		});
+		observer.observe(element);
+		setContainerWidth(element.clientWidth);
+		return () => observer.disconnect();
+	}, []);
 
 	const safeStrings = strings.length === DEFAULT_STRINGS.length ? strings : [...DEFAULT_STRINGS];
 	const stringCount = safeStrings.length;
@@ -519,7 +535,11 @@ export function CanvasFretboard({
 		() => Array.from({ length: fretCount }, (_, index) => index + minFret),
 		[fretCount, minFret],
 	);
-	const canvasWidth = Math.max(360, 72 + fretCount * CELL_WIDTH);
+	const baseCanvasWidth = Math.max(360, 72 + fretCount * CELL_WIDTH);
+	// Reserve space for string labels (~20px) + gap (12px) when shown
+	const labelsGutter = showStringLabels ? 32 : 0;
+	const availableCanvasWidth = containerWidth > 0 ? containerWidth - labelsGutter : 0;
+	const canvasWidth = Math.max(baseCanvasWidth, availableCanvasWidth);
 	// Extra vertical padding so dots and group outlines on the outermost strings aren't clipped.
 	// Max dot radius = MEDIUM_DOT_DIAMETER / 2 = 20; group stroke adds ~8px beyond that → 30px safe.
 	const VERTICAL_PAD = 30;
@@ -950,8 +970,8 @@ export function CanvasFretboard({
 	}, [onFretHoverChange]);
 
 	return (
-		<div className="max-w-full overflow-x-auto pb-4">
-			<div className="inline-flex min-w-max items-start gap-3">
+		<div ref={containerRef} className="max-w-full overflow-x-auto pb-4">
+			<div className="inline-flex items-start gap-3">
 				{showStringLabels && (
 					<div
 						className="grid text-right text-xs text-[var(--gb-text-muted)]"

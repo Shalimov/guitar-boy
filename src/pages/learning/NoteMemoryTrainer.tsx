@@ -2,43 +2,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import {
 	Button,
+	ButtonGroup,
 	FeedbackPanel,
-	KeyboardShortcutsBar,
-	NoteButtonGrid,
+	ShortcutButtons,
 	TinyStat,
+	Toggle,
 } from "@/components/ui";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
-import { buildNoteShortcutItems } from "@/lib/shortcuts";
+import {
+	buildNoteShortcutItems,
+	FLAT_KEY_DISPLAY,
+	getNoteFromKeyEvent,
+	NATURAL_KEY_DISPLAY,
+	SHARP_KEY_DISPLAY,
+} from "@/lib/shortcuts";
 import type { FretPosition, NoteName } from "@/types";
-
-const NOTE_KEY_MAP: Record<string, string> = {
-	q: "C",
-	w: "D",
-	e: "E",
-	r: "F",
-	t: "G",
-	y: "A",
-	u: "B",
-	Q: "C",
-	W: "D",
-	E: "E",
-	R: "F",
-	T: "G",
-	Y: "A",
-	U: "B",
-};
-
-const KEY_TO_DISPLAY: Record<string, string> = {
-	C: "Q",
-	D: "W",
-	E: "E",
-	F: "R",
-	G: "T",
-	A: "Y",
-	B: "U",
-};
 
 type TrainerMode = "visual" | "sound";
 type TrainerRangeKey = "first-position" | "octave";
@@ -295,7 +275,7 @@ export function NoteMemoryTrainer() {
 				return;
 			}
 
-			const note = NOTE_KEY_MAP[event.key];
+			const note = getNoteFromKeyEvent(event, false);
 			if (note && NATURAL_NOTES.includes(note as NoteName) && !feedback) {
 				handleSubmitAnswer(note);
 				return;
@@ -333,7 +313,7 @@ export function NoteMemoryTrainer() {
 	const revealedDotColor = feedback?.correct ? "#16a34a" : "#dc2626";
 	const shortcuts = buildNoteShortcutItems({
 		notes: NATURAL_NOTES,
-		keyDisplayMap: KEY_TO_DISPLAY,
+		keyDisplayMap: NATURAL_KEY_DISPLAY,
 		includeSpaceAction: mode === "sound" ? "replay" : "next",
 		includeEnterAction: "next",
 		extra: mode === "sound" ? [{ id: "r", keyLabel: "R", action: "replay" }] : [],
@@ -376,59 +356,25 @@ export function NoteMemoryTrainer() {
 				<hr className="my-3 border-[var(--gb-border)]" />
 
 				<div className="flex flex-wrap items-center gap-3 text-xs">
-					<span className="font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
-						Mode
-					</span>
-					<div className="flex gap-1">
-						<Button
-							variant={mode === "visual" ? "primary" : "secondary"}
-							size="sm"
-							onClick={() => setMode("visual")}
-							className="h-7 px-2.5 text-xs"
-						>
-							Visual
-						</Button>
-						<Button
-							variant={mode === "sound" ? "primary" : "secondary"}
-							size="sm"
-							onClick={() => setMode("sound")}
-							className="h-7 px-2.5 text-xs"
-						>
-							Sound
-						</Button>
-					</div>
+					<ButtonGroup
+						options={[
+							{ value: "visual", label: "Visual" },
+							{ value: "sound", label: "Sound" },
+						]}
+						value={mode}
+						onChange={(newMode) => setMode(newMode as TrainerMode)}
+					/>
 					<span className="h-4 w-[1px] bg-[var(--gb-border)]" />
-					<span className="font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
-						Window
-					</span>
-					<div className="flex gap-1">
-						{(
-							Object.entries(RANGE_CONFIG) as [
-								TrainerRangeKey,
-								(typeof RANGE_CONFIG)[TrainerRangeKey],
-							][]
-						).map(([key, config]) => (
-							<Button
-								key={key}
-								variant={rangeKey === key ? "primary" : "secondary"}
-								size="sm"
-								onClick={() => setRangeKey(key)}
-								className="h-7 px-2.5 text-xs"
-							>
-								{config.label}
-							</Button>
-						))}
-					</div>
+					<ButtonGroup
+						options={Object.entries(RANGE_CONFIG).map(([key, config]) => ({
+							value: key as TrainerRangeKey,
+							label: config.label,
+						}))}
+						value={rangeKey}
+						onChange={setRangeKey}
+					/>
 					<span className="h-4 w-[1px] bg-[var(--gb-border)]" />
-					<label className="flex items-center gap-1.5 text-[var(--gb-text-muted)]">
-						<input
-							type="checkbox"
-							checked={includeOpenStrings}
-							onChange={(event) => setIncludeOpenStrings(event.target.checked)}
-							className="rounded border-[var(--gb-border)]"
-						/>
-						<span>Open</span>
-					</label>
+					<Toggle checked={includeOpenStrings} onChange={setIncludeOpenStrings} label="Open" />
 				</div>
 			</section>
 
@@ -530,17 +476,27 @@ export function NoteMemoryTrainer() {
 								<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">
 									Choose the note name
 								</p>
-								<KeyboardShortcutsBar items={shortcuts} className="mb-3" />
-								<NoteButtonGrid
-									notes={NATURAL_NOTES}
+								<ShortcutButtons
+									items={shortcuts}
+									noteGroups={[
+										{
+											label: "Natural Notes",
+											notes: ["A", "B", "C", "D", "E", "F", "G"],
+										},
+										{
+											label: "Sharps (Ctrl)",
+											notes: ["A#", "C#", "D#", "F#", "G#"],
+										},
+										{
+											label: "Flats (Shift)",
+											notes: ["Bb", "Db", "Eb", "Gb", "Ab"],
+										},
+									]}
 									selectedNote={selectedNote}
-									correctNote={prompt.note}
-									revealed={feedback !== null}
-									onSelect={handleSubmitAnswer}
-									keyDisplayMap={KEY_TO_DISPLAY}
+									onNoteSelect={handleSubmitAnswer}
 									disabled={feedback !== null}
-									buttonClassName="py-3 text-xl sm:py-3.5"
-									gridClassName="grid w-full max-w-[760px] grid-cols-4 gap-2 sm:grid-cols-7"
+									showFeedback={feedback !== null}
+									correctNote={prompt.note}
 								/>
 							</div>
 

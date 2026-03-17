@@ -1,7 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { applyGitHubPagesRedirect } from "./lib/githubPagesRedirect";
 import "./index.css";
+
+applyGitHubPagesRedirect(window.location.search, window.history, process.env.PUBLIC_URL || "/");
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element not found");

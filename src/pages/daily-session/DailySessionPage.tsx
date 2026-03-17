@@ -130,7 +130,12 @@ export function DailySessionPage() {
 				<button
 					type="button"
 					onClick={() => navigate("/")}
-					className="text-xs font-bold uppercase tracking-widest text-[var(--gb-text-muted)] hover:text-[var(--gb-text)] transition-colors"
+					className="text-xs font-bold uppercase tracking-widest rounded-lg px-4 py-2 transition-all hover:opacity-80 focus-visible:outline-none"
+					style={{
+						color: "var(--gb-accent)",
+						border: "1px solid var(--gb-accent)",
+						background: "transparent",
+					}}
 				>
 					Exit Session
 				</button>

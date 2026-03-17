@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
-import { Button } from "@/components/ui";
+import { Button, ButtonGroup, Toggle } from "@/components/ui";
 import { playFretPosition } from "@/lib/audio";
 import {
 	getConstructNotes,
@@ -64,7 +64,7 @@ function toggleShape(shapes: ExplorerCagedShape[], shape: ExplorerCagedShape) {
 	return shapes.includes(shape) ? shapes.filter((value) => value !== shape) : [...shapes, shape];
 }
 
-function TooltipCard({
+function InspectorBar({
 	position,
 	root,
 	accidentalPreference,
@@ -77,40 +77,39 @@ function TooltipCard({
 }) {
 	if (!position) {
 		return (
-			<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 text-sm text-[var(--gb-text-muted)]">
-				Hover or focus a highlighted note to inspect its pitch, frequency, and interval role.
+			<div className="flex items-center gap-2 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-3 py-2 text-xs text-[var(--gb-text-muted)]">
+				Hover a note to inspect
 			</div>
 		);
 	}
 
 	const note = getNoteAtFret(position);
 	const noteLabel = getDisplayNoteName(note, accidentalPreference);
-	const frequency = getFrequencyAtFret(position).toFixed(2);
+	const frequency = getFrequencyAtFret(position).toFixed(1);
 	const rootLabel = getDisplayNoteName(root, accidentalPreference);
 	const intervalFormula = getIntervalFormulaToken(root, note);
 
 	return (
-		<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 shadow-[var(--gb-shadow-soft)]">
-			<p className="gb-page-kicker mb-2">Selected Tone</p>
-			<div className="grid gap-3 text-sm sm:grid-cols-3">
-				<div>
-					<p className="text-[var(--gb-text-muted)]">Pitch</p>
-					<p className="font-semibold text-[var(--gb-text)]">{noteLabel}</p>
-				</div>
-				<div>
-					<p className="text-[var(--gb-text-muted)]">Frequency</p>
-					<p className="font-semibold text-[var(--gb-text)]">{frequency} Hz</p>
-				</div>
-				<div>
-					<p className="text-[var(--gb-text-muted)]">Against Root {rootLabel}</p>
-					<p className="font-semibold text-[var(--gb-text)]">{intervalFormula}</p>
-				</div>
-			</div>
-			<div className="mt-4">
-				<Button size="sm" onClick={onPlay}>
-					Play note
-				</Button>
-			</div>
+		<div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-3 py-2 text-xs shadow-[var(--gb-shadow-soft)]">
+			<span>
+				<span className="text-[var(--gb-text-muted)]">Pitch </span>
+				<span className="font-semibold text-[var(--gb-text)]">{noteLabel}</span>
+			</span>
+			<span>
+				<span className="text-[var(--gb-text-muted)]">Freq </span>
+				<span className="font-semibold text-[var(--gb-text)]">{frequency} Hz</span>
+			</span>
+			<span>
+				<span className="text-[var(--gb-text-muted)]">vs {rootLabel} </span>
+				<span className="font-semibold text-[var(--gb-text)]">{intervalFormula}</span>
+			</span>
+			<button
+				type="button"
+				onClick={onPlay}
+				className="ml-auto rounded-md border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-2 py-0.5 text-xs font-semibold text-[var(--gb-text)] transition-colors hover:bg-[var(--gb-bg-elev)]"
+			>
+				Play
+			</button>
 		</div>
 	);
 }
@@ -153,273 +152,18 @@ export function ExplorerPanel() {
 	}, [hoveredPosition]);
 
 	return (
-		<div className="space-y-6">
-			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-5 shadow-[var(--gb-shadow-soft)]">
-				<div className="mb-5">
-					<p className="gb-page-kicker mb-1">Control Deck</p>
-					<h2 className="text-2xl font-semibold text-[var(--gb-text)]">Build a neck map</h2>
-					<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
-						Switch roots, formulas, labels, and fret windows to reveal theory anywhere on the neck.
-					</p>
+		<div className="space-y-4">
+			{/* ── Fretboard hero ── */}
+			<section className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-3 shadow-[var(--gb-shadow-soft)]">
+				{/* Compact title bar */}
+				<div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-1">
+					<h2 className="text-lg font-semibold text-[var(--gb-text)]">
+						{rootLabel} {state.constructName}
+					</h2>
+					<span className="text-xs text-[var(--gb-text-muted)]">{constructNotes.join(" - ")}</span>
 				</div>
 
-				<div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
-					<div className="2xl:col-span-1">
-						<label
-							htmlFor="explorer-root"
-							className="mb-2 block text-sm font-semibold text-[var(--gb-text)]"
-						>
-							Root note
-						</label>
-						<select
-							id="explorer-root"
-							value={state.root}
-							onChange={(event) =>
-								setState((current) => ({ ...current, root: event.target.value as NoteName }))
-							}
-							className="w-full rounded-[14px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-3 py-2 text-sm text-[var(--gb-text)]"
-						>
-							{ROOT_OPTIONS.map((note) => (
-								<option key={note} value={note}>
-									{getDisplayNoteName(note, state.accidentalPreference)}
-								</option>
-							))}
-						</select>
-						<div className="mt-2 flex gap-2">
-							{(
-								[
-									{ label: "Sharps", value: "sharp" },
-									{ label: "Flats", value: "flat" },
-								] as const
-							).map((option) => (
-								<Button
-									key={option.value}
-									variant={state.accidentalPreference === option.value ? "primary" : "secondary"}
-									size="sm"
-									onClick={() =>
-										setState((current) => ({ ...current, accidentalPreference: option.value }))
-									}
-								>
-									{option.label}
-								</Button>
-							))}
-						</div>
-					</div>
-
-					<div>
-						<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">Construct type</p>
-						<div className="grid grid-cols-2 gap-2">
-							{CONSTRUCT_TYPES.map((type) => (
-								<Button
-									key={type}
-									variant={state.constructType === type ? "primary" : "secondary"}
-									size="sm"
-									onClick={() =>
-										setState((current) => ({
-											...current,
-											constructType: type,
-											constructName: EXPLORER_CONSTRUCT_OPTIONS[type][0],
-										}))
-									}
-								>
-									{type}
-								</Button>
-							))}
-						</div>
-					</div>
-
-					<div>
-						<label
-							htmlFor="explorer-construct"
-							className="mb-2 block text-sm font-semibold text-[var(--gb-text)]"
-						>
-							Specific construct
-						</label>
-						<select
-							id="explorer-construct"
-							value={state.constructName}
-							onChange={(event) =>
-								setState((current) => ({ ...current, constructName: event.target.value }))
-							}
-							className="w-full rounded-[14px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-3 py-2 text-sm text-[var(--gb-text)]"
-						>
-							{constructOptions.map((option) => (
-								<option key={option} value={option}>
-									{option}
-								</option>
-							))}
-						</select>
-					</div>
-
-					<div>
-						<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">Label type</p>
-						<div className="flex gap-2">
-							<Button
-								variant={state.labelType === "notes" ? "primary" : "secondary"}
-								size="sm"
-								onClick={() => setState((current) => ({ ...current, labelType: "notes" }))}
-							>
-								Note Names
-							</Button>
-							<Button
-								variant={state.labelType === "intervals" ? "primary" : "secondary"}
-								size="sm"
-								onClick={() => setState((current) => ({ ...current, labelType: "intervals" }))}
-							>
-								Interval Degrees
-							</Button>
-						</div>
-					</div>
-
-					<div>
-						<label
-							htmlFor="explorer-note-filter"
-							className="mb-2 block text-sm font-semibold text-[var(--gb-text)]"
-						>
-							Filter by note
-						</label>
-						<select
-							id="explorer-note-filter"
-							value={state.noteFilter}
-							onChange={(event) =>
-								setState((current) => ({
-									...current,
-									noteFilter: event.target.value as ExplorerNoteFilter,
-								}))
-							}
-							className="w-full rounded-[14px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-3 py-2 text-sm text-[var(--gb-text)]"
-						>
-							<option value="all">All construct tones</option>
-							{noteFilterOptions
-								.filter((option) => option !== "all")
-								.map((option) => (
-									<option key={option} value={option}>
-										{getDisplayNoteName(option, state.accidentalPreference)}
-									</option>
-								))}
-						</select>
-					</div>
-
-					<div>
-						<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">Fret window</p>
-						<div className="grid grid-cols-2 gap-3">
-							<label className="text-sm text-[var(--gb-text-muted)]">
-								Start fret
-								<input
-									type="range"
-									min={1}
-									max={MAX_FRET - 1}
-									value={state.fretRange[0]}
-									style={
-										{
-											"--range-progress": getRangeProgress(state.fretRange[0], 1, MAX_FRET - 1),
-										} as React.CSSProperties
-									}
-									onChange={(event) => {
-										const nextMin = Number(event.target.value);
-										setState((current) => ({
-											...current,
-											fretRange: [
-												Math.min(nextMin, current.fretRange[1] - 1),
-												current.fretRange[1],
-											],
-										}));
-									}}
-									className="mt-2 w-full"
-								/>
-								<span className="mt-1 block font-semibold text-[var(--gb-text)]">
-									{state.fretRange[0]}
-								</span>
-							</label>
-							<label className="text-sm text-[var(--gb-text-muted)]">
-								End fret
-								<input
-									type="range"
-									min={2}
-									max={MAX_FRET}
-									value={state.fretRange[1]}
-									style={
-										{
-											"--range-progress": getRangeProgress(state.fretRange[1], 2, MAX_FRET),
-										} as React.CSSProperties
-									}
-									onChange={(event) => {
-										const nextMax = Number(event.target.value);
-										setState((current) => ({
-											...current,
-											fretRange: [
-												current.fretRange[0],
-												Math.max(nextMax, current.fretRange[0] + 1),
-											],
-										}));
-									}}
-									className="mt-2 w-full"
-								/>
-								<span className="mt-1 block font-semibold text-[var(--gb-text)]">
-									{state.fretRange[1]}
-								</span>
-							</label>
-						</div>
-					</div>
-
-					<div className="rounded-[16px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 lg:col-span-2 2xl:col-span-1">
-						<div className="flex items-center justify-between gap-3">
-							<div>
-								<p className="text-sm font-semibold text-[var(--gb-text)]">CAGED overlays</p>
-								<p className="text-xs text-[var(--gb-text-muted)]">
-									Reveal overlapping shape windows.
-								</p>
-							</div>
-							<input
-								type="checkbox"
-								checked={state.showCagedOverlay}
-								onChange={(event) =>
-									setState((current) => ({ ...current, showCagedOverlay: event.target.checked }))
-								}
-								aria-label="Toggle CAGED overlays"
-							/>
-						</div>
-						{state.showCagedOverlay && (
-							<div className="mt-3 flex flex-wrap gap-2">
-								{CAGED_SHAPES.map((shape) => (
-									<Button
-										key={shape}
-										variant={state.activeCagedShapes.includes(shape) ? "primary" : "secondary"}
-										size="sm"
-										onClick={() =>
-											setState((current) => ({
-												...current,
-												activeCagedShapes: toggleShape(current.activeCagedShapes, shape),
-											}))
-										}
-									>
-										{shape}
-									</Button>
-								))}
-							</div>
-						)}
-					</div>
-				</div>
-			</section>
-
-			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow)]">
-				<div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-					<div>
-						<p className="gb-page-kicker mb-1">Live View</p>
-						<h2 className="text-3xl font-semibold text-[var(--gb-text)]">
-							{rootLabel} {state.constructName}
-						</h2>
-						<p className="mt-2 max-w-2xl text-sm text-[var(--gb-text-muted)]">
-							Square notes anchor the root. Switch to interval labels to see how each tone
-							functions. Click a marked note or use the inspector to hear it.
-						</p>
-					</div>
-					<div className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-4 py-3 text-sm text-[var(--gb-text)]">
-						<span className="font-semibold">Formula:</span> {constructNotes.join(" - ")}
-					</div>
-				</div>
-
-				<div className="overflow-x-auto rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-3 md:p-4">
+				<div className="overflow-x-auto rounded-[14px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-2">
 					<Fretboard
 						mode="view"
 						state={fretboardState}
@@ -432,12 +176,238 @@ export function ExplorerPanel() {
 					/>
 				</div>
 
-				<TooltipCard
-					position={hoveredPosition}
-					root={state.root}
-					accidentalPreference={state.accidentalPreference}
-					onPlay={handlePlayHoveredNote}
-				/>
+				<div className="mt-2">
+					<InspectorBar
+						position={hoveredPosition}
+						root={state.root}
+						accidentalPreference={state.accidentalPreference}
+						onPlay={handlePlayHoveredNote}
+					/>
+				</div>
+			</section>
+
+			{/* ── Controls ── */}
+			<section className="rounded-[18px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-4 shadow-[var(--gb-shadow-soft)]">
+				<div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+					<div className="rounded-[16px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4">
+						<div className="mb-4 flex items-baseline justify-between gap-3">
+							<div>
+								<p className="gb-page-kicker mb-1">Theory</p>
+								<h3 className="text-base font-semibold text-[var(--gb-text)]">
+									Choose the sound set
+								</h3>
+							</div>
+							<p className="text-xs text-[var(--gb-text-muted)]">Root, spelling, and formula</p>
+						</div>
+
+						<div className="space-y-3">
+							<ButtonGroup
+								options={ROOT_OPTIONS.map((note) => ({
+									label: getDisplayNoteName(note, state.accidentalPreference),
+									value: note,
+								}))}
+								value={state.root}
+								onChange={(value) =>
+									setState((current) => ({ ...current, root: value as NoteName }))
+								}
+								label="Root note"
+							/>
+
+							<ButtonGroup
+								options={[
+									{ label: "Sharps", value: "sharp" },
+									{ label: "Flats", value: "flat" },
+								]}
+								value={state.accidentalPreference}
+								onChange={(value) =>
+									setState((current) => ({ ...current, accidentalPreference: value }))
+								}
+								label="Accidentals"
+							/>
+
+							<ButtonGroup
+								options={CONSTRUCT_TYPES.map((type) => ({
+									label: type,
+									value: type,
+								}))}
+								value={state.constructType}
+								onChange={(value) =>
+									setState((current) => ({
+										...current,
+										constructType: value as ExplorerConstructType,
+										constructName: EXPLORER_CONSTRUCT_OPTIONS[value as ExplorerConstructType][0],
+									}))
+								}
+								label="Construct type"
+							/>
+
+							<div>
+								<span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+									Specific construct
+								</span>
+								<select
+									value={state.constructName}
+									onChange={(e) =>
+										setState((current) => ({ ...current, constructName: e.target.value }))
+									}
+									className="h-8 w-full rounded-[var(--gb-radius-card)] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] px-3 text-sm font-semibold text-[var(--gb-text)] outline-none transition-all focus:border-[var(--gb-accent)] focus:ring-2 focus:ring-[var(--gb-accent)] focus:ring-offset-1 focus:ring-offset-[var(--gb-bg-elev)]"
+								>
+									{constructOptions.map((option) => (
+										<option key={option} value={option}>
+											{option}
+										</option>
+									))}
+								</select>
+							</div>
+						</div>
+					</div>
+
+					<div className="rounded-[16px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4">
+						<div className="mb-4 flex items-baseline justify-between gap-3">
+							<div>
+								<p className="gb-page-kicker mb-1">View</p>
+								<h3 className="text-base font-semibold text-[var(--gb-text)]">
+									Focus what you see
+								</h3>
+							</div>
+							<p className="text-xs text-[var(--gb-text-muted)]">Labels, filters, and windows</p>
+						</div>
+
+						<div className="space-y-3">
+							<ButtonGroup
+								options={[
+									{ label: "Note Names", value: "notes" },
+									{ label: "Intervals", value: "intervals" },
+								]}
+								value={state.labelType}
+								onChange={(value) => setState((current) => ({ ...current, labelType: value }))}
+								label="Label type"
+							/>
+
+							<ButtonGroup
+								options={[
+									{ label: "All", value: "all" },
+									...noteFilterOptions
+										.filter((option) => option !== "all")
+										.map((option) => ({
+											label: getDisplayNoteName(option, state.accidentalPreference),
+											value: option,
+										})),
+								]}
+								value={state.noteFilter}
+								onChange={(value) =>
+									setState((current) => ({
+										...current,
+										noteFilter: value as ExplorerNoteFilter,
+									}))
+								}
+								label="Filter by note"
+							/>
+
+							<div>
+								<span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+									Fret window
+								</span>
+								<div className="grid grid-cols-2 gap-3 rounded-[14px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-3">
+									<label className="text-xs text-[var(--gb-text-muted)]">
+										Start
+										<input
+											type="range"
+											min={1}
+											max={MAX_FRET - 1}
+											value={state.fretRange[0]}
+											style={
+												{
+													"--range-progress": getRangeProgress(state.fretRange[0], 1, MAX_FRET - 1),
+												} as React.CSSProperties
+											}
+											onChange={(event) => {
+												const nextMin = Number(event.target.value);
+												setState((current) => ({
+													...current,
+													fretRange: [
+														Math.min(nextMin, current.fretRange[1] - 1),
+														current.fretRange[1],
+													],
+												}));
+											}}
+											className="mt-1 w-full"
+										/>
+										<span className="block font-semibold text-[var(--gb-text)]">
+											{state.fretRange[0]}
+										</span>
+									</label>
+									<label className="text-xs text-[var(--gb-text-muted)]">
+										End
+										<input
+											type="range"
+											min={2}
+											max={MAX_FRET}
+											value={state.fretRange[1]}
+											style={
+												{
+													"--range-progress": getRangeProgress(state.fretRange[1], 2, MAX_FRET),
+												} as React.CSSProperties
+											}
+											onChange={(event) => {
+												const nextMax = Number(event.target.value);
+												setState((current) => ({
+													...current,
+													fretRange: [
+														current.fretRange[0],
+														Math.max(nextMax, current.fretRange[0] + 1),
+													],
+												}));
+											}}
+											className="mt-1 w-full"
+										/>
+										<span className="block font-semibold text-[var(--gb-text)]">
+											{state.fretRange[1]}
+										</span>
+									</label>
+								</div>
+							</div>
+
+							<div className="rounded-[14px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-3">
+								<div className="flex items-center justify-between gap-3">
+									<div>
+										<span className="text-xs font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+											CAGED overlays
+										</span>
+										<p className="mt-1 text-xs text-[var(--gb-text-muted)]">
+											Compare overlapping shape zones
+										</p>
+									</div>
+									<Toggle
+										checked={state.showCagedOverlay}
+										onChange={(checked) =>
+											setState((current) => ({ ...current, showCagedOverlay: checked }))
+										}
+									/>
+								</div>
+								{state.showCagedOverlay && (
+									<div className="mt-3 flex flex-wrap gap-1.5">
+										{CAGED_SHAPES.map((shape) => (
+											<Button
+												key={shape}
+												variant={state.activeCagedShapes.includes(shape) ? "primary" : "secondary"}
+												size="sm"
+												onClick={() =>
+													setState((current) => ({
+														...current,
+														activeCagedShapes: toggleShape(current.activeCagedShapes, shape),
+													}))
+												}
+											>
+												{shape}
+											</Button>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
 			</section>
 		</div>
 	);
