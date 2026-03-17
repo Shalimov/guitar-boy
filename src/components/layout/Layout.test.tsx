@@ -32,6 +32,21 @@ describe("Layout", () => {
 		expect(screen.getByRole("link", { name: /quiz/i })).toBeInTheDocument();
 	});
 
+	it("renders GitHub repo link when env var is set", () => {
+		const previous = process.env.GITHUB_REPO_URL;
+		process.env.GITHUB_REPO_URL = "https://github.com/igorshalimov/guitar-boy";
+		renderWithRouter(<Layout />);
+		expect(screen.getByRole("link", { name: /github/i })).toHaveAttribute(
+			"href",
+			"https://github.com/igorshalimov/guitar-boy",
+		);
+		if (previous === undefined) {
+			delete process.env.GITHUB_REPO_URL;
+		} else {
+			process.env.GITHUB_REPO_URL = previous;
+		}
+	});
+
 	it("has main content area", () => {
 		renderWithRouter(<Layout />);
 		expect(screen.getByRole("main")).toBeInTheDocument();

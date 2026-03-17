@@ -14,6 +14,7 @@ const navItems = [
 export function Layout() {
 	const [theme, setTheme] = useDarkMode();
 	const [isWizardOpen, setIsWizardOpen] = useState(false);
+	const githubRepoUrl = process.env.GITHUB_REPO_URL;
 
 	useEffect(() => {
 		const shown = localStorage.getItem("gb_onboarding_shown");
@@ -69,6 +70,16 @@ export function Layout() {
 					</div>
 					<div className="flex items-center gap-3">
 						<ThemeToggle theme={theme} onThemeChange={setTheme} />
+						{githubRepoUrl && (
+							<a
+								href={githubRepoUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-sm font-medium text-[var(--gb-text-muted)] hover:text-[var(--gb-text)]"
+							>
+								GitHub
+							</a>
+						)}
 					</div>
 				</div>
 			</nav>
