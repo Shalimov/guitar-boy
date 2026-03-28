@@ -1,4 +1,5 @@
 import type { SessionRecord, SRSCard } from "@/types";
+import type { ReviewSegment } from "./sessionComposer";
 import { composeSession, findWeakestCategory } from "./sessionComposer";
 
 describe("sessionComposer", () => {
@@ -34,14 +35,14 @@ describe("sessionComposer", () => {
 			const plan = composeSession([mockCard], []);
 			expect(plan.segments.length).toBe(3);
 			expect(plan.segments[0].type).toBe("review");
-			expect((plan.segments[0] as any).cards.length).toBe(1);
+			expect((plan.segments[0] as ReviewSegment).cards.length).toBe(1);
 			expect(plan.totalSteps).toBe(1 + 5 + 3);
 		});
 
 		it("caps review at 10 cards", () => {
 			const manyCards = Array(15).fill(mockCard);
 			const plan = composeSession(manyCards, []);
-			expect((plan.segments[0] as any).cards.length).toBe(10);
+			expect((plan.segments[0] as ReviewSegment).cards.length).toBe(10);
 			expect(plan.totalSteps).toBe(10 + 5 + 3);
 		});
 	});

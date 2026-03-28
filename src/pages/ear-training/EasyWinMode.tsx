@@ -30,7 +30,7 @@ const STAGES: { id: EasyWinStage; name: string; description: string }[] = [
 ];
 
 const CONSECUTIVE_TO_ADVANCE = 5;
-const ROOT: NoteName = "C";
+const _ROOT: NoteName = "C";
 
 function randomOctave(): number {
 	return 3 + Math.floor(Math.random() * 2); // 3 or 4
@@ -59,7 +59,7 @@ export function EasyWinMode() {
 
 	const stage = STAGES[stageIndex];
 
-	const playTwoNotes = useCallback(async (n1: NoteName, n2: NoteName, oct1 = 4, oct2 = 4) => {
+	const playTwoNotes = useCallback(async (n1: NoteName, n2: NoteName, _oct1 = 4, _oct2 = 4) => {
 		await playNote(n1, "2n");
 		await new Promise((r) => setTimeout(r, 1200));
 		await playNote(n2, "2n");
@@ -124,7 +124,7 @@ export function EasyWinMode() {
 
 	useEffect(() => {
 		void generateQuestion();
-	}, [generateQuestion, stageIndex]);
+	}, [generateQuestion]);
 
 	const handleReplay = useCallback(async () => {
 		if (isPlaying || !replayRef.current) return;

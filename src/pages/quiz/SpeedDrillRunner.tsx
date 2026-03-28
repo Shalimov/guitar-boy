@@ -50,7 +50,7 @@ export function SpeedDrillRunner({
 		timerRef.current = setInterval(() => {
 			setTimeLeft((prev) => {
 				if (prev <= 1) {
-					clearInterval(timerRef.current!);
+					if (timerRef.current) clearInterval(timerRef.current);
 					setIsFinished(true);
 					return 0;
 				}

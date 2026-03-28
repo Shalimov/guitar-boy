@@ -6,13 +6,13 @@ function PatternPreview({ state }: { state: FretboardState }) {
 	const cellWidth = 24;
 	const cellHeight = 18;
 
-	const hasDot = (stringIndex: number, fretIndex: number): boolean => {
+	const _hasDot = (stringIndex: number, fretIndex: number): boolean => {
 		return state.dots.some(
 			(dot) => dot.position.string === stringIndex && dot.position.fret === fretIndex,
 		);
 	};
 
-	const getDotColor = (stringIndex: number, fretIndex: number): string | undefined => {
+	const _getDotColor = (stringIndex: number, fretIndex: number): string | undefined => {
 		const dot = state.dots.find(
 			(d) => d.position.string === stringIndex && d.position.fret === fretIndex,
 		);
@@ -28,31 +28,40 @@ function PatternPreview({ state }: { state: FretboardState }) {
 				width={fretCount * cellWidth + 30}
 				height={stringCount * cellHeight + 10}
 				className="block"
+				role="img"
+				aria-label="Fretboard pattern diagram"
 			>
-				{Array.from({ length: fretCount + 1 }).map((_, fretIndex) => (
-					<line
-						key={`fret-${fretIndex}`}
-						x1={30 + fretIndex * cellWidth}
-						y1={5}
-						x2={30 + fretIndex * cellWidth}
-						y2={5 + stringCount * cellHeight}
-						stroke="var(--gb-border)"
-						strokeWidth={fretIndex === 0 ? 3 : 1}
-					/>
-				))}
-				{Array.from({ length: stringCount - 1 }).map((_, stringIndex) => (
-					<line
-						key={`string-${stringIndex}`}
-						x1={30}
-						y1={5 + (stringIndex + 1) * cellHeight}
-						x2={30 + fretCount * cellWidth}
-						y2={5 + (stringIndex + 1) * cellHeight}
-						stroke="var(--gb-border)"
-						strokeWidth={1}
-						strokeDasharray="2,2"
-						opacity={0.5}
-					/>
-				))}
+				<title>Fretboard Pattern</title>
+				{Array.from({ length: fretCount + 1 }).map((_, fretIndex) => {
+					const x = 30 + fretIndex * cellWidth;
+					return (
+						<line
+							key={`fret-${x}`}
+							x1={x}
+							y1={5}
+							x2={x}
+							y2={5 + stringCount * cellHeight}
+							stroke="var(--gb-border)"
+							strokeWidth={fretIndex === 0 ? 3 : 1}
+						/>
+					);
+				})}
+				{Array.from({ length: stringCount - 1 }).map((_, stringIndex) => {
+					const y = 5 + (stringIndex + 1) * cellHeight;
+					return (
+						<line
+							key={`string-${y}`}
+							x1={30}
+							y1={y}
+							x2={30 + fretCount * cellWidth}
+							y2={y}
+							stroke="var(--gb-border)"
+							strokeWidth={1}
+							strokeDasharray="2,2"
+							opacity={0.5}
+						/>
+					);
+				})}
 				{state.dots
 					.filter((dot) => dot.position.fret <= fretCount)
 					.map((dot, idx) => (

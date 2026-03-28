@@ -34,7 +34,7 @@ export function DailySessionPage() {
 			};
 		}
 		return basePlan;
-	}, [dueCards, store.sessionHistory, warmUp]);
+	}, [dueCards, store.sessionHistory, warmUp, store.earTraining]);
 
 	const [segmentIndex, setSegmentIndex] = useState(0);
 	const [completedSteps, setCompletedSteps] = useState(0);

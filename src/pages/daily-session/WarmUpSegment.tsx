@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
-import { Button } from "@/components/ui/Button";
-import { checkAnswer, type Question } from "@/pages/quiz/questions";
+import { checkAnswer, type NoteGuessQuestion, type Question } from "@/pages/quiz/questions";
 import type { FretPosition } from "@/types";
+
+function isNoteGuessQuestion(q: Question): q is NoteGuessQuestion {
+	return q.type === "note-guess" || q.type === "note-guess-sound";
+}
 
 interface WarmUpSegmentProps {
 	questions: Question[];
@@ -125,35 +128,39 @@ export function WarmUpSegment({ questions, sourceMode, onComplete, onSkip }: War
 						/>
 					) : (
 						<div className="space-y-4 w-full max-w-sm">
-							<Fretboard
-								mode="view"
-								state={{
-									dots: [
-										{
-											position: (currentQuestion as any).shownPosition,
-											shape: "circle",
-											color: "var(--gb-accent)",
-										},
-									],
-									lines: [],
-								}}
-								fretRange={[1, 12]}
-							/>
-							<div className="grid grid-cols-4 gap-2">
-								{(currentQuestion as any).noteOptions?.map((note: string) => (
-									<button
-										key={note}
-										type="button"
-										onClick={() => {
-											setSelectedNote(note);
-											setTimeout(handleSubmit, 50);
+							{isNoteGuessQuestion(currentQuestion) && (
+								<>
+									<Fretboard
+										mode="view"
+										state={{
+											dots: [
+												{
+													position: currentQuestion.shownPosition,
+													shape: "circle",
+													color: "var(--gb-accent)",
+												},
+											],
+											lines: [],
 										}}
-										className="p-3 rounded-lg border-2 border-[var(--gb-border)] bg-[var(--gb-bg-panel)] font-bold hover:border-[var(--gb-accent)] transition-all"
-									>
-										{note}
-									</button>
-								))}
-							</div>
+										fretRange={[1, 12]}
+									/>
+									<div className="grid grid-cols-4 gap-2">
+										{currentQuestion.noteOptions?.map((note: string) => (
+											<button
+												key={note}
+												type="button"
+												onClick={() => {
+													setSelectedNote(note);
+													setTimeout(handleSubmit, 50);
+												}}
+												className="p-3 rounded-lg border-2 border-[var(--gb-border)] bg-[var(--gb-bg-panel)] font-bold hover:border-[var(--gb-accent)] transition-all"
+											>
+												{note}
+											</button>
+										))}
+									</div>
+								</>
+							)}
 						</div>
 					)}
 				</div>

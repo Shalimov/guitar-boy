@@ -147,7 +147,7 @@ export function EarOnboarding({ onComplete }: EarOnboardingProps) {
 	}
 
 	if (step === "assessment") {
-		const currentDegree = ASSESSMENT_DEGREES[assessmentIndex];
+		const _currentDegree = ASSESSMENT_DEGREES[assessmentIndex];
 		const answerOptions: ScaleDegree[] = ["1", "3", "4", "5", "b7"];
 
 		return (
@@ -196,9 +196,9 @@ export function EarOnboarding({ onComplete }: EarOnboardingProps) {
 					)}
 
 					<div className="mt-4 flex justify-center gap-1">
-						{ASSESSMENT_DEGREES.map((_, i) => (
+						{ASSESSMENT_DEGREES.map((degree, i) => (
 							<div
-								key={i}
+								key={degree}
 								className={`h-2 w-8 rounded-full ${
 									i < assessmentIndex
 										? "bg-[var(--gb-accent)]"

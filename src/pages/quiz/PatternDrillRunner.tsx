@@ -16,6 +16,24 @@ interface PatternDrillRunnerProps {
 	onCancel: () => void;
 }
 
+type PatternFeedback =
+	| {
+			isCorrect: boolean;
+			message: string;
+			correct: FretPosition[];
+			missed: FretPosition[];
+			incorrect: FretPosition[];
+	  }
+	| { isCorrect: boolean; message: string };
+
+function isPatternCompleteFeedback(fb: PatternFeedback | null): fb is PatternFeedback & {
+	correct: FretPosition[];
+	missed: FretPosition[];
+	incorrect: FretPosition[];
+} {
+	return fb !== null && "correct" in fb;
+}
+
 export function PatternDrillRunner({
 	questionCount,
 	questionType,
@@ -26,7 +44,7 @@ export function PatternDrillRunner({
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [selectedPositions, setSelectedPositions] = useState<FretPosition[]>([]);
 	const [selectedName, setSelectedName] = useState<string | null>(null);
-	const [feedback, setFeedback] = useState<any | null>(null);
+	const [feedback, setFeedback] = useState<PatternFeedback | null>(null);
 	const [score, setScore] = useState(0);
 
 	const currentQuestion = questions[currentIndex];
@@ -136,20 +154,23 @@ export function PatternDrillRunner({
 											...selectedPositions.map((p) => ({
 												position: p,
 												shape: "circle" as const,
-												color: feedback
-													? feedback.correct.some(
-															(cp: FretPosition) => cp.string === p.string && cp.fret === p.fret,
-														)
-														? "#16a34a"
-														: "#dc2626"
-													: "var(--gb-accent)",
+												color:
+													feedback && isPatternCompleteFeedback(feedback)
+														? feedback.correct.some(
+																(cp: FretPosition) => cp.string === p.string && cp.fret === p.fret,
+															)
+															? "#16a34a"
+															: "#dc2626"
+														: "var(--gb-accent)",
 											})),
-											...(feedback?.missed || []).map((p: FretPosition) => ({
-												position: p,
-												shape: "circle" as const,
-												color: "#eab308", // Yellow for missed
-												label: "!",
-											})),
+											...(isPatternCompleteFeedback(feedback) ? feedback.missed : []).map(
+												(p: FretPosition) => ({
+													position: p,
+													shape: "circle" as const,
+													color: "#eab308", // Yellow for missed
+													label: "!",
+												}),
+											),
 										]
 									: currentQuestion.shownPositions.map((p) => ({
 											position: p,
@@ -204,13 +225,9 @@ export function PatternDrillRunner({
 							<QuizFeedback
 								isCorrect={feedback.isCorrect}
 								message={feedback.message}
-								correctPositions={
-									currentQuestion.type === "pattern-complete" ? feedback.correct : []
-								}
-								missedPositions={currentQuestion.type === "pattern-complete" ? feedback.missed : []}
-								incorrectPositions={
-									currentQuestion.type === "pattern-complete" ? feedback.incorrect : []
-								}
+								correctPositions={isPatternCompleteFeedback(feedback) ? feedback.correct : []}
+								missedPositions={isPatternCompleteFeedback(feedback) ? feedback.missed : []}
+								incorrectPositions={isPatternCompleteFeedback(feedback) ? feedback.incorrect : []}
 								onContinue={handleContinue}
 							/>
 						</div>

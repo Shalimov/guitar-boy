@@ -14,16 +14,16 @@ export function generateWarmUp(
 	if (!lastQuiz) return null;
 
 	// 2. Map mode to quiz type
-	const modeToType: Record<string, string> = {
+	const modeToType: Record<string, "note" | "interval" | "chord"> = {
 		"quiz-note": "note",
 		"quiz-interval": "interval",
 		"quiz-chord": "chord",
 	};
-	const type = modeToType[lastQuiz.mode] || "note";
+	const type = modeToType[lastQuiz.mode] ?? "note";
 
 	// 3. Generate 3 questions at "beginner" difficulty (or same as last session if we tracked it)
 	// For now, use "beginner" as a safe warm-up level
-	const questions = generateQuestions(type as any, "beginner", 3);
+	const questions = generateQuestions(type, "beginner", 3);
 
 	return {
 		questions,

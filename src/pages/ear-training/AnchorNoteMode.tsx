@@ -33,11 +33,6 @@ export function AnchorNoteMode() {
 	const earState = getEarTraining();
 	const { currentKey, unlockedDegrees, degreeStats } = earState;
 
-	// Gate: show onboarding if not completed
-	if (!earState.onboardingCompleted) {
-		return <EarOnboarding onComplete={completeEarOnboarding} />;
-	}
-
 	const [sessionActive, setSessionActive] = useState(false);
 	const [sessionCorrect, setSessionCorrect] = useState(0);
 	const [sessionTotal, setSessionTotal] = useState(0);
@@ -244,6 +239,11 @@ export function AnchorNoteMode() {
 		handleReplayNote,
 		startSession,
 	]);
+
+	// Gate: show onboarding if not completed
+	if (!earState.onboardingCompleted) {
+		return <EarOnboarding onComplete={completeEarOnboarding} />;
+	}
 
 	// Computed stats
 	const totalAttempts = Object.values(degreeStats).reduce((sum, s) => sum + (s?.attempts ?? 0), 0);

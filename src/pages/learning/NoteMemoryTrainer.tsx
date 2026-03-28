@@ -11,13 +11,7 @@ import {
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { playFretPosition } from "@/lib/audio";
 import { getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
-import {
-	buildNoteShortcutItems,
-	FLAT_KEY_DISPLAY,
-	getNoteFromKeyEvent,
-	NATURAL_KEY_DISPLAY,
-	SHARP_KEY_DISPLAY,
-} from "@/lib/shortcuts";
+import { buildNoteShortcutItems, getNoteFromKeyEvent, NATURAL_KEY_DISPLAY } from "@/lib/shortcuts";
 import type { FretPosition, NoteName } from "@/types";
 
 type TrainerMode = "visual" | "sound";

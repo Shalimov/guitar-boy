@@ -1,5 +1,5 @@
 import type { ScaleDegree } from "@/types/earTraining";
-import { DEGREE_LABELS, DEGREE_UNLOCK_ORDER } from "@/types/earTraining";
+import { DEGREE_LABELS } from "@/types/earTraining";
 
 export interface HintData {
 	level: number;
