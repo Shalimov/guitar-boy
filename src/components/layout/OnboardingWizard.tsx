@@ -27,15 +27,15 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 			content: (
 				<div className="space-y-4">
 					<p className="text-[var(--gb-text-muted)]">
-						<strong>Guitar Boy</strong> teaches you to see the fretboard and hear what you play.
-						It combines visual theory tools, interactive quizzes, and functional ear training
-						into a daily practice loop designed for real progress.
+						<strong>Guitar Boy</strong> teaches you to see the fretboard and hear what you play. It
+						combines visual theory tools, interactive quizzes, and functional ear training into a
+						daily practice loop designed for real progress.
 					</p>
 					<div className="rounded-xl bg-[var(--gb-bg-panel)] p-4 text-sm">
 						<p className="font-semibold text-[var(--gb-text)]">5 minutes a day is all it takes.</p>
 						<p className="mt-1 text-[var(--gb-text-muted)]">
-							The app adapts to your level, tracks your weak spots, and uses spaced
-							repetition so you focus on what needs work.
+							The app adapts to your level, tracks your weak spots, and uses spaced repetition so
+							you focus on what needs work.
 						</p>
 					</div>
 				</div>
@@ -47,8 +47,8 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 			content: (
 				<div className="space-y-3 text-sm">
 					<p className="text-[var(--gb-text-muted)]">
-						Each day, hit <strong>Daily Practice</strong> on the dashboard. The app builds a
-						short session mixing these segments based on your progress:
+						Each day, hit <strong>Daily Practice</strong> on the dashboard. The app builds a short
+						session mixing these segments based on your progress:
 					</p>
 					<div className="grid gap-2">
 						{[

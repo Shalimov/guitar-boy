@@ -1,6 +1,6 @@
+import { getDegreeColor } from "@/lib/scaleDegreeColors";
 import type { ScaleDegree } from "@/types/earTraining";
 import { DEGREE_LABELS, DEGREE_UNLOCK_ORDER } from "@/types/earTraining";
-import { getDegreeColor } from "@/lib/scaleDegreeColors";
 
 interface PitchLadderProps {
 	/** Currently highlighted degree (the one being played) */
@@ -25,8 +25,18 @@ export function PitchLadder({
 	// Display all degrees from high (7) to low (1)
 	const degreesTopToBottom = [...DEGREE_UNLOCK_ORDER].sort((a, b) => {
 		const semitones: Record<ScaleDegree, number> = {
-			"1": 0, b2: 1, "2": 2, b3: 3, "3": 4, "4": 5,
-			b5: 6, "5": 7, b6: 8, "6": 9, b7: 10, "7": 11,
+			"1": 0,
+			b2: 1,
+			"2": 2,
+			b3: 3,
+			"3": 4,
+			"4": 5,
+			b5: 6,
+			"5": 7,
+			b6: 8,
+			"6": 9,
+			b7: 10,
+			"7": 11,
 		};
 		return semitones[b] - semitones[a];
 	});
@@ -42,9 +52,7 @@ export function PitchLadder({
 					<div
 						key={degree}
 						className={`flex items-center gap-2 rounded-md px-2 py-1 transition-all duration-200 ${
-							isHighlighted
-								? "ring-2 ring-white/60 shadow-lg scale-105"
-								: ""
+							isHighlighted ? "ring-2 ring-white/60 shadow-lg scale-105" : ""
 						} ${!isUnlocked ? "opacity-20" : ""}`}
 						style={{
 							backgroundColor: isHighlighted
@@ -77,9 +85,7 @@ export function PitchLadder({
 						{showLabels && isUnlocked && (
 							<span
 								className={`text-[10px] ${
-									isHighlighted
-										? "text-white/80"
-										: "text-[var(--gb-text-muted)]"
+									isHighlighted ? "text-white/80" : "text-[var(--gb-text-muted)]"
 								}`}
 							>
 								{DEGREE_LABELS[degree]}

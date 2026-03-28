@@ -104,9 +104,7 @@ export function EasyWinMode() {
 			// major-or-minor
 			const isMajor = Math.random() > 0.5;
 			const root = randomNote();
-			const third = isMajor
-				? getScaleDegreeNote(root, "3")
-				: getScaleDegreeNote(root, "b3");
+			const third = isMajor ? getScaleDegreeNote(root, "3") : getScaleDegreeNote(root, "b3");
 			const fifth = getScaleDegreeNote(root, "5");
 			const oct = 3;
 			const chordNotes = [
@@ -190,10 +188,7 @@ export function EasyWinMode() {
 	// Keyboard shortcuts
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (
-				event.target instanceof HTMLInputElement ||
-				event.target instanceof HTMLTextAreaElement
-			)
+			if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
 				return;
 
 			if (event.key === "r" || event.key === "R") {
@@ -257,7 +252,11 @@ export function EasyWinMode() {
 							{ label: "Different", value: "different", color: "bg-red-600 border-b-red-800" },
 						]
 					: [
-							{ label: "Major (Happy)", value: "major", color: "bg-yellow-500 border-b-yellow-700" },
+							{
+								label: "Major (Happy)",
+								value: "major",
+								color: "bg-yellow-500 border-b-yellow-700",
+							},
 							{ label: "Minor (Sad)", value: "minor", color: "bg-indigo-600 border-b-indigo-800" },
 						];
 

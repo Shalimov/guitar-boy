@@ -63,11 +63,16 @@ const LEVELS: LevelConfig[] = [
 const ALL_NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
 const ENHARMONICS: Record<string, string> = {
-	"C#": "Db", Db: "C#",
-	"D#": "Eb", Eb: "D#",
-	"F#": "Gb", Gb: "F#",
-	"G#": "Ab", Ab: "G#",
-	"A#": "Bb", Bb: "A#",
+	"C#": "Db",
+	Db: "C#",
+	"D#": "Eb",
+	Eb: "D#",
+	"F#": "Gb",
+	Gb: "F#",
+	"G#": "Ab",
+	Ab: "G#",
+	"A#": "Bb",
+	Bb: "A#",
 };
 
 function isEnharmonicMatch(a: string, b: string): boolean {

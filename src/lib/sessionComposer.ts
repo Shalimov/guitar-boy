@@ -1,7 +1,7 @@
+import { getTopConfusions } from "@/lib/confusionMatrix";
 import type { Question } from "@/pages/quiz/questions";
 import type { SessionRecord, SRSCard } from "@/types";
 import type { EarTrainingState, ScaleDegree } from "@/types/earTraining";
-import { getTopConfusions } from "@/lib/confusionMatrix";
 
 export type SessionSegmentType = "review" | "quiz" | "ear-training" | "warmup";
 

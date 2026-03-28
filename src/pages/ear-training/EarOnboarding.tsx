@@ -156,8 +156,8 @@ export function EarOnboarding({ onComplete }: EarOnboardingProps) {
 					<p className="gb-page-kicker mb-2">Step 2 of 3</p>
 					<h2 className="text-2xl font-bold text-[var(--gb-text)]">Quick Ear Check</h2>
 					<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
-						A cadence played to set the key. Now identify each note.
-						Question {assessmentIndex + 1} of {ASSESSMENT_DEGREES.length}.
+						A cadence played to set the key. Now identify each note. Question {assessmentIndex + 1}{" "}
+						of {ASSESSMENT_DEGREES.length}.
 					</p>
 
 					{isPlaying && (
@@ -177,9 +177,7 @@ export function EarOnboarding({ onComplete }: EarOnboardingProps) {
 								>
 									<span className="text-lg">{degree}</span>
 									<br />
-									<span className="text-[10px] opacity-80">
-										{DEGREE_LABELS[degree]}
-									</span>
+									<span className="text-[10px] opacity-80">{DEGREE_LABELS[degree]}</span>
 								</button>
 							))}
 						</div>

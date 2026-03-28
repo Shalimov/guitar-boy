@@ -1,5 +1,10 @@
 import * as Tone from "tone";
-import { CHORD_FORMULAS, getConstructNotes, getDisplayNoteName, getFrequencyAtFret } from "@/lib/music";
+import {
+	CHORD_FORMULAS,
+	getConstructNotes,
+	getDisplayNoteName,
+	getFrequencyAtFret,
+} from "@/lib/music";
 import type { FretPosition, NoteName } from "@/types";
 
 type NoteDuration = string;
@@ -172,19 +177,11 @@ export async function playCadence(root: NoteName, octave = 3): Promise<void> {
 	const chords: { notes: string[]; durationMs: number }[] = [
 		{ notes: buildChordPitches(root, "Major", octave), durationMs: 500 },
 		{
-			notes: buildChordPitches(
-				getConstructNotes(root, ["4"])[0],
-				"Major",
-				octave,
-			),
+			notes: buildChordPitches(getConstructNotes(root, ["4"])[0], "Major", octave),
 			durationMs: 500,
 		},
 		{
-			notes: buildChordPitches(
-				getConstructNotes(root, ["5"])[0],
-				"Major",
-				octave,
-			),
+			notes: buildChordPitches(getConstructNotes(root, ["5"])[0], "Major", octave),
 			durationMs: 500,
 		},
 		{ notes: buildChordPitches(root, "Major", octave), durationMs: 700 },
@@ -207,11 +204,7 @@ export async function playShortCadence(root: NoteName, octave = 3): Promise<void
 	const chords: { notes: string[]; durationMs: number }[] = [
 		{ notes: buildChordPitches(root, "Major", octave), durationMs: 400 },
 		{
-			notes: buildChordPitches(
-				getConstructNotes(root, ["5"])[0],
-				"Major",
-				octave,
-			),
+			notes: buildChordPitches(getConstructNotes(root, ["5"])[0], "Major", octave),
 			durationMs: 400,
 		},
 		{ notes: buildChordPitches(root, "Major", octave), durationMs: 500 },

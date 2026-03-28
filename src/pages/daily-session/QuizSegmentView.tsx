@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Fretboard } from "@/components/fretboard";
 import { Button } from "@/components/ui/Button";
+import { useProgressStore } from "@/hooks/useProgressStore";
+import { createOrUpdateSRSCard, deriveCardId } from "@/lib/srsCardFactory";
 import type { Difficulty, QuizType } from "@/pages/quiz/QuizSelector";
 import { checkAnswer, generateQuestions, type Question } from "@/pages/quiz/questions";
 import type { FretPosition } from "@/types";
@@ -25,6 +27,7 @@ export function QuizSegmentView({
 	const [selectedNote, setSelectedNote] = useState<string | null>(null);
 	const [feedback, setFeedback] = useState<ReturnType<typeof checkAnswer> | null>(null);
 	const [score, setScore] = useState(0);
+	const { updateCard, getCard } = useProgressStore();
 
 	const currentQuestion = questions[currentIndex];
 	const isLast = currentIndex === questions.length - 1;
@@ -57,7 +60,12 @@ export function QuizSegmentView({
 	const handleCheckAnswer = () => {
 		if (!currentQuestion) return;
 		const result = checkAnswer(currentQuestion, selectedPositions, selectedInterval, selectedNote);
-		if (result.correct.length > 0 && result.incorrect.length === 0 && result.missed.length === 0) {
+		const isCorrect = result.incorrect.length === 0 && result.missed.length === 0;
+
+		const existingCard = getCard(deriveCardId(currentQuestion));
+		updateCard(createOrUpdateSRSCard(currentQuestion, isCorrect, existingCard));
+
+		if (result.correct.length > 0 && isCorrect) {
 			setScore((prev) => prev + 1);
 		}
 		setFeedback(result);

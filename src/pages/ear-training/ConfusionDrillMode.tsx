@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { FeedbackPanel } from "@/components/ui/FeedbackPanel";
 import { KeyboardShortcutsBar } from "@/components/ui/KeyboardShortcutsBar";
 import { TinyStat } from "@/components/ui/TinyStat";
+import { useProgressStore } from "@/hooks/useProgressStore";
 import { playCadence, playNote, playRootReference } from "@/lib/audio";
 import { getTopConfusions } from "@/lib/confusionMatrix";
 import { getScaleDegreeNote } from "@/lib/music";
@@ -11,7 +12,6 @@ import { getDegreeColor } from "@/lib/scaleDegreeColors";
 import { buildSimpleShortcutItems } from "@/lib/shortcuts";
 import type { ScaleDegree } from "@/types/earTraining";
 import { DEGREE_LABELS } from "@/types/earTraining";
-import { useProgressStore } from "@/hooks/useProgressStore";
 
 const DRILL_LENGTH = 10;
 const CONSECUTIVE_TO_PASS = 5;
@@ -58,8 +58,7 @@ export function ConfusionDrillMode() {
 
 	const playRandomFromPair = useCallback(async () => {
 		if (!activePair) return;
-		const degree =
-			Math.random() > 0.5 ? activePair.degreeA : activePair.degreeB;
+		const degree = Math.random() > 0.5 ? activePair.degreeA : activePair.degreeB;
 		await playDegree(degree);
 	}, [activePair, playDegree]);
 
@@ -193,8 +192,8 @@ export function ConfusionDrillMode() {
 				<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-6 text-center shadow-[var(--gb-shadow-soft)]">
 					<h2 className="text-xl font-semibold text-[var(--gb-text)]">No Confusion Pairs</h2>
 					<p className="mt-2 text-sm text-[var(--gb-text-muted)]">
-						You haven't confused any scale degrees yet. Keep practicing in Anchor Note mode,
-						and if you start mixing up any degrees, come back here for targeted drills.
+						You haven't confused any scale degrees yet. Keep practicing in Anchor Note mode, and if
+						you start mixing up any degrees, come back here for targeted drills.
 					</p>
 				</section>
 			</div>
@@ -213,8 +212,7 @@ export function ConfusionDrillMode() {
 						</h2>
 						<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
 							You've confused {DEGREE_LABELS[activePair.degreeA]} and{" "}
-							{DEGREE_LABELS[activePair.degreeB]} {activePair.count} times.
-							Let's fix that.
+							{DEGREE_LABELS[activePair.degreeB]} {activePair.count} times. Let's fix that.
 						</p>
 					</div>
 

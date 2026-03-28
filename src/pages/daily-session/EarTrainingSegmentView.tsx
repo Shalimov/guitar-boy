@@ -20,11 +20,16 @@ interface EarTrainingSegmentViewProps {
 const ALL_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 const ENHARMONICS: Record<string, string> = {
-	"C#": "Db", Db: "C#",
-	"D#": "Eb", Eb: "D#",
-	"F#": "Gb", Gb: "F#",
-	"G#": "Ab", Ab: "G#",
-	"A#": "Bb", Bb: "A#",
+	"C#": "Db",
+	Db: "C#",
+	"D#": "Eb",
+	Eb: "D#",
+	"F#": "Gb",
+	Gb: "F#",
+	"G#": "Ab",
+	Ab: "G#",
+	"A#": "Bb",
+	Bb: "A#",
 };
 
 function isEnharmonicMatch(a: string, b: string): boolean {

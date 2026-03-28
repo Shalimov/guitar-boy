@@ -8,6 +8,7 @@ import { useQuizTimer } from "@/hooks/useQuizTimer";
 import { playFretPosition, playFretSequence } from "@/lib/audio";
 import { toErrorKey } from "@/lib/mistakeAnalysis";
 import { getFrequencyAtFret, getNoteAtFret } from "@/lib/music";
+import { createOrUpdateSRSCard, deriveCardId } from "@/lib/srsCardFactory";
 import { shouldShowTip } from "@/lib/tipEngine";
 import type { FretPosition } from "@/types";
 import { FollowUpPrompt } from "./FollowUpPrompt";
@@ -46,7 +47,7 @@ export function QuizRunner({
 	onCancel,
 	deepPractice,
 }: QuizRunnerProps) {
-	const { store, recordMistakes, dismissTip } = useProgressStore();
+	const { store, updateCard, getCard, recordMistakes, dismissTip } = useProgressStore();
 	const [questions, setQuestions] = useState<Question[]>([]);
 	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 	const [selectedPositions, setSelectedPositions] = useState<FretPosition[]>([]);
@@ -114,7 +115,12 @@ export function QuizRunner({
 		if (!currentQuestion) return;
 
 		const result = checkAnswer(currentQuestion, selectedPositions, selectedInterval, selectedNote);
-		if (result.correct.length > 0 && result.incorrect.length === 0 && result.missed.length === 0) {
+
+		const cardIsCorrect = result.incorrect.length === 0 && result.missed.length === 0;
+		const existingCard = getCard(deriveCardId(currentQuestion));
+		updateCard(createOrUpdateSRSCard(currentQuestion, cardIsCorrect, existingCard));
+
+		if (result.correct.length > 0 && cardIsCorrect) {
 			setScore((prev) => prev + 1);
 
 			if (deepPractice) {
@@ -158,6 +164,8 @@ export function QuizRunner({
 		maxFret,
 		store.mistakeLog,
 		store.dismissedTips,
+		getCard,
+		updateCard,
 	]);
 
 	submitAnswerRef.current = handleSubmitAnswer;

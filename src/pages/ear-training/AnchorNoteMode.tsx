@@ -6,6 +6,7 @@ import { FeedbackPanel } from "@/components/ui/FeedbackPanel";
 import { KeyboardShortcutsBar } from "@/components/ui/KeyboardShortcutsBar";
 import { PitchLadder } from "@/components/ui/PitchLadder";
 import { TinyStat } from "@/components/ui/TinyStat";
+import { useProgressStore } from "@/hooks/useProgressStore";
 import { playCadence, playNote, playRootReference } from "@/lib/audio";
 import { getHint, MAX_HINT_LEVEL } from "@/lib/hintEngine";
 import { getScaleDegreeNote } from "@/lib/music";
@@ -13,7 +14,6 @@ import { getDegreeColor } from "@/lib/scaleDegreeColors";
 import { buildSimpleShortcutItems } from "@/lib/shortcuts";
 import type { ScaleDegree } from "@/types/earTraining";
 import { DEGREE_LABELS, DEGREE_UNLOCK_ORDER } from "@/types/earTraining";
-import { useProgressStore } from "@/hooks/useProgressStore";
 import { EarOnboarding } from "./EarOnboarding";
 
 const QUESTIONS_PER_SESSION = 10;
@@ -198,7 +198,12 @@ export function AnchorNoteMode() {
 			}
 
 			// H = request hint
-			if ((event.key === "h" || event.key === "H") && sessionActive && !isPlaying && !showFeedback) {
+			if (
+				(event.key === "h" || event.key === "H") &&
+				sessionActive &&
+				!isPlaying &&
+				!showFeedback
+			) {
 				event.preventDefault();
 				void handleRequestHint();
 				return;
@@ -243,7 +248,8 @@ export function AnchorNoteMode() {
 	// Computed stats
 	const totalAttempts = Object.values(degreeStats).reduce((sum, s) => sum + (s?.attempts ?? 0), 0);
 	const totalCorrect = Object.values(degreeStats).reduce((sum, s) => sum + (s?.correct ?? 0), 0);
-	const totalAccuracy = totalAttempts > 0 ? `${Math.round((totalCorrect / totalAttempts) * 100)}%` : "--";
+	const totalAccuracy =
+		totalAttempts > 0 ? `${Math.round((totalCorrect / totalAttempts) * 100)}%` : "--";
 	const sessionAccuracy =
 		sessionTotal > 0 ? `${Math.round((sessionCorrect / sessionTotal) * 100)}%` : "--";
 
@@ -266,17 +272,13 @@ export function AnchorNoteMode() {
 							Scale Degree Recognition
 						</h2>
 						<p className="mt-1 text-sm text-[var(--gb-text-muted)]">
-							Listen to the cadence, then identify which scale degree is played.
-							Key of {currentKey} major.
+							Listen to the cadence, then identify which scale degree is played. Key of {currentKey}{" "}
+							major.
 						</p>
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
-						<TinyStat
-							label="Sessions"
-							value={String(earState.totalSessions)}
-							statKey="sessions"
-						/>
+						<TinyStat label="Sessions" value={String(earState.totalSessions)} statKey="sessions" />
 						<TinyStat label="Accuracy" value={totalAccuracy} statKey="accuracy" />
 						<TinyStat
 							label="Unlocked"
@@ -311,11 +313,7 @@ export function AnchorNoteMode() {
 												? "text-white shadow-sm"
 												: "bg-transparent text-[var(--gb-text-muted)] opacity-40 cursor-not-allowed"
 										}`}
-										style={
-											isUnlocked
-												? { backgroundColor: getDegreeColor(degree) }
-												: undefined
-										}
+										style={isUnlocked ? { backgroundColor: getDegreeColor(degree) } : undefined}
 									>
 										<span>{degree}</span>
 										<span className="text-[8px] font-medium opacity-80">
@@ -337,16 +335,16 @@ export function AnchorNoteMode() {
 						</summary>
 						<div className="mt-2 text-[var(--gb-text-muted)]">
 							<p>
-								A <strong>I-IV-V-I cadence</strong> plays to establish the key.
-								Then you hear a note and identify which <strong>scale degree</strong> it is.
+								A <strong>I-IV-V-I cadence</strong> plays to establish the key. Then you hear a note
+								and identify which <strong>scale degree</strong> it is.
 							</p>
 							<p className="mt-1">
 								Start with just the root (1). Achieve {Math.round(ACCURACY_THRESHOLD * 100)}%
 								accuracy over {MIN_ATTEMPTS_TO_UNLOCK}+ attempts to unlock the next degree.
 							</p>
 							<p className="mt-1">
-								Press <strong>R</strong> anytime to replay the root note for reference.
-								This is not penalized — re-anchoring is learning.
+								Press <strong>R</strong> anytime to replay the root note for reference. This is not
+								penalized — re-anchoring is learning.
 							</p>
 						</div>
 					</details>

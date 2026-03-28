@@ -1,6 +1,6 @@
+import { getDegreeColor } from "@/lib/scaleDegreeColors";
 import type { DegreeStats, EarStreak, MasteryLevel, ScaleDegree } from "@/types/earTraining";
 import { DEGREE_LABELS, DEGREE_UNLOCK_ORDER, getDegreeMastery } from "@/types/earTraining";
-import { getDegreeColor } from "@/lib/scaleDegreeColors";
 
 interface DegreeProgressMapProps {
 	unlockedDegrees: ScaleDegree[];
@@ -32,23 +32,17 @@ export function DegreeProgressMap({
 					{streak && streak.current > 0 && (
 						<div className="flex items-center gap-1.5 rounded-full border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] px-3 py-1">
 							<span className="text-lg">🔥</span>
-							<span className="text-sm font-bold text-[var(--gb-accent)]">
-								{streak.current}
-							</span>
+							<span className="text-sm font-bold text-[var(--gb-accent)]">{streak.current}</span>
 							<span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
 								Day Streak
 							</span>
 						</div>
 					)}
 					{streak && streak.best > 0 && (
-						<span className="text-xs text-[var(--gb-text-muted)]">
-							Best: {streak.best} days
-						</span>
+						<span className="text-xs text-[var(--gb-text-muted)]">Best: {streak.best} days</span>
 					)}
 				</div>
-				<span className="text-xs text-[var(--gb-text-muted)]">
-					{totalSessions} total sessions
-				</span>
+				<span className="text-xs text-[var(--gb-text-muted)]">{totalSessions} total sessions</span>
 			</div>
 
 			{/* Degree grid */}
@@ -58,9 +52,7 @@ export function DegreeProgressMap({
 					const stats = degreeStats[degree];
 					const mastery = getDegreeMastery(stats);
 					const accuracy =
-						stats && stats.attempts > 0
-							? Math.round((stats.correct / stats.attempts) * 100)
-							: null;
+						stats && stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : null;
 					const color = getDegreeColor(degree);
 					const config = MASTERY_CONFIG[mastery];
 
@@ -72,23 +64,15 @@ export function DegreeProgressMap({
 									? `shadow-sm ${config.ring}`
 									: "opacity-30 border border-dashed border-[var(--gb-border)]"
 							}`}
-							style={
-								isUnlocked
-									? { backgroundColor: `${color}20`, borderColor: color }
-									: undefined
-							}
+							style={isUnlocked ? { backgroundColor: `${color}20`, borderColor: color } : undefined}
 						>
 							{/* Mastery badge */}
 							{mastery !== "none" && (
-								<span className="absolute -right-1 -top-1 text-sm">
-									{config.icon}
-								</span>
+								<span className="absolute -right-1 -top-1 text-sm">{config.icon}</span>
 							)}
 
 							{/* Lock icon for locked degrees */}
-							{!isUnlocked && (
-								<span className="text-lg text-[var(--gb-text-muted)]">🔒</span>
-							)}
+							{!isUnlocked && <span className="text-lg text-[var(--gb-text-muted)]">🔒</span>}
 
 							{/* Degree number */}
 							<span
@@ -106,10 +90,7 @@ export function DegreeProgressMap({
 
 							{/* Accuracy */}
 							{isUnlocked && (
-								<span
-									className="mt-1 text-[11px] font-bold"
-									style={{ color }}
-								>
+								<span className="mt-1 text-[11px] font-bold" style={{ color }}>
 									{accuracy !== null ? `${accuracy}%` : "--"}
 								</span>
 							)}
