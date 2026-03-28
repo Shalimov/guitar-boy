@@ -1,8 +1,11 @@
 import { useCallback } from "react";
 import { computeAdaptiveConfig } from "@/lib/adaptiveDifficulty";
+import { recordConfusion } from "@/lib/confusionMatrix";
 import { EMPTY_MISTAKE_LOG, recordErrors } from "@/lib/mistakeAnalysis";
 import { getDueCards as getDueCardsUtil } from "@/lib/srs";
 import type { FretPosition, ProgressStore, SessionRecord, SRSCard, UserSettings } from "@/types";
+import type { ScaleDegree } from "@/types/earTraining";
+import { DEGREE_UNLOCK_ORDER, getInitialEarTrainingState } from "@/types/earTraining";
 import { useLocalStorage } from "./useLocalStorage";
 
 const INITIAL_STORE: ProgressStore = {
@@ -139,6 +142,118 @@ export function useProgressStore() {
 		return getDueCardsUtil(store.cards);
 	}, [store.cards]);
 
+	const getEarTraining = useCallback(() => {
+		return store.earTraining ?? getInitialEarTrainingState();
+	}, [store.earTraining]);
+
+	const updateEarDegreeResult = useCallback(
+		(degree: ScaleDegree, correct: boolean, answeredAs?: ScaleDegree) => {
+			setStore((prev) => {
+				const ear = prev.earTraining ?? getInitialEarTrainingState();
+				const today = new Date().toISOString().slice(0, 10);
+				const existing = ear.degreeStats[degree] ?? { attempts: 0, correct: 0, lastDate: today };
+
+				const updatedStats = {
+					...ear.degreeStats,
+					[degree]: {
+						attempts: existing.attempts + 1,
+						correct: existing.correct + (correct ? 1 : 0),
+						lastDate: today,
+					},
+				};
+
+				const updatedPairs =
+					!correct && answeredAs && answeredAs !== degree
+						? recordConfusion(ear.confusionPairs, degree, answeredAs)
+						: ear.confusionPairs;
+
+				return {
+					...prev,
+					earTraining: {
+						...ear,
+						degreeStats: updatedStats,
+						confusionPairs: updatedPairs,
+					},
+				};
+			});
+		},
+		[setStore],
+	);
+
+	const unlockNextDegree = useCallback(() => {
+		setStore((prev) => {
+			const ear = prev.earTraining ?? getInitialEarTrainingState();
+			const currentCount = ear.unlockedDegrees.length;
+			if (currentCount >= DEGREE_UNLOCK_ORDER.length) return prev;
+
+			const nextDegree = DEGREE_UNLOCK_ORDER[currentCount];
+			return {
+				...prev,
+				earTraining: {
+					...ear,
+					unlockedDegrees: [...ear.unlockedDegrees, nextDegree],
+				},
+			};
+		});
+	}, [setStore]);
+
+	const incrementEarSessions = useCallback(() => {
+		setStore((prev) => {
+			const ear = prev.earTraining ?? getInitialEarTrainingState();
+			const today = new Date().toISOString().slice(0, 10);
+			const streak = ear.streak ?? { current: 0, best: 0, lastDate: "" };
+
+			// Compute new streak
+			let newCurrent = streak.current;
+			if (streak.lastDate === today) {
+				// Already practiced today, no change
+			} else {
+				const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+				newCurrent = streak.lastDate === yesterday ? streak.current + 1 : 1;
+			}
+			const newBest = Math.max(streak.best, newCurrent);
+
+			return {
+				...prev,
+				earTraining: {
+					...ear,
+					totalSessions: ear.totalSessions + 1,
+					streak: { current: newCurrent, best: newBest, lastDate: today },
+				},
+			};
+		});
+	}, [setStore]);
+
+	const updateEarKey = useCallback(
+		(key: import("@/types").NoteName) => {
+			setStore((prev) => {
+				const ear = prev.earTraining ?? getInitialEarTrainingState();
+				return {
+					...prev,
+					earTraining: { ...ear, currentKey: key },
+				};
+			});
+		},
+		[setStore],
+	);
+
+	const completeEarOnboarding = useCallback(
+		(unlockedDegrees: import("@/types/earTraining").ScaleDegree[]) => {
+			setStore((prev) => {
+				const ear = prev.earTraining ?? getInitialEarTrainingState();
+				return {
+					...prev,
+					earTraining: {
+						...ear,
+						onboardingCompleted: true,
+						unlockedDegrees,
+					},
+				};
+			});
+		},
+		[setStore],
+	);
+
 	return {
 		store,
 		updateCard,
@@ -150,6 +265,12 @@ export function useProgressStore() {
 		recordMistakes,
 		dismissTip,
 		updatePersonalBest,
+		getEarTraining,
+		updateEarDegreeResult,
+		unlockNextDegree,
+		incrementEarSessions,
+		updateEarKey,
+		completeEarOnboarding,
 	};
 }
 
@@ -165,6 +286,14 @@ function migrateProgressStore(data: unknown, fromVersion: number): ProgressStore
 				accidentalPreference: "sharp",
 				fretRange: { min: 1, max: 15 },
 			},
+		};
+	}
+
+	if (fromVersion < 2) {
+		store = {
+			...store,
+			version: 2,
+			earTraining: store.earTraining ?? getInitialEarTrainingState(),
 		};
 	}
 

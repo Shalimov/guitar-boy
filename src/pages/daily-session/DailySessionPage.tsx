@@ -20,7 +20,7 @@ export function DailySessionPage() {
 	const warmUp = useMemo(() => generateWarmUp(store.sessionHistory), [store.sessionHistory]);
 
 	const plan = useMemo(() => {
-		const basePlan = composeSession(dueCards, store.sessionHistory);
+		const basePlan = composeSession(dueCards, store.sessionHistory, store.earTraining);
 		if (warmUp) {
 			const warmupSeg: SessionSegment = {
 				type: "warmup",

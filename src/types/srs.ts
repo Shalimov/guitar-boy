@@ -40,4 +40,7 @@ export type AppMode =
 	| "quiz-chord"
 	| "quiz-pattern"
 	| "review"
-	| "daily-practice";
+	| "daily-practice"
+	| "ear-anchor"
+	| "ear-identify"
+	| "ear-meditation";

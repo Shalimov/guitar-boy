@@ -1,5 +1,5 @@
 import * as Tone from "tone";
-import { getDisplayNoteName, getFrequencyAtFret } from "@/lib/music";
+import { CHORD_FORMULAS, getConstructNotes, getDisplayNoteName, getFrequencyAtFret } from "@/lib/music";
 import type { FretPosition, NoteName } from "@/types";
 
 type NoteDuration = string;
@@ -113,6 +113,116 @@ export async function playFrequency(frequency: number, duration: NoteDuration = 
 
 export async function playFretPosition(position: FretPosition, duration: NoteDuration = "8n") {
 	await playFrequency(getFrequencyAtFret(position), duration);
+}
+
+/** Play multiple notes simultaneously as a chord */
+export async function playChord(notes: string[], duration: NoteDuration = "8n") {
+	await ensureAudioReady();
+	trackPlayback(duration);
+	getSynth().triggerAttackRelease(notes, duration);
+}
+
+/** Build pitched chord notes from a root, quality, and octave */
+function buildChordPitches(root: NoteName, quality: string, octave: number): string[] {
+	const formula = CHORD_FORMULAS[quality];
+	if (!formula) return [toPlayablePitch(root, octave)];
+	const noteNames = getConstructNotes(root, formula);
+	return noteNames.map((n, i) => {
+		// If a note wraps around (lower index than root), bump octave
+		const noteOctave = i > 0 && n <= noteNames[0] ? octave + 1 : octave;
+		return `${getDisplayNoteName(n, "sharp")}${noteOctave}`;
+	});
+}
+
+/** Play two fret positions sequentially with a pause between them */
+export async function playFretSequence(
+	positions: FretPosition[],
+	duration: NoteDuration = "1n",
+	gapMs = 600,
+) {
+	await ensureAudioReady();
+	for (let i = 0; i < positions.length; i++) {
+		trackPlayback(duration);
+		getSynth().triggerAttackRelease(getFrequencyAtFret(positions[i]), duration);
+		if (i < positions.length - 1) {
+			await new Promise<void>((resolve) => {
+				const id = setTimeout(resolve, parseDurationToMs(duration) + gapMs);
+				playbackTimeouts.add(id);
+			});
+		}
+	}
+}
+
+/** Play the root note as a reference tone (non-penalized anchor) */
+export async function playRootReference(root: NoteName, octave = 4) {
+	await playNote(root, "2n");
+	// Also play one octave above softly for a fuller reference
+	await ensureAudioReady();
+	const higherPitch = toPlayablePitch(root, octave + 1);
+	getSynth().triggerAttackRelease(higherPitch, "4n", undefined, 0.3);
+}
+
+/**
+ * Play a I-IV-V-I cadence to establish tonal context.
+ * Returns a Promise that resolves when the cadence finishes (~2.2s).
+ */
+export async function playCadence(root: NoteName, octave = 3): Promise<void> {
+	await ensureAudioReady();
+
+	const chords: { notes: string[]; durationMs: number }[] = [
+		{ notes: buildChordPitches(root, "Major", octave), durationMs: 500 },
+		{
+			notes: buildChordPitches(
+				getConstructNotes(root, ["4"])[0],
+				"Major",
+				octave,
+			),
+			durationMs: 500,
+		},
+		{
+			notes: buildChordPitches(
+				getConstructNotes(root, ["5"])[0],
+				"Major",
+				octave,
+			),
+			durationMs: 500,
+		},
+		{ notes: buildChordPitches(root, "Major", octave), durationMs: 700 },
+	];
+
+	for (const chord of chords) {
+		const durationSec = chord.durationMs / 1000;
+		trackPlayback(String(durationSec));
+		getSynth().triggerAttackRelease(chord.notes, durationSec);
+		await new Promise((resolve) => setTimeout(resolve, chord.durationMs));
+	}
+}
+
+/**
+ * Play a short I-V-I cadence (~1.2s) for quick re-anchoring between questions.
+ */
+export async function playShortCadence(root: NoteName, octave = 3): Promise<void> {
+	await ensureAudioReady();
+
+	const chords: { notes: string[]; durationMs: number }[] = [
+		{ notes: buildChordPitches(root, "Major", octave), durationMs: 400 },
+		{
+			notes: buildChordPitches(
+				getConstructNotes(root, ["5"])[0],
+				"Major",
+				octave,
+			),
+			durationMs: 400,
+		},
+		{ notes: buildChordPitches(root, "Major", octave), durationMs: 500 },
+	];
+
+	for (const chord of chords) {
+		const durationSec = chord.durationMs / 1000;
+		trackPlayback(String(durationSec));
+		getSynth().triggerAttackRelease(chord.notes, durationSec);
+		await new Promise((resolve) => setTimeout(resolve, chord.durationMs));
+	}
 }
 
 export function subscribeToPlaybackState(listener: (isPlaying: boolean) => void) {

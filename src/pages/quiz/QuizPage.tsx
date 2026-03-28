@@ -2,6 +2,8 @@ import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import { PageHeader, SectionCard } from "@/components/ui";
 import { useProgressStore } from "@/hooks/useProgressStore";
 import { AnchorNoteMode } from "@/pages/ear-training/AnchorNoteMode";
+import { ConfusionDrillMode } from "@/pages/ear-training/ConfusionDrillMode";
+import { EasyWinMode } from "@/pages/ear-training/EasyWinMode";
 import { HearIdentifyMode } from "@/pages/ear-training/HearIdentifyMode";
 import { ToneMeditationMode } from "@/pages/ear-training/ToneMeditationMode";
 import { QuizRunner } from "./QuizRunner";
@@ -10,9 +12,11 @@ import { QuizSelector } from "./QuizSelector";
 import { SpeedDrillRunner } from "./SpeedDrillRunner";
 
 const EAR_TRAINING_COMPONENTS: Record<EarTrainingMode, React.ReactNode> = {
+	"easy-wins": <EasyWinMode />,
 	"hear-identify": <HearIdentifyMode />,
 	"tone-meditation": <ToneMeditationMode />,
 	"anchor-note": <AnchorNoteMode />,
+	"confusion-drill": <ConfusionDrillMode />,
 };
 
 export function QuizPage() {

@@ -5,7 +5,12 @@ import type { CardCategory } from "@/types";
 export type QuizType = CardCategory | "note-guess" | "note-guess-sound";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
-export type EarTrainingMode = "hear-identify" | "tone-meditation" | "anchor-note";
+export type EarTrainingMode =
+	| "hear-identify"
+	| "tone-meditation"
+	| "anchor-note"
+	| "easy-wins"
+	| "confusion-drill";
 
 export interface QuizSettings {
 	type: QuizType;
@@ -93,6 +98,16 @@ const QUICK_START_PRESETS: QuickStartPreset[] = [
 		},
 	},
 	{
+		id: "easy-wins",
+		name: "Easy Wins",
+		icon: "🎯",
+		description: "High/low, same/different, major/minor — build confidence",
+		badge: "Start here",
+		time: "2-3 min",
+		earTrainingMode: "easy-wins",
+		settings: null,
+	},
+	{
 		id: "hear-identify",
 		name: "Hear & ID",
 		icon: "👂",
@@ -116,10 +131,20 @@ const QUICK_START_PRESETS: QuickStartPreset[] = [
 		id: "anchor-note",
 		name: "Anchor",
 		icon: "⚓",
-		description: "Master one note at a time",
+		description: "Scale degree recognition with progressive unlock",
 		badge: "Best for beginners",
 		time: "4-7 min",
 		earTrainingMode: "anchor-note",
+		settings: null,
+	},
+	{
+		id: "confusion-drill",
+		name: "Weak Spots",
+		icon: "🎯",
+		description: "Targeted drill on your most confused degree pairs",
+		badge: "Fix mistakes",
+		time: "2-4 min",
+		earTrainingMode: "confusion-drill",
 		settings: null,
 	},
 	{

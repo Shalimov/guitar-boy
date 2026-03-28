@@ -280,7 +280,7 @@ export function SpeedDrillRunner({
 									<Button
 										variant="secondary"
 										className="p-8 rounded-full text-4xl hover:scale-110 transition-transform"
-										onClick={() => playFretPosition(currentQuestion.shownPosition, "2n")}
+										onClick={() => playFretPosition(currentQuestion.shownPosition, "1n")}
 									>
 										🔊
 									</Button>

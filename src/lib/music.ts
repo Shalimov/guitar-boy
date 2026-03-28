@@ -239,6 +239,16 @@ export function isChordCorrect(
 	};
 }
 
+/**
+ * Get the note name for a scale degree relative to a root note.
+ * Uses the interval formula mapping to resolve degrees to actual notes.
+ */
+export function getScaleDegreeNote(root: NoteName, degree: IntervalFormulaToken): NoteName {
+	const rootIndex = CHROMATIC.indexOf(root);
+	const semitones = INTERVAL_FORMULA_TO_SEMITONES[degree];
+	return CHROMATIC[(rootIndex + semitones) % 12];
+}
+
 /** Natural notes (no accidentals/sharps/flats) */
 export const NATURAL_NOTES: readonly NoteName[] = ["C", "D", "E", "F", "G", "A", "B"];
 

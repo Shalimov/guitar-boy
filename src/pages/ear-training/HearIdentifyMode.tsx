@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
 import {
 	Button,
@@ -9,15 +9,15 @@ import {
 	TinyStat,
 } from "@/components/ui";
 import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
-import { playFretPosition } from "@/lib/audio";
-import { getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
+import { playCadence, playFretPosition, playRootReference } from "@/lib/audio";
+import { CHROMATIC_NOTES, getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
 import {
 	buildNoteShortcutItems,
 	FLAT_KEY_DISPLAY,
 	NATURAL_KEY_DISPLAY,
 	SHARP_KEY_DISPLAY,
 } from "@/lib/shortcuts";
-import type { FretPosition } from "@/types";
+import type { FretPosition, NoteName } from "@/types";
 
 type DifficultyLevel = 1 | 2 | 3 | 4;
 
@@ -144,14 +144,18 @@ function getRandomPosition(config: LevelConfig): FretPosition {
 	return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
+const KEY_OPTIONS: NoteName[] = [...CHROMATIC_NOTES];
+
 export function HearIdentifyMode() {
 	const [level, setLevel] = useState<DifficultyLevel>(1);
+	const [tonalKey, setTonalKey] = useState<NoteName>("C");
 	const [currentPosition, setCurrentPosition] = useState<FretPosition | null>(null);
 	const [currentNote, setCurrentNote] = useState<string | null>(null);
 	const [selectedNote, setSelectedNote] = useState<string | null>(null);
 	const [showFeedback, setShowFeedback] = useState(false);
 	const [isCorrect, setIsCorrect] = useState(false);
 	const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0 });
+	const cadencePlayed = useRef(false);
 
 	const currentLevelConfig = LEVELS[level - 1];
 
@@ -183,11 +187,20 @@ export function HearIdentifyMode() {
 		generateNewQuestion();
 	}, [generateNewQuestion]);
 
+	const handleReplayRoot = useCallback(async () => {
+		await playRootReference(tonalKey);
+	}, [tonalKey]);
+
+	// Play cadence once at start, then play each note
 	useEffect(() => {
-		if (currentPosition) {
+		if (!currentPosition) return;
+		if (!cadencePlayed.current) {
+			cadencePlayed.current = true;
+			void playCadence(tonalKey).then(() => playCurrentNote());
+		} else {
 			void playCurrentNote();
 		}
-	}, [currentPosition, playCurrentNote]);
+	}, [currentPosition, playCurrentNote, tonalKey]);
 
 	const handleNoteSelect = useCallback(
 		(note: string) => {
@@ -288,7 +301,7 @@ export function HearIdentifyMode() {
 
 				<hr className="my-3 border-[var(--gb-border)]" />
 
-				<div className="mt-4">
+				<div className="mt-4 space-y-3">
 					<ButtonGroup
 						options={LEVELS.map((lvl) => ({
 							label: lvl.name,
@@ -298,6 +311,31 @@ export function HearIdentifyMode() {
 						onChange={(value) => setLevel(Number(value) as DifficultyLevel)}
 						label="Select difficulty level"
 					/>
+
+					<div className="flex flex-wrap items-center gap-2">
+						<span className="text-xs font-bold uppercase tracking-wider text-[var(--gb-text-muted)]">
+							Key
+						</span>
+						<div className="flex flex-wrap gap-1 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-1 shadow-inner">
+							{KEY_OPTIONS.map((key) => (
+								<button
+									key={key}
+									type="button"
+									onClick={() => {
+										setTonalKey(key);
+										cadencePlayed.current = false;
+									}}
+									className={`min-w-[28px] rounded-md px-2 py-1 text-[11px] font-bold transition-all ${
+										key === tonalKey
+											? "bg-[var(--gb-accent)] text-white shadow-sm"
+											: "text-[var(--gb-text-muted)] hover:bg-[var(--gb-bg-panel)]"
+									}`}
+								>
+									{key.split("/")[0]}
+								</button>
+							))}
+						</div>
+					</div>
 				</div>
 			</section>
 
@@ -312,6 +350,14 @@ export function HearIdentifyMode() {
 						</p>
 					</div>
 					<div className="flex gap-2">
+						<Button
+							variant="secondary"
+							size="sm"
+							onClick={() => void handleReplayRoot()}
+							className="border-b-2 border-b-blue-600 text-blue-600"
+						>
+							Root ({tonalKey.split("/")[0]})
+						</Button>
 						<Button variant="secondary" size="sm" onClick={playCurrentNote}>
 							Replay note
 						</Button>

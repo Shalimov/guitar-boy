@@ -23,89 +23,199 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 	const steps: Step[] = [
 		{
 			kicker: "Welcome",
-			title: "Master the Fretboard",
+			title: "Learn Guitar by Ear and Eye",
 			content: (
 				<div className="space-y-4">
 					<p className="text-[var(--gb-text-muted)]">
-						Welcome to <strong>Guitar Boy</strong>! This tool is designed to help you build a mental
-						map of your instrument through visualization, theory, and spaced repetition.
+						<strong>Guitar Boy</strong> teaches you to see the fretboard and hear what you play.
+						It combines visual theory tools, interactive quizzes, and functional ear training
+						into a daily practice loop designed for real progress.
 					</p>
-					<div className="rounded-xl bg-[var(--gb-bg-panel)] p-4 text-sm italic">
-						"The fretboard is a grid of possibilities. Let's make it intuitive."
+					<div className="rounded-xl bg-[var(--gb-bg-panel)] p-4 text-sm">
+						<p className="font-semibold text-[var(--gb-text)]">5 minutes a day is all it takes.</p>
+						<p className="mt-1 text-[var(--gb-text-muted)]">
+							The app adapts to your level, tracks your weak spots, and uses spaced
+							repetition so you focus on what needs work.
+						</p>
 					</div>
 				</div>
 			),
 		},
 		{
-			kicker: "Framework",
-			title: "Three ways to learn",
+			kicker: "The Daily Loop",
+			title: "How practice works",
 			content: (
-				<div className="grid gap-3 text-sm">
-					<div className="flex gap-3 items-start">
-						<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--gb-accent)] text-white text-[10px] font-bold">
-							1
-						</span>
-						<div>
-							<p className="font-bold">Guided Lessons</p>
-							<p className="text-[var(--gb-text-muted)]">
-								Step-by-step lessons covering notes, listening skills, how to build scales, and how
-								to build chords — with a clickable fretboard so you learn by ear and eye together.
-							</p>
-						</div>
-					</div>
-					<div className="flex gap-3 items-start">
-						<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--gb-accent)] text-white text-[10px] font-bold">
-							2
-						</span>
-						<div>
-							<p className="font-bold">Memory Quizzes</p>
-							<p className="text-[var(--gb-text-muted)]">
-								Spaced repetition quizzes on notes, intervals, chords, and patterns to lock what
-								you've learned into long-term memory.
-							</p>
-						</div>
-					</div>
-					<div className="flex gap-3 items-start">
-						<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--gb-accent)] text-white text-[10px] font-bold">
-							3
-						</span>
-						<div>
-							<p className="font-bold">Fretboard Explorer</p>
-							<p className="text-[var(--gb-text-muted)]">
-								An interactive theory lab to visualize any scale, chord, arpeggio, or interval shape
-								across the full neck.
-							</p>
-						</div>
+				<div className="space-y-3 text-sm">
+					<p className="text-[var(--gb-text-muted)]">
+						Each day, hit <strong>Daily Practice</strong> on the dashboard. The app builds a
+						short session mixing these segments based on your progress:
+					</p>
+					<div className="grid gap-2">
+						{[
+							{
+								icon: "🎸",
+								label: "Warm-up",
+								desc: "Quick review of yesterday's weak spots",
+							},
+							{
+								icon: "🃏",
+								label: "SRS Review",
+								desc: "Spaced repetition cards that are due — notes, intervals, chords",
+							},
+							{
+								icon: "🧩",
+								label: "Quiz",
+								desc: "Targeted quiz on your weakest area (notes, intervals, or chords)",
+							},
+							{
+								icon: "👂",
+								label: "Ear Training",
+								desc: "Scale degree recognition — hear a note, identify its role in the key",
+							},
+						].map((item) => (
+							<div
+								key={item.label}
+								className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)]"
+							>
+								<span className="text-lg shrink-0">{item.icon}</span>
+								<div>
+									<p className="font-bold text-[var(--gb-text)]">{item.label}</p>
+									<p className="text-[var(--gb-text-muted)]">{item.desc}</p>
+								</div>
+							</div>
+						))}
 					</div>
 				</div>
 			),
 		},
 		{
-			kicker: "The Program",
-			title: "Learning Roadmap",
+			kicker: "Your Toolkit",
+			title: "Learn, Quiz, Listen, Create",
 			content: (
-				<div className="space-y-4">
-					<p className="text-sm text-[var(--gb-text-muted)] mb-3">
-						Follow this path for the most effective progress:
+				<div className="grid gap-2.5 text-sm">
+					{[
+						{
+							icon: "📖",
+							label: "Learn",
+							desc: "7 guided lessons on notes, scales, chords, and intervals. Plus a Fretboard Explorer for free experimentation.",
+						},
+						{
+							icon: "🧠",
+							label: "Quiz Studio",
+							desc: "Find notes, guess notes by sight or sound, identify intervals, build chords. Pick a preset or customize difficulty, timer, and question count.",
+						},
+						{
+							icon: "👂",
+							label: "Ear Training",
+							desc: "Starts with easy wins (high/low, major/minor), then scale degree recognition with progressive unlock, hints, and confusion drills.",
+						},
+						{
+							icon: "🎨",
+							label: "Whiteboard",
+							desc: "Create and save fretboard diagrams. Annotate scales, chord shapes, and patterns. Browse a built-in pattern library.",
+						},
+					].map((item) => (
+						<div key={item.label} className="flex gap-3 items-start">
+							<span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--gb-bg-panel)] text-sm">
+								{item.icon}
+							</span>
+							<div>
+								<p className="font-bold text-[var(--gb-text)]">{item.label}</p>
+								<p className="text-[var(--gb-text-muted)]">{item.desc}</p>
+							</div>
+						</div>
+					))}
+				</div>
+			),
+		},
+		{
+			kicker: "The Path",
+			title: "Recommended progression",
+			content: (
+				<div className="space-y-3">
+					<p className="text-sm text-[var(--gb-text-muted)]">
+						Follow this sequence. Each phase builds on the last:
 					</p>
 					<nav className="space-y-2">
 						{[
-							{ phase: "Beginner", task: "Note names, string positions & listening fundamentals" },
-							{ phase: "Intermediate", task: "Build major & minor scales from the W–W–H formula" },
-							{ phase: "Advanced", task: "Construct chords from interval formulas (1–3–5)" },
-							{ phase: "Mastery", task: "Internalize intervals, blues scale & daily SRS review" },
+							{
+								phase: "Phase 1",
+								title: "Notes",
+								desc: "Learn all natural notes on the fretboard. Use the Guided Lessons, then quiz yourself.",
+								where: "Learn tab + Quiz: Find the Note",
+							},
+							{
+								phase: "Phase 2",
+								title: "Scales & Patterns",
+								desc: "Major, minor, and pentatonic shapes. Visualize them on the Whiteboard, then drill patterns.",
+								where: "Whiteboard + Quiz: Pattern Drill",
+							},
+							{
+								phase: "Phase 3",
+								title: "Intervals & Chords",
+								desc: "Understand note relationships. Build chords from formulas. Quiz intervals and chord tones.",
+								where: "Learn tab + Quiz: Intervals & Build Chord",
+							},
+							{
+								phase: "Phase 4",
+								title: "Ear Training",
+								desc: "Train your ear to recognize scale degrees. Start with Easy Wins, progress through Anchor Note training.",
+								where: "Quiz Studio: Ear Training modes",
+							},
 						].map((item) => (
 							<div
 								key={item.phase}
-								className="flex items-start gap-3 p-2 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)]"
+								className="p-2.5 rounded-lg border border-[var(--gb-border)] bg-[var(--gb-bg-elev)]"
 							>
-								<span className="shrink-0 w-24 text-[10px] font-bold uppercase tracking-widest text-[var(--gb-accent)] pt-0.5">
-									{item.phase}
-								</span>
-								<span className="text-sm font-medium">{item.task}</span>
+								<div className="flex items-baseline gap-2">
+									<span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gb-accent)]">
+										{item.phase}
+									</span>
+									<span className="text-sm font-bold text-[var(--gb-text)]">{item.title}</span>
+								</div>
+								<p className="mt-1 text-sm text-[var(--gb-text-muted)]">{item.desc}</p>
+								<p className="mt-1 text-[11px] text-[var(--gb-accent)]">{item.where}</p>
 							</div>
 						))}
 					</nav>
+				</div>
+			),
+		},
+		{
+			kicker: "One More Thing",
+			title: "Consistency beats intensity",
+			content: (
+				<div className="space-y-4">
+					<div className="grid gap-3 text-sm">
+						{[
+							{
+								icon: "🔥",
+								tip: "Hit Daily Practice every day. 5 focused minutes beats 30 scattered ones.",
+							},
+							{
+								icon: "💡",
+								tip: "Using hints is learning, not cheating. The hint system helps you build connections, not just guess.",
+							},
+							{
+								icon: "🎯",
+								tip: "The app tracks what you get wrong. Weak spots get more practice automatically.",
+							},
+							{
+								icon: "👂",
+								tip: "Ear training teaches relative pitch — how notes feel in a key. This is the skill that transfers to real playing.",
+							},
+						].map((item) => (
+							<div key={item.icon} className="flex gap-3 items-start">
+								<span className="text-lg shrink-0">{item.icon}</span>
+								<p className="text-[var(--gb-text-muted)]">{item.tip}</p>
+							</div>
+						))}
+					</div>
+					<div className="rounded-xl bg-[var(--gb-bg-panel)] p-4 text-center">
+						<p className="text-sm font-semibold text-[var(--gb-text)]">
+							Ready? Start with your first lesson or jump into Daily Practice.
+						</p>
+					</div>
 				</div>
 			),
 		},

@@ -1,5 +1,7 @@
 import type { Question } from "@/pages/quiz/questions";
 import type { SessionRecord, SRSCard } from "@/types";
+import type { EarTrainingState, ScaleDegree } from "@/types/earTraining";
+import { getTopConfusions } from "@/lib/confusionMatrix";
 
 export type SessionSegmentType = "review" | "quiz" | "ear-training" | "warmup";
 
@@ -22,10 +24,17 @@ export interface QuizSegment {
 	difficulty: "beginner" | "intermediate" | "advanced";
 }
 
+/** Sub-mode for ear training segments */
+export type EarTrainingSubMode = "easy-wins" | "anchor-drill" | "confusion-drill" | "identify";
+
 export interface EarTrainingSegment {
 	type: "ear-training";
 	/** Number of ear training rounds */
 	rounds: number;
+	/** Which sub-mode to use (defaults to "identify" for backwards compat) */
+	subMode?: EarTrainingSubMode;
+	/** Target degrees for focused drills */
+	targetDegrees?: ScaleDegree[];
 }
 
 export type SessionSegment = WarmUpSegment | ReviewSegment | QuizSegment | EarTrainingSegment;
@@ -41,10 +50,14 @@ export interface SessionPlan {
  * Rules:
  * 1. If there are due SRS cards, start with review (max 10 cards)
  * 2. Always include a quiz segment (5 questions from weakest category)
- * 3. Always include 1 ear training segment (fixed rounds)
+ * 3. Always include 1 ear training segment with smart sub-mode selection
  * 4. Determine weakest category from session history accuracy
  */
-export function composeSession(dueCards: SRSCard[], sessionHistory: SessionRecord[]): SessionPlan {
+export function composeSession(
+	dueCards: SRSCard[],
+	sessionHistory: SessionRecord[],
+	earTrainingState?: EarTrainingState,
+): SessionPlan {
 	const segments: SessionSegment[] = [];
 	let totalSteps = 0;
 
@@ -66,12 +79,47 @@ export function composeSession(dueCards: SRSCard[], sessionHistory: SessionRecor
 	});
 	totalSteps += quizCount;
 
-	// Segment 3: Ear training
+	// Segment 3: Ear training (smart sub-mode)
 	const earRounds = 3;
-	segments.push({ type: "ear-training", rounds: earRounds });
+	const earSegment: EarTrainingSegment = { type: "ear-training", rounds: earRounds };
+
+	if (earTrainingState) {
+		earSegment.subMode = pickEarTrainingSubMode(earTrainingState);
+		if (earSegment.subMode === "confusion-drill") {
+			const topPair = getTopConfusions(earTrainingState.confusionPairs, 1)[0];
+			if (topPair) {
+				earSegment.targetDegrees = [topPair.degreeA, topPair.degreeB];
+			}
+		}
+	}
+
+	segments.push(earSegment);
 	totalSteps += earRounds;
 
 	return { segments, totalSteps };
+}
+
+/**
+ * Pick the best ear training sub-mode based on user's state.
+ */
+function pickEarTrainingSubMode(state: EarTrainingState): EarTrainingSubMode {
+	// New user with no sessions: start with easy wins
+	if (state.totalSessions === 0) {
+		return "easy-wins";
+	}
+
+	// User has significant confusion pairs (count > 3): drill those
+	const topConfusion = getTopConfusions(state.confusionPairs, 1)[0];
+	if (topConfusion && topConfusion.count > 3) {
+		return "confusion-drill";
+	}
+
+	// Default to anchor drill for focused degree work
+	if (state.unlockedDegrees.length < 7) {
+		return "anchor-drill";
+	}
+
+	return "identify";
 }
 
 /**

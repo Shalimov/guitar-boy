@@ -29,6 +29,20 @@ export function FollowUpPrompt({ followUp, onComplete, onSkip }: FollowUpPromptP
 		}
 	}, [followUp, handlePlay]);
 
+	useEffect(() => {
+		if (followUp.type !== "ear-check") return;
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+				return;
+			if (event.key === " ") {
+				event.preventDefault();
+				handlePlay();
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [followUp.type, handlePlay]);
+
 	const handleNoteSelect = (note: string) => {
 		if (followUp.type !== "ear-check" || feedback !== null) return;
 		setSelectedNote(note);

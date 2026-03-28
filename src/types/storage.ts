@@ -1,4 +1,5 @@
 import type { MistakeLog } from "@/lib/mistakeAnalysis";
+import type { EarTrainingState } from "./earTraining";
 import type { AccidentalPreference } from "./music";
 import type { SessionRecord, SRSCard } from "./srs";
 
@@ -46,6 +47,8 @@ export interface ProgressStore {
 		chord: number | null;
 		pattern: number | null;
 	};
+	/** Ear training progress (scale degree recognition, confusion tracking) */
+	earTraining?: EarTrainingState;
 }
 
 import type { Diagram } from "./diagram";

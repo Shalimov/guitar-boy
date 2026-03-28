@@ -5,7 +5,7 @@ import { TipOverlay } from "@/components/ui/TipOverlay";
 import type { Tip } from "@/data/tips";
 import { useProgressStore } from "@/hooks/useProgressStore";
 import { useQuizTimer } from "@/hooks/useQuizTimer";
-import { playFretPosition } from "@/lib/audio";
+import { playFretPosition, playFretSequence } from "@/lib/audio";
 import { toErrorKey } from "@/lib/mistakeAnalysis";
 import { getFrequencyAtFret, getNoteAtFret } from "@/lib/music";
 import { shouldShowTip } from "@/lib/tipEngine";
@@ -167,7 +167,16 @@ export function QuizRunner({
 		if (playedQuestionIdRef.current === currentQuestion.id) return;
 
 		playedQuestionIdRef.current = currentQuestion.id;
-		void playFretPosition(currentQuestion.shownPosition, "2n");
+		void playFretPosition(currentQuestion.shownPosition, "1n");
+	}, [currentQuestion, feedback]);
+
+	// Auto-play interval notes sequentially when an interval question appears
+	useEffect(() => {
+		if (!currentQuestion || currentQuestion.type !== "interval" || feedback) return;
+		if (playedQuestionIdRef.current === currentQuestion.id) return;
+
+		playedQuestionIdRef.current = currentQuestion.id;
+		void playFretSequence(currentQuestion.targetPositions, "1n", 600);
 	}, [currentQuestion, feedback]);
 
 	useEffect(() => {
@@ -203,8 +212,12 @@ export function QuizRunner({
 	}, [currentQuestion, currentQuestionIndex, questions]);
 
 	const handleReplaySound = useCallback(() => {
-		if (!currentQuestion || currentQuestion.type !== "note-guess-sound") return;
-		void playFretPosition(currentQuestion.shownPosition, "2n");
+		if (!currentQuestion) return;
+		if (currentQuestion.type === "note-guess-sound") {
+			void playFretPosition(currentQuestion.shownPosition, "1n");
+		} else if (currentQuestion.type === "interval") {
+			void playFretSequence(currentQuestion.targetPositions, "1n", 600);
+		}
 	}, [currentQuestion]);
 
 	const handleFretClick = (position: FretPosition) => {
@@ -508,6 +521,19 @@ export function QuizRunner({
 							/>
 						)}
 					</div>
+
+					{currentQuestion.type === "interval" && (
+						<div className="flex justify-center">
+							<button
+								type="button"
+								onClick={handleReplaySound}
+								style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
+								className="rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 focus-visible:outline-none"
+							>
+								Replay interval
+							</button>
+						</div>
+					)}
 
 					{isNoteGuessQuestion && (
 						<div className="grid grid-cols-4 gap-2">
