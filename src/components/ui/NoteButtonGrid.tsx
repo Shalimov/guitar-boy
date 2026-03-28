@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { AnswerButton, type NoteGroup } from "./AnswerButton";
 import { NoteButtonGroup } from "./NoteButtonGroup";
 
 interface NoteButtonGridProps {
@@ -37,72 +37,17 @@ function groupNotes(notes: readonly string[]): Map<string, string[]> {
 	return groups;
 }
 
-function renderButton(
-	note: string,
-	selectedNote: string | null,
-	correctNote: string | null,
-	revealed: boolean,
-	disabled: boolean,
-	onSelect: (note: string) => void,
-	keyDisplayMap: Record<string, string | undefined> | undefined,
-	buttonClassName: string,
-) {
-	const isSelected = selectedNote === note;
-	const isCorrect = revealed && note === correctNote;
-	const isIncorrect = revealed && isSelected && note !== correctNote;
+function buildGroups(notes: readonly string[]): NoteGroup[] {
+	const groupedNotes = groupNotes(notes);
+	const result: NoteGroup[] = [];
 
-	let styles: CSSProperties = {
-		background: "var(--gb-bg-panel)",
-		color: "var(--gb-text)",
-		borderColor: "var(--gb-border)",
-		borderBottomWidth: "4px",
-	};
-	let activeClass = "hover:brightness-95 active:translate-y-0.5 active:border-b-2";
-
-	if (isCorrect) {
-		styles = {
-			background: "#16a34a",
-			color: "#fff",
-			borderColor: "#14532d",
-			borderBottomWidth: "4px",
-		};
-		activeClass = "";
-	} else if (isIncorrect) {
-		styles = {
-			background: "#dc2626",
-			color: "#fff",
-			borderColor: "#7f1d1d",
-			borderBottomWidth: "4px",
-		};
-		activeClass = "";
-	} else if (isSelected) {
-		styles = {
-			background: "var(--gb-accent)",
-			color: "#fff8ee",
-			borderColor: "var(--gb-accent-strong)",
-			borderBottomWidth: "2px",
-			transform: "translateY(2px)",
-		};
-		activeClass = "";
+	for (const [label, groupNotesList] of groupedNotes) {
+		if (groupNotesList.length > 0) {
+			result.push({ label, notes: groupNotesList });
+		}
 	}
 
-	return (
-		<button
-			key={note}
-			type="button"
-			onClick={() => onSelect(note)}
-			disabled={disabled}
-			style={styles}
-			className={`relative rounded-xl border-x border-t font-bold transition-all focus-visible:outline-none ${buttonClassName} ${disabled ? "cursor-not-allowed opacity-90" : activeClass}`}
-		>
-			{note}
-			{keyDisplayMap?.[note] ? (
-				<kbd className="absolute bottom-1 right-1.5 rounded bg-[var(--gb-bg-elev)] px-1 py-0.5 font-mono text-[9px] font-medium text-[var(--gb-text-muted)] opacity-70">
-					{keyDisplayMap[note]}
-				</kbd>
-			) : null}
-		</button>
-	);
+	return result;
 }
 
 export function NoteButtonGrid({
@@ -120,44 +65,46 @@ export function NoteButtonGrid({
 	if (!useGroups || notes.length <= 7) {
 		return (
 			<div className={gridClassName}>
-				{notes.map((note) =>
-					renderButton(
-						note,
-						selectedNote,
-						correctNote,
-						revealed,
-						disabled,
-						onSelect,
-						keyDisplayMap,
-						buttonClassName,
-					),
-				)}
+				{notes.map((note) => (
+					<AnswerButton
+						key={note}
+						note={note}
+						selected={selectedNote === note}
+						correct={revealed && note === correctNote}
+						revealed={revealed}
+						disabled={disabled}
+						variant="style"
+						onSelect={onSelect}
+						keyboardHint={keyDisplayMap?.[note]}
+						buttonClassName={buttonClassName}
+					/>
+				))}
 			</div>
 		);
 	}
 
-	const groupedNotes = groupNotes(notes);
+	const groups = buildGroups(notes);
 
 	return (
 		<div className="space-y-4">
-			{Array.from(groupedNotes.entries()).map(([groupName, groupNotes]) =>
-				groupNotes.length > 0 ? (
-					<NoteButtonGroup key={groupName} label={groupName}>
-						{groupNotes.map((note) =>
-							renderButton(
-								note,
-								selectedNote,
-								correctNote,
-								revealed,
-								disabled,
-								onSelect,
-								keyDisplayMap,
-								"py-2 text-base",
-							),
-						)}
-					</NoteButtonGroup>
-				) : null,
-			)}
+			{groups.map((group) => (
+				<NoteButtonGroup key={group.label} label={group.label}>
+					{group.notes.map((note) => (
+						<AnswerButton
+							key={note}
+							note={note}
+							selected={selectedNote === note}
+							correct={revealed && note === correctNote}
+							revealed={revealed}
+							disabled={disabled}
+							variant="style"
+							onSelect={onSelect}
+							keyboardHint={keyDisplayMap?.[note]}
+							buttonClassName="py-2 text-base"
+						/>
+					))}
+				</NoteButtonGroup>
+			))}
 		</div>
 	);
 }

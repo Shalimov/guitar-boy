@@ -48,9 +48,8 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 						<div>
 							<p className="font-bold">Guided Lessons</p>
 							<p className="text-[var(--gb-text-muted)]">
-								Step-by-step lessons covering notes, listening skills, how to build scales, and
-								how to build chords — with a clickable fretboard so you learn by ear and eye
-								together.
+								Step-by-step lessons covering notes, listening skills, how to build scales, and how
+								to build chords — with a clickable fretboard so you learn by ear and eye together.
 							</p>
 						</div>
 					</div>
@@ -61,8 +60,8 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 						<div>
 							<p className="font-bold">Memory Quizzes</p>
 							<p className="text-[var(--gb-text-muted)]">
-								Spaced repetition quizzes on notes, intervals, chords, and patterns to lock
-								what you've learned into long-term memory.
+								Spaced repetition quizzes on notes, intervals, chords, and patterns to lock what
+								you've learned into long-term memory.
 							</p>
 						</div>
 					</div>
@@ -73,8 +72,8 @@ export function OnboardingWizard({ isOpen, onClose }: Props) {
 						<div>
 							<p className="font-bold">Fretboard Explorer</p>
 							<p className="text-[var(--gb-text-muted)]">
-								An interactive theory lab to visualize any scale, chord, arpeggio, or interval
-								shape across the full neck.
+								An interactive theory lab to visualize any scale, chord, arpeggio, or interval shape
+								across the full neck.
 							</p>
 						</div>
 					</div>

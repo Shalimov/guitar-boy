@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { AnswerButton, NoteButtonGroup } from "./index";
 import type { ShortcutItem } from "./KeyboardShortcutsBar";
 import { KeyboardShortcutsBar } from "./KeyboardShortcutsBar";
-import { NoteButtonGroup } from "./NoteButtonGroup";
 
 interface ShortcutButtonsProps {
 	items: readonly ShortcutItem[];
@@ -48,24 +48,6 @@ export function ShortcutButtons({
 		};
 	}, []);
 
-	const getButtonStyle = (note: string) => {
-		const isSelected = selectedNote === note;
-		const isCorrectNote = correctNote && note === correctNote;
-		const isWrong = isSelected && !isCorrectNote;
-
-		if (showFeedback && isCorrectNote) {
-			return "bg-green-600 text-white border-transparent";
-		}
-		if (isWrong) {
-			return "bg-red-600 text-white border-transparent";
-		}
-		if (isSelected) {
-			return "bg-[var(--gb-accent)] text-white border-transparent";
-		}
-		return "bg-[var(--gb-bg-panel)] text-[var(--gb-text)] border-[var(--gb-border)]";
-	};
-
-	// Filter groups based on active modifiers
 	const visibleGroups = noteGroups.filter((group) => {
 		if (!activeModifiers.ctrl && !activeModifiers.shift) {
 			return group.label === "Natural Notes";
@@ -86,17 +68,17 @@ export function ShortcutButtons({
 				{visibleGroups.map((group) => (
 					<NoteButtonGroup key={group.label} label={group.label}>
 						{group.notes.map((note) => (
-							<button
+							<AnswerButton
 								key={note}
-								type="button"
-								onClick={() => onNoteSelect(note)}
+								note={note}
+								selected={selectedNote === note}
+								correct={showFeedback && correctNote === note}
+								revealed={showFeedback}
 								disabled={disabled}
-								className={`py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed ${getButtonStyle(
-									note,
-								)} ${disabled ? "cursor-not-allowed" : ""}`}
-							>
-								{note}
-							</button>
+								variant="class"
+								onSelect={onNoteSelect}
+								buttonClassName="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
+							/>
 						))}
 					</NoteButtonGroup>
 				))}

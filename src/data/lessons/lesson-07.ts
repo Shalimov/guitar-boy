@@ -31,9 +31,7 @@ const lesson: Lesson = {
 			content:
 				"Major and minor chords are almost identical — they share the same root and perfect 5th. The only difference is the third:\n\n• Major chord: 1 – 3 – 5  (major 3rd: 4 semitones above root)\n• Minor chord: 1 – b3 – 5  (minor 3rd: 3 semitones above root — one fret lower)\n\nLowering that one note by a single half step shifts the chord from bright and resolved to dark and emotional. This tiny change is the basis of all tension in music.",
 			fretboardState: {
-				dots: [
-					{ position: { string: 3, fret: 0 }, label: "1", color: "#10B981" },
-				],
+				dots: [{ position: { string: 3, fret: 0 }, label: "1", color: "#10B981" }],
 				lines: [],
 				highlightStrings: [3],
 			},
@@ -100,8 +98,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click all three A notes (the root of A minor) visible in first position.",
+			instruction: "Click all three A notes (the root of A minor) visible in first position.",
 			targetPositions: [
 				{ string: 1, fret: 0 },
 				{ string: 3, fret: 2 },
@@ -143,8 +140,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click all three C notes (the minor 3rd of A minor) in first position.",
+			instruction: "Click all three C notes (the minor 3rd of A minor) in first position.",
 			targetPositions: [
 				{ string: 1, fret: 3 },
 				{ string: 3, fret: 5 },

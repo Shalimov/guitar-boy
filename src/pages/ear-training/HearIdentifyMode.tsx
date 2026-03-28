@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
-import { Button, ButtonGroup, FeedbackPanel, NoteButtonGroup, TinyStat } from "@/components/ui";
+import {
+	Button,
+	ButtonGroup,
+	FeedbackPanel,
+	KeyboardShortcutsBar,
+	NoteSelectionGrid,
+	TinyStat,
+} from "@/components/ui";
 import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
-import { KeyboardShortcutsBar } from "@/components/ui/KeyboardShortcutsBar";
 import { playFretPosition } from "@/lib/audio";
-import { getNoteAtFret } from "@/lib/music";
+import { getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
 import {
 	buildNoteShortcutItems,
 	FLAT_KEY_DISPLAY,
@@ -54,8 +60,19 @@ const LEVELS: LevelConfig[] = [
 	},
 ];
 
-const NATURAL_NOTES_ONLY = ["C", "D", "E", "F", "G", "A", "B"] as const;
 const ALL_NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
+
+const ENHARMONICS: Record<string, string> = {
+	"C#": "Db", Db: "C#",
+	"D#": "Eb", Eb: "D#",
+	"F#": "Gb", Gb: "F#",
+	"G#": "Ab", Ab: "G#",
+	"A#": "Bb", Bb: "A#",
+};
+
+function isEnharmonicMatch(a: string, b: string): boolean {
+	return a === b || ENHARMONICS[a] === b;
+}
 
 const NATURAL_KEY_MAP: Record<string, string> = {
 	q: "C",
@@ -88,9 +105,13 @@ const CHROMATIC_KEY_MAP: Record<string, string> = {
 	"}": "A#",
 };
 
+const NATURAL_GROUP = { label: "Natural Notes", notes: ["A", "B", "C", "D", "E", "F", "G"] };
+const SHARP_GROUP = { label: "Sharps (Ctrl)", notes: ["A#", "C#", "D#", "F#", "G#"] };
+const FLAT_GROUP = { label: "Flats (Shift)", notes: ["Bb", "Db", "Eb", "Gb", "Ab"] };
+
 function getPossibleNotes(config: LevelConfig): string[] {
 	if (config.naturalOnly) {
-		return [...NATURAL_NOTES_ONLY];
+		return [...NATURAL_NOTES];
 	}
 	return [...ALL_NOTES_SHARP];
 }
@@ -107,7 +128,7 @@ function getRandomPosition(config: LevelConfig): FretPosition {
 			}
 
 			const note = getNoteAtFret({ string, fret }).split("/")[0];
-			if (NATURAL_NOTES_ONLY.includes(note as (typeof NATURAL_NOTES_ONLY)[number])) {
+			if (NATURAL_NOTES.includes(note as (typeof NATURAL_NOTES)[number])) {
 				candidates.push({ string, fret });
 			}
 		}
@@ -135,6 +156,13 @@ export function HearIdentifyMode() {
 	const currentLevelConfig = LEVELS[level - 1];
 
 	const possibleNotes = useMemo(() => getPossibleNotes(currentLevelConfig), [currentLevelConfig]);
+
+	const noteGroups = useMemo(() => {
+		if (currentLevelConfig.naturalOnly) {
+			return [NATURAL_GROUP];
+		}
+		return [NATURAL_GROUP, SHARP_GROUP, FLAT_GROUP];
+	}, [currentLevelConfig.naturalOnly]);
 
 	const generateNewQuestion = useCallback(() => {
 		const position = getRandomPosition(currentLevelConfig);
@@ -167,7 +195,7 @@ export function HearIdentifyMode() {
 
 			setSelectedNote(note);
 			setShowFeedback(true);
-			const correct = note === currentNote;
+			const correct = isEnharmonicMatch(note, currentNote);
 			setIsCorrect(correct);
 			setSessionStats((prev) => ({
 				correct: prev.correct + (correct ? 1 : 0),
@@ -241,7 +269,6 @@ export function HearIdentifyMode() {
 
 	return (
 		<div className="space-y-6">
-			{/* ── Section 1: Header Panel ── */}
 			<section className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] p-4 shadow-[var(--gb-shadow-soft)] lg:p-5">
 				<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 					<div>
@@ -274,7 +301,6 @@ export function HearIdentifyMode() {
 				</div>
 			</section>
 
-			{/* ── Section 2: Drill Area ── */}
 			<section className="space-y-5 rounded-[24px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 shadow-[var(--gb-shadow)]">
 				<div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 					<div>
@@ -296,7 +322,6 @@ export function HearIdentifyMode() {
 				</div>
 
 				<div className="grid gap-5 xl:grid-cols-[1.15fr,0.85fr]">
-					{/* Left: Fretboard */}
 					<div className="rounded-[22px] border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-4 md:p-5">
 						<Fretboard
 							fretRange={currentLevelConfig.fretRange}
@@ -322,211 +347,26 @@ export function HearIdentifyMode() {
 						</div>
 					</div>
 
-					{/* Right: Answer controls */}
 					<div className="space-y-4">
 						<div>
 							<p className="mb-2 text-sm font-semibold text-[var(--gb-text)]">
 								Choose the note name
 							</p>
 							<KeyboardShortcutsBar items={shortcutItems} className="mb-3" />
-							<div className="space-y-4">
-								{!currentLevelConfig.naturalOnly && (
-									<NoteButtonGroup label="Natural Notes">
-										{["A", "B", "C", "D", "E", "F", "G"].map((note) => {
-											const isSelected = selectedNote === note;
-											const isCorrectNote = currentNote && note === currentNote;
-											const isWrong = isSelected && !isCorrectNote;
-
-											let buttonStyle = {};
-											if (showFeedback && isCorrectNote) {
-												buttonStyle = {
-													background: "#16a34a",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isWrong) {
-												buttonStyle = {
-													background: "#dc2626",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isSelected) {
-												buttonStyle = {
-													background: "var(--gb-accent)",
-													color: "#fff8ee",
-													borderColor: "transparent",
-												};
-											} else {
-												buttonStyle = {
-													background: "var(--gb-bg-panel)",
-													color: "var(--gb-text)",
-													borderColor: "var(--gb-border)",
-												};
-											}
-
-											return (
-												<button
-													key={note}
-													type="button"
-													onClick={() => handleNoteSelect(note)}
-													disabled={showFeedback}
-													style={buttonStyle}
-													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
-												>
-													{note}
-												</button>
-											);
-										})}
-									</NoteButtonGroup>
-								)}
-								{!currentLevelConfig.naturalOnly && (
-									<NoteButtonGroup label="Sharps (Ctrl)">
-										{["A#", "C#", "D#", "F#", "G#"].map((note) => {
-											const isSelected = selectedNote === note;
-											const isCorrectNote = currentNote && note === currentNote;
-											const isWrong = isSelected && !isCorrectNote;
-
-											let buttonStyle = {};
-											if (showFeedback && isCorrectNote) {
-												buttonStyle = {
-													background: "#16a34a",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isWrong) {
-												buttonStyle = {
-													background: "#dc2626",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isSelected) {
-												buttonStyle = {
-													background: "var(--gb-accent)",
-													color: "#fff8ee",
-													borderColor: "transparent",
-												};
-											} else {
-												buttonStyle = {
-													background: "var(--gb-bg-panel)",
-													color: "var(--gb-text)",
-													borderColor: "var(--gb-border)",
-												};
-											}
-
-											return (
-												<button
-													key={note}
-													type="button"
-													onClick={() => handleNoteSelect(note)}
-													disabled={showFeedback}
-													style={buttonStyle}
-													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
-												>
-													{note}
-												</button>
-											);
-										})}
-									</NoteButtonGroup>
-								)}
-								{!currentLevelConfig.naturalOnly && (
-									<NoteButtonGroup label="Flats (Shift)">
-										{["Bb", "Db", "Eb", "Gb", "Ab"].map((note) => {
-											const isSelected = selectedNote === note;
-											const isCorrectNote = currentNote && note === currentNote;
-											const isWrong = isSelected && !isCorrectNote;
-
-											let buttonStyle = {};
-											if (showFeedback && isCorrectNote) {
-												buttonStyle = {
-													background: "#16a34a",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isWrong) {
-												buttonStyle = {
-													background: "#dc2626",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isSelected) {
-												buttonStyle = {
-													background: "var(--gb-accent)",
-													color: "#fff8ee",
-													borderColor: "transparent",
-												};
-											} else {
-												buttonStyle = {
-													background: "var(--gb-bg-panel)",
-													color: "var(--gb-text)",
-													borderColor: "var(--gb-border)",
-												};
-											}
-
-											return (
-												<button
-													key={note}
-													type="button"
-													onClick={() => handleNoteSelect(note)}
-													disabled={showFeedback}
-													style={buttonStyle}
-													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
-												>
-													{note}
-												</button>
-											);
-										})}
-									</NoteButtonGroup>
-								)}
-								{currentLevelConfig.naturalOnly && (
-									<NoteButtonGroup label="Natural Notes">
-										{["A", "B", "C", "D", "E", "F", "G"].map((note) => {
-											const isSelected = selectedNote === note;
-											const isCorrectNote = currentNote && note === currentNote;
-											const isWrong = isSelected && !isCorrectNote;
-
-											let buttonStyle = {};
-											if (showFeedback && isCorrectNote) {
-												buttonStyle = {
-													background: "#16a34a",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isWrong) {
-												buttonStyle = {
-													background: "#dc2626",
-													color: "#fff",
-													borderColor: "transparent",
-												};
-											} else if (isSelected) {
-												buttonStyle = {
-													background: "var(--gb-accent)",
-													color: "#fff8ee",
-													borderColor: "transparent",
-												};
-											} else {
-												buttonStyle = {
-													background: "var(--gb-bg-panel)",
-													color: "var(--gb-text)",
-													borderColor: "var(--gb-border)",
-												};
-											}
-
-											return (
-												<button
-													key={note}
-													type="button"
-													onClick={() => handleNoteSelect(note)}
-													disabled={showFeedback}
-													style={buttonStyle}
-													className="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
-												>
-													{note}
-												</button>
-											);
-										})}
-									</NoteButtonGroup>
-								)}
-							</div>
+							<NoteSelectionGrid
+								groups={noteGroups}
+								selectedNote={selectedNote}
+								correctNote={
+									showFeedback && selectedNote && isEnharmonicMatch(selectedNote, currentNote ?? "")
+										? selectedNote
+										: currentNote
+								}
+								revealed={showFeedback}
+								onSelect={handleNoteSelect}
+								disabled={showFeedback}
+								variant="class"
+								buttonClassName="py-3 px-4 rounded-lg font-bold border transition-all focus-visible:outline-none hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
+							/>
 						</div>
 
 						{showFeedback ? (

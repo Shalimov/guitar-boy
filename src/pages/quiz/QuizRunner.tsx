@@ -4,6 +4,7 @@ import { AudioEqualizer } from "@/components/ui/AudioEqualizer";
 import { TipOverlay } from "@/components/ui/TipOverlay";
 import type { Tip } from "@/data/tips";
 import { useProgressStore } from "@/hooks/useProgressStore";
+import { useQuizTimer } from "@/hooks/useQuizTimer";
 import { playFretPosition } from "@/lib/audio";
 import { toErrorKey } from "@/lib/mistakeAnalysis";
 import { getFrequencyAtFret, getNoteAtFret } from "@/lib/music";
@@ -15,7 +16,6 @@ import { QuizFeedback } from "./QuizFeedback";
 import type { Difficulty, QuizType } from "./QuizSelector";
 import { checkAnswer, generateQuestions, type Question } from "./questions";
 import { SessionSummary } from "./SessionSummary";
-import { useQuizTimer } from "./useQuizTimer";
 
 interface QuizRunnerProps {
 	type: QuizType;

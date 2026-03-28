@@ -109,8 +109,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click the note that is a half step above E on the low E string (string 6).",
+			instruction: "Click the note that is a half step above E on the low E string (string 6).",
 			targetPositions: [{ string: 0, fret: 1 }],
 			fretboardState: {
 				dots: [{ position: { string: 0, fret: 0 }, label: "E", color: "#10B981" }],
@@ -119,8 +118,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click the note that is a half step above B on the B string (string 2).",
+			instruction: "Click the note that is a half step above B on the B string (string 2).",
 			targetPositions: [{ string: 4, fret: 1 }],
 			fretboardState: {
 				dots: [{ position: { string: 4, fret: 0 }, label: "B", color: "#10B981" }],
@@ -139,8 +137,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click the note that is a whole step above D on the D string (string 4).",
+			instruction: "Click the note that is a whole step above D on the D string (string 4).",
 			targetPositions: [{ string: 2, fret: 2 }],
 			fretboardState: {
 				dots: [{ position: { string: 2, fret: 0 }, label: "D", color: "#10B981" }],
@@ -149,8 +146,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Find the half step B→C pair on the A string. Click both the B and C notes.",
+			instruction: "Find the half step B→C pair on the A string. Click both the B and C notes.",
 			targetPositions: [
 				{ string: 1, fret: 2 },
 				{ string: 1, fret: 3 },

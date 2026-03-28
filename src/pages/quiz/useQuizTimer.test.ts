@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
-import { useQuizTimer } from "./useQuizTimer";
+import { useQuizTimer } from "@/hooks/useQuizTimer";
 
 describe("useQuizTimer", () => {
 	beforeEach(() => {

@@ -15,8 +15,7 @@ import type { Lesson } from "@/types/lesson";
 const lesson: Lesson = {
 	id: "lesson-06-major-chords",
 	title: "Building Major Chords",
-	description:
-		"Learn the 1–3–5 formula and use it to find major chord tones on any string.",
+	description: "Learn the 1–3–5 formula and use it to find major chord tones on any string.",
 	category: "chords",
 	difficulty: "beginner",
 	steps: [
@@ -26,9 +25,7 @@ const lesson: Lesson = {
 			content:
 				"A chord is three or more notes played together. The major chord — the happiest, most resolved sound — is built from three specific intervals above a root note:\n\n• Root (1): the note the chord is named after\n• Major 3rd (3): 4 semitones (4 frets on one string) above the root\n• Perfect 5th (5): 7 semitones above the root\n\nThis 1–3–5 formula works for any root note. The note you start from determines the key; the formula gives you the chord.",
 			fretboardState: {
-				dots: [
-					{ position: { string: 3, fret: 0 }, label: "1", color: "#10B981" },
-				],
+				dots: [{ position: { string: 3, fret: 0 }, label: "1", color: "#10B981" }],
 				lines: [],
 				highlightStrings: [3],
 			},
@@ -85,8 +82,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click all four G notes (the root of G major) visible in first position.",
+			instruction: "Click all four G notes (the root of G major) visible in first position.",
 			targetPositions: [
 				{ string: 0, fret: 3 },
 				{ string: 2, fret: 5 },
@@ -121,8 +117,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click all three C notes (the root of C major) in first position.",
+			instruction: "Click all three C notes (the root of C major) in first position.",
 			targetPositions: [
 				{ string: 1, fret: 3 },
 				{ string: 3, fret: 5 },

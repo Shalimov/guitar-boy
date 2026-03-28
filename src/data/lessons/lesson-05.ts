@@ -20,9 +20,7 @@ const lesson: Lesson = {
 			content:
 				"A scale is a sequence of notes arranged by pitch, following a specific pattern of whole steps (W) and half steps (H).\n\nThe major scale — the foundation of most Western music — always uses the same formula:\n\nW  W  H  W  W  W  H\n\nStart from any note, apply this pattern, and you get that note's major scale. The key is knowing where the half steps (1 fret) and whole steps (2 frets) fall.\n\nLet's build the G major scale starting on the open G string.",
 			fretboardState: {
-				dots: [
-					{ position: { string: 3, fret: 0 }, label: "G", color: "#10B981" },
-				],
+				dots: [{ position: { string: 3, fret: 0 }, label: "G", color: "#10B981" }],
 				lines: [],
 				highlightStrings: [3],
 			},
@@ -131,8 +129,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click all four notes of G major on the G string (string 3): G, A, B, and C.",
+			instruction: "Click all four notes of G major on the G string (string 3): G, A, B, and C.",
 			targetPositions: [
 				{ string: 3, fret: 0 },
 				{ string: 3, fret: 2 },
@@ -143,8 +140,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "verify",
-			instruction:
-				"Click the 5th (D) and 6th (E) degrees of G major on the B string (string 2).",
+			instruction: "Click the 5th (D) and 6th (E) degrees of G major on the B string (string 2).",
 			targetPositions: [
 				{ string: 4, fret: 3 },
 				{ string: 4, fret: 5 },
@@ -169,8 +165,7 @@ const lesson: Lesson = {
 		},
 		{
 			type: "teach-back",
-			instruction:
-				"Label the first four notes of G major on the G string from memory: G, A, B, C.",
+			instruction: "Label the first four notes of G major on the G string from memory: G, A, B, C.",
 			expectedLabels: [
 				{ position: { string: 3, fret: 0 }, label: "G" },
 				{ position: { string: 3, fret: 2 }, label: "A" },

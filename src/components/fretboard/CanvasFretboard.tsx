@@ -9,6 +9,22 @@ import type {
 	FretPosition,
 	MarkedDot,
 } from "@/types";
+import {
+	clamp,
+	EMPTY_DOTS,
+	EMPTY_LINES,
+	EMPTY_POSITIONS,
+	getDotFromCollection,
+	hasConnectionLine,
+	hasPosition,
+	isSamePosition,
+	mapLinesToVisual,
+	mapPositionsToVisual,
+	normalizeFretRange,
+	positionKey,
+	toVisualPosition,
+	toVisualStringIndex,
+} from "./canvas/fretboardHelpers";
 import { createCanvasMetrics, positionToCanvasPoint } from "./canvas/geometry";
 import { drawConnectionLines, drawDots, drawFretboardSurface, drawGroups } from "./canvas/render";
 
@@ -18,9 +34,6 @@ const CELL_WIDTH = 54;
 const STRING_GAP = 46;
 const PATTERN_DOT_COLOR = "#2850a7";
 const EMPTY_STATE: FretboardState = { dots: [], lines: [] };
-const EMPTY_DOTS: MarkedDot[] = [];
-const EMPTY_LINES: ConnectionLine[] = [];
-const EMPTY_POSITIONS: FretPosition[] = [];
 
 interface InteractiveHotspot {
 	key: string;
@@ -29,75 +42,12 @@ interface InteractiveHotspot {
 	y: number;
 }
 
-function normalizeFretRange(range: [number, number]): [number, number] {
-	return range[0] <= range[1] ? range : [range[1], range[0]];
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
-}
-
-function isSamePosition(a: FretPosition, b: FretPosition): boolean {
-	return a.string === b.string && a.fret === b.fret;
-}
-
-function positionKey(position: FretPosition): string {
-	return `${position.string}:${position.fret}`;
-}
-
 function shouldHideLabels(mode: string, hasFeedback: boolean): boolean {
 	return mode === "test" && !hasFeedback;
 }
 
-function toVisualStringIndex(stringIndex: number, stringCount: number): number {
-	return stringCount - 1 - stringIndex;
-}
-
-function toVisualPosition(position: FretPosition, stringCount: number): FretPosition {
-	return {
-		...position,
-		string: toVisualStringIndex(position.string, stringCount),
-	};
-}
-
-function mapPositionsToVisual(positions: FretPosition[], stringCount: number): FretPosition[] {
-	if (positions.length === 0) {
-		return EMPTY_POSITIONS;
-	}
-
-	return positions.map((position) => toVisualPosition(position, stringCount));
-}
-
-function mapLinesToVisual(lines: ConnectionLine[], stringCount: number): ConnectionLine[] {
-	if (lines.length === 0) {
-		return EMPTY_LINES;
-	}
-
-	return lines.map((line) => ({
-		...line,
-		from: toVisualPosition(line.from, stringCount),
-		to: toVisualPosition(line.to, stringCount),
-	}));
-}
-
-function hasPosition(positions: FretPosition[], target: FretPosition): boolean {
-	return positions.some((position) => isSamePosition(position, target));
-}
-
 function getDotAtPosition(state: FretboardState, target: FretPosition) {
 	return state.dots.find((dot) => isSamePosition(dot.position, target));
-}
-
-function getDotFromCollection(dots: MarkedDot[], target: FretPosition) {
-	return dots.find((dot) => isSamePosition(dot.position, target));
-}
-
-function hasConnectionLine(lines: ConnectionLine[], from: FretPosition, to: FretPosition): boolean {
-	return lines.some(
-		(line) =>
-			(isSamePosition(line.from, from) && isSamePosition(line.to, to)) ||
-			(isSamePosition(line.from, to) && isSamePosition(line.to, from)),
-	);
 }
 
 function isValidPosition(

@@ -1,8 +1,8 @@
 import type { MistakeLog } from "@/lib/mistakeAnalysis";
+import type { AccidentalPreference } from "./music";
 import type { SessionRecord, SRSCard } from "./srs";
 
-/** User preferences for display and interaction */
-export type AccidentalPreference = "sharp" | "flat";
+export type { AccidentalPreference } from "./music";
 
 export interface UserSettings {
 	accidentalPreference: AccidentalPreference;

@@ -14,6 +14,12 @@ Object.defineProperty(window, "matchMedia", {
 	})),
 });
 
+window.ResizeObserver = class ResizeObserver {
+	observe() {}
+	unobserve() {}
+	disconnect() {}
+};
+
 import { TextDecoder, TextEncoder } from "node:util";
 
 global.TextEncoder = TextEncoder;

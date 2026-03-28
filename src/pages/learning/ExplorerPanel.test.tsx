@@ -51,18 +51,20 @@ describe("ExplorerPanel", () => {
 	it("renders explorer controls and live title", () => {
 		render(<ExplorerPanel />);
 
-		expect(screen.getByRole("heading", { name: /build a neck map/i })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: /C Major/i })).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: /Choose the sound set/i })).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: /Focus what you see/i })).toBeInTheDocument();
 		// ButtonGroup renders a label with text content
-		expect(screen.getByText(/root note/i)).toBeInTheDocument();
+		expect(screen.getByText(/Root note/i)).toBeInTheDocument();
 	});
 
 	it("updates the live view when the construct changes", async () => {
 		render(<ExplorerPanel />);
 
-		// Find the button for "Mixolydian" in the specific construct button group
-		const mixolydianButton = screen.getByRole("button", { name: /Mixolydian/i });
-		await userEvent.click(mixolydianButton);
+		expect(screen.getByRole("heading", { name: /C Major/i })).toBeInTheDocument();
+
+		const constructSelect = screen.getByRole("combobox");
+		await userEvent.selectOptions(constructSelect, "Mixolydian");
 
 		expect(screen.getByRole("heading", { name: /C Mixolydian/i })).toBeInTheDocument();
 		expect(screen.getByText(/1 - 2 - 3 - 4 - 5 - 6 - b7/i)).toBeInTheDocument();
@@ -128,7 +130,7 @@ describe("ExplorerPanel", () => {
 		render(<ExplorerPanel />);
 
 		await userEvent.hover(screen.getByRole("button", { name: /fret 3, note c/i }));
-		await userEvent.click(screen.getByRole("button", { name: /play note/i }));
+		await userEvent.click(screen.getByRole("button", { name: /Play/i }));
 
 		expect(playFretPosition).toHaveBeenCalledWith({ string: 1, fret: 3 }, "2n");
 	});

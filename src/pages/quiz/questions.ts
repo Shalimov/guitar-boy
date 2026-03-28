@@ -1,4 +1,10 @@
-import { getAllPositionsOfNote, getInterval, getNoteAtFret, NATURAL_NOTES } from "@/lib/music";
+import {
+	getAllPositionsOfNote,
+	getInterval,
+	getNoteAtFret,
+	INTERVAL_NAMES,
+	NATURAL_NOTES,
+} from "@/lib/music";
 import { defaultRNG, shuffle } from "@/lib/rng";
 import type { FretPosition, NoteName } from "@/types";
 import type { Difficulty, QuizType } from "./QuizSelector";
@@ -40,21 +46,7 @@ export interface ChordQuestion {
 
 export type Question = NoteQuestion | NoteGuessQuestion | IntervalQuestion | ChordQuestion;
 
-export const INTERVAL_NAMES = [
-	"Unison",
-	"m2",
-	"M2",
-	"m3",
-	"M3",
-	"P4",
-	"Tritone",
-	"P5",
-	"m6",
-	"M6",
-	"m7",
-	"M7",
-	"Octave",
-];
+export { INTERVAL_NAMES } from "@/lib/music";
 
 export interface Feedback {
 	correct: FretPosition[];
@@ -80,10 +72,14 @@ export function generateQuestions(
 		if (type === "note") {
 			const targetNote = NATURAL_NOTES[Math.floor(rng.random() * NATURAL_NOTES.length)];
 			const allPositions = getAllPositionsOfNote(targetNote, [minFret, maxFret]);
-			// For speed drills, pick one specific string to make it clearer
-			const targetString = Math.floor(rng.random() * 6);
-			const targetPositions = allPositions.filter((p) => p.string === targetString);
 			const stringLabels = ["E", "A", "D", "G", "B", "e"];
+			// Only pick from strings that actually have the note in the fret range
+			const stringsWithNote = [...new Set(allPositions.map((p) => p.string))];
+			const targetString =
+				stringsWithNote.length > 0
+					? stringsWithNote[Math.floor(rng.random() * stringsWithNote.length)]
+					: Math.floor(rng.random() * 6);
+			const targetPositions = allPositions.filter((p) => p.string === targetString);
 			generated.push({
 				id: `note-${i}`,
 				type: "note",
@@ -198,6 +194,11 @@ export function checkAnswer(
 				correct.push(target);
 			} else {
 				missed.push(target);
+			}
+		}
+		for (const sel of selectedPositions) {
+			if (!question.targetPositions.some((t) => t.string === sel.string && t.fret === sel.fret)) {
+				incorrect.push(sel);
 			}
 		}
 		isCorrect = incorrect.length === 0 && missed.length === 0;

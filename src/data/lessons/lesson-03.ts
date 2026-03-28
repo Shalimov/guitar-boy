@@ -99,9 +99,7 @@ const lesson: Lesson = {
 			instruction: "Click the A note on the low E string.",
 			targetPositions: [{ string: 0, fret: 5 }],
 			fretboardState: {
-				dots: [
-					{ position: { string: 0, fret: 3 }, label: "G", color: "#10B981" },
-				],
+				dots: [{ position: { string: 0, fret: 3 }, label: "G", color: "#10B981" }],
 				lines: [],
 			},
 		},

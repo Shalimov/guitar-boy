@@ -123,6 +123,23 @@ const SEMITONE_TO_INTERVAL: Record<number, IntervalName> = {
 	12: "Octave",
 };
 
+/** All interval names in order */
+export const INTERVAL_NAMES: IntervalName[] = [
+	"Unison",
+	"m2",
+	"M2",
+	"m3",
+	"M3",
+	"P4",
+	"Tritone",
+	"P5",
+	"m6",
+	"M6",
+	"m7",
+	"M7",
+	"Octave",
+];
+
 /**
  * Get the note at a given fret position in standard tuning.
  */

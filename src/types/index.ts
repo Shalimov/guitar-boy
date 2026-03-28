@@ -9,9 +9,4 @@ export type {
 	TriadQuality,
 } from "./music";
 export type { AppMode, CardCategory, SessionRecord, SRSCard } from "./srs";
-export type {
-	AccidentalPreference as AccidentalPreferenceType,
-	DiagramStore,
-	ProgressStore,
-	UserSettings,
-} from "./storage";
+export type { DiagramStore, ProgressStore, UserSettings } from "./storage";
