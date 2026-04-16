@@ -94,7 +94,7 @@ export function DailySessionPage() {
 				</div>
 			</div>
 
-			<div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+			<div key={segmentIndex} className="animate-gb-slide-up animate-gb-duration-500">
 				{currentSegment.type === "warmup" && (
 					<WarmUpSegment
 						questions={currentSegment.questions}

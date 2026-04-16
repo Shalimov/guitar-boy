@@ -169,7 +169,7 @@ export function EarTrainingSegmentView({ rounds, onComplete }: EarTrainingSegmen
 					/>
 
 					{feedback !== null && (
-						<div className="pt-4 border-t border-[var(--gb-border)]">
+						<div className="pt-4 border-t border-[var(--gb-border)] animate-gb-slide-up animate-gb-duration-300">
 							<p className={`text-lg font-bold ${feedback ? "text-green-600" : "text-red-600"}`}>
 								{feedback ? "Perfect!" : `Almost. It was ${targetNote}`}
 							</p>

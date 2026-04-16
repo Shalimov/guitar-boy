@@ -118,7 +118,7 @@ export function LearningPage() {
 			<TabBar tabs={tabs} />
 
 			{activeTab === "lessons" ? (
-				<SectionCard className="space-y-5">
+				<SectionCard key="lessons" className="space-y-5 animate-gb-fade-in animate-gb-duration-200">
 					<PageHeader
 						kicker={activeTabMeta.kicker}
 						title={activeTabMeta.title}
@@ -127,7 +127,7 @@ export function LearningPage() {
 					<LessonList onSelectLesson={handleSelectLesson} />
 				</SectionCard>
 			) : activeTab === "trainer" ? (
-				<SectionCard className="space-y-5">
+				<SectionCard key="trainer" className="space-y-5 animate-gb-fade-in animate-gb-duration-200">
 					<PageHeader
 						kicker={activeTabMeta.kicker}
 						title={activeTabMeta.title}
@@ -136,7 +136,9 @@ export function LearningPage() {
 					<NoteMemoryTrainer />
 				</SectionCard>
 			) : (
-				<ExplorerPanel />
+				<div key="explorer" className="animate-gb-fade-in animate-gb-duration-200">
+					<ExplorerPanel />
+				</div>
 			)}
 		</div>
 	);

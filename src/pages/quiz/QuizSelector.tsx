@@ -388,7 +388,7 @@ export function QuizSelector({ onStartQuiz, onStartEarTraining }: QuizSelectorPr
 
 			{/* Step 1: Quiz Type */}
 			{wizardStep === "type" && (
-				<div className="space-y-4">
+				<div key="type" className="space-y-4 animate-gb-slide-right animate-gb-duration-300">
 					<h3 className="text-lg font-semibold text-[var(--gb-text)]">
 						What do you want to practice?
 					</h3>
@@ -426,7 +426,7 @@ export function QuizSelector({ onStartQuiz, onStartEarTraining }: QuizSelectorPr
 
 			{/* Step 2: Difficulty */}
 			{wizardStep === "difficulty" && (
-				<div className="space-y-4">
+				<div key="difficulty" className="space-y-4 animate-gb-slide-right animate-gb-duration-300">
 					<h3 className="text-lg font-semibold text-[var(--gb-text)]">Choose difficulty level</h3>
 					<p className="text-sm text-[var(--gb-text-muted)]">
 						Beginner keeps the neck tighter, advanced opens the full range.
@@ -496,7 +496,7 @@ export function QuizSelector({ onStartQuiz, onStartEarTraining }: QuizSelectorPr
 
 			{/* Step 3: Pace */}
 			{wizardStep === "pace" && (
-				<div className="space-y-4">
+				<div key="pace" className="space-y-4 animate-gb-slide-right animate-gb-duration-300">
 					<h3 className="text-lg font-semibold text-[var(--gb-text)]">Set your pace</h3>
 
 					{/* Question Count */}

@@ -6,11 +6,5 @@ interface SectionCardProps {
 }
 
 export function SectionCard({ children, className = "" }: SectionCardProps) {
-	return (
-		<section
-			className={`rounded-[22px] border border-[var(--gb-border)] bg-white p-7 shadow-[var(--gb-shadow-soft)] ${className}`}
-		>
-			{children}
-		</section>
-	);
+	return <section className={`gb-panel p-7 ${className}`}>{children}</section>;
 }

@@ -258,7 +258,7 @@ export function WhiteboardPage() {
 			/>
 
 			{pageView === "list" && (
-				<div>
+				<div key="list" className="animate-gb-fade-in animate-gb-duration-200">
 					{userDiagrams.length === 0 ? (
 						<section className="gb-panel py-12 text-center">
 							<p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gb-text-muted)]">
@@ -315,11 +315,13 @@ export function WhiteboardPage() {
 			)}
 
 			{pageView === "patterns" && (
-				<PatternLibrary
-					patterns={allPatterns}
-					onViewPattern={handleViewDiagram}
-					onEditCopy={handleEditCopy}
-				/>
+				<div key="patterns" className="animate-gb-fade-in animate-gb-duration-200">
+					<PatternLibrary
+						patterns={allPatterns}
+						onViewPattern={handleViewDiagram}
+						onEditCopy={handleEditCopy}
+					/>
+				</div>
 			)}
 
 			<ConfirmDialog

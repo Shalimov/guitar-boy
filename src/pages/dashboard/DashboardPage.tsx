@@ -96,7 +96,7 @@ export function DashboardPage() {
 
 	return (
 		<div className="space-y-8">
-			<header className="space-y-2">
+			<header className="space-y-2 animate-gb-fade-in animate-gb-duration-300">
 				<p className="gb-page-kicker">Practice Radar</p>
 				<h1 className="gb-page-title">Dashboard</h1>
 				<p className="max-w-2xl text-sm text-[var(--gb-text-muted)]">
@@ -106,14 +106,22 @@ export function DashboardPage() {
 			</header>
 
 			{sessionHistory.length > 0 && (
-				<StreakDisplay
-					currentStreak={currentStreak}
-					longestStreak={longestStreak}
-					activeDays={activeDays}
-				/>
+				<div
+					style={{ animationDelay: "80ms" }}
+					className="animate-gb-slide-up animate-gb-duration-300"
+				>
+					<StreakDisplay
+						currentStreak={currentStreak}
+						longestStreak={longestStreak}
+						activeDays={activeDays}
+					/>
+				</div>
 			)}
 
-			<section className="gb-panel overflow-hidden">
+			<section
+				style={{ animationDelay: "160ms" }}
+				className="gb-panel overflow-hidden animate-gb-slide-up animate-gb-duration-300"
+			>
 				<div className="grid gap-5 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-7">
 					<div className="space-y-4">
 						<div className="space-y-2">
@@ -161,7 +169,10 @@ export function DashboardPage() {
 			</section>
 
 			{recentSessions.length > 0 && (
-				<section className="gb-panel p-6">
+				<section
+					style={{ animationDelay: "240ms" }}
+					className="gb-panel p-6 animate-gb-slide-up animate-gb-duration-300"
+				>
 					<div className="flex flex-wrap items-end justify-between gap-3">
 						<div>
 							<p className="gb-page-kicker">Recent Activity</p>
@@ -193,10 +204,18 @@ export function DashboardPage() {
 				</section>
 			)}
 
-			<WeakSpotsPanel mistakeLog={store.mistakeLog ?? EMPTY_MISTAKE_LOG} />
+			<div
+				style={{ animationDelay: "320ms" }}
+				className="animate-gb-slide-up animate-gb-duration-300"
+			>
+				<WeakSpotsPanel mistakeLog={store.mistakeLog ?? EMPTY_MISTAKE_LOG} />
+			</div>
 
 			{sessionHistory.length === 0 && (
-				<section className="gb-panel px-6 py-10 md:px-10">
+				<section
+					style={{ animationDelay: "400ms" }}
+					className="gb-panel px-6 py-10 md:px-10 animate-gb-slide-up animate-gb-duration-300"
+				>
 					<div className="max-w-3xl mx-auto text-center space-y-3">
 						<p className="gb-page-kicker !text-[var(--gb-accent)]">Getting Started</p>
 						<h2 className="text-3xl font-bold text-[var(--gb-text)]">Your Learning Roadmap</h2>

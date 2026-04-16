@@ -21,7 +21,7 @@ export function FeedbackPanel({
 }: FeedbackPanelProps) {
 	return (
 		<div
-			className={`space-y-4 rounded-[18px] p-5 transition-all duration-300 ease-out ${className}`}
+			className={`space-y-4 rounded-[18px] p-5 transition-all duration-300 ease-out animate-gb-slide-up ${className}`}
 			style={{
 				background: isCorrect
 					? "color-mix(in srgb, #16a34a 12%, var(--gb-bg-elev))"

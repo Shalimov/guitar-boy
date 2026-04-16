@@ -396,265 +396,268 @@ export function QuizRunner({
 					onSkip={handleContinue}
 				/>
 			) : (
-				<div
-					className="rounded-2xl p-6 space-y-4"
-					style={{
-						background: "var(--gb-bg-elev)",
-						border: "1px solid var(--gb-border)",
-						boxShadow: "var(--gb-shadow-soft)",
-					}}
-				>
-					<p className="text-base font-medium" style={{ color: "var(--gb-text)" }}>
-						{currentQuestion.type === "note" && (
-							<>
-								Click all positions of{" "}
-								<span className="font-bold" style={{ color: "var(--gb-accent)" }}>
-									{currentQuestion.targetNote}
-								</span>
-								{currentQuestion.targetStringLabel && (
-									<span className="text-sm font-medium text-[var(--gb-text-muted)] ml-2">
-										on the {currentQuestion.targetStringLabel} string
-									</span>
-								)}
-								<span className="text-sm text-[var(--gb-text-muted)] ml-2">
-									({currentQuestion.targetPositions.length} position
-									{currentQuestion.targetPositions.length !== 1 ? "s" : ""})
-								</span>
-							</>
-						)}
-						{currentQuestion.type === "note-guess" && <>What note is shown on the fretboard?</>}
-						{currentQuestion.type === "note-guess-sound" && (
-							<>Listen to the note, then choose the correct note name.</>
-						)}
-						{currentQuestion.type === "interval" && (
-							<>What interval is between these two positions?</>
-						)}
-						{currentQuestion.type === "chord" && (
-							<>
-								Build the chord:{" "}
-								<span className="font-bold" style={{ color: "var(--gb-accent)" }}>
-									{currentQuestion.targetChord}
-								</span>
-							</>
-						)}
-					</p>
-
+				<div key={currentQuestionIndex} className="animate-gb-slide-up animate-gb-duration-300">
 					<div
-						className="p-4 rounded-xl"
-						style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
+						className="rounded-2xl p-6 space-y-4"
+						style={{
+							background: "var(--gb-bg-elev)",
+							border: "1px solid var(--gb-border)",
+							boxShadow: "var(--gb-shadow-soft)",
+						}}
 					>
-						{currentQuestion.type === "note-guess" ? (
-							<Fretboard
-								mode="view"
-								state={{
-									dots: [
-										{
-											position: currentQuestion.shownPosition,
-											shape: "circle",
-											color: feedback
-												? feedback.correct.length > 0
-													? "#16a34a"
-													: "#dc2626"
-												: "var(--gb-accent)",
-										},
-									],
-									lines: [],
-								}}
-								fretRange={[minFret, maxFret]}
-								showNoteNames={false}
-								showStringLabels={false}
-							/>
-						) : currentQuestion.type === "note-guess-sound" ? (
-							<div className="space-y-4">
-								<div className="rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 text-center">
-									<p className="text-sm" style={{ color: "var(--gb-text-muted)" }}>
-										Use your ear only. Replay the prompt as many times as you need.
-									</p>
-									{soundDirectionHint && (
-										<p
-											className="mt-2 text-xs font-medium"
-											style={{ color: "var(--gb-accent-strong)" }}
-										>
-											{soundDirectionHint === "same"
-												? "Tip: this prompt is the same pitch as the previous sound prompt."
-												: `Tip: this prompt is ${soundDirectionHint} than the previous sound prompt.`}
-										</p>
+						<p className="text-base font-medium" style={{ color: "var(--gb-text)" }}>
+							{currentQuestion.type === "note" && (
+								<>
+									Click all positions of{" "}
+									<span className="font-bold" style={{ color: "var(--gb-accent)" }}>
+										{currentQuestion.targetNote}
+									</span>
+									{currentQuestion.targetStringLabel && (
+										<span className="text-sm font-medium text-[var(--gb-text-muted)] ml-2">
+											on the {currentQuestion.targetStringLabel} string
+										</span>
 									)}
-									<div className="mx-auto mt-4 max-w-md">
-										<AudioEqualizer />
-									</div>
-									<button
-										type="button"
-										onClick={handleReplaySound}
-										style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
-										className="mt-4 rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 focus-visible:outline-none"
-									>
-										Play note
-									</button>
-								</div>
-								{feedback && (
-									<Fretboard
-										mode="view"
-										state={{
-											dots: [
-												{
-													position: currentQuestion.shownPosition,
-													shape: "circle",
-													color: feedback.correct.length > 0 ? "#16a34a" : "#dc2626",
-													label: currentQuestion.targetNote,
-												},
-											],
-											lines: [],
-										}}
-										fretRange={[minFret, maxFret]}
-										showStringLabels={false}
-									/>
-								)}
-							</div>
-						) : (
-							<Fretboard
-								mode={currentQuestion.type === "interval" ? "view" : "test"}
-								state={{ dots: [], lines: [] }}
-								fretRange={[minFret, maxFret]}
-								targetPositions={
-									currentQuestion.type === "interval" ? currentQuestion.targetPositions : []
-								}
-								selectedPositions={selectedPositions}
-								correctPositions={feedback?.correct ?? []}
-								incorrectPositions={feedback?.incorrect ?? []}
-								missedPositions={feedback?.missed ?? []}
-								onFretClick={handleFretClick}
-								showNoteNames
-								showStringLabels={false}
-							/>
-						)}
-					</div>
+									<span className="text-sm text-[var(--gb-text-muted)] ml-2">
+										({currentQuestion.targetPositions.length} position
+										{currentQuestion.targetPositions.length !== 1 ? "s" : ""})
+									</span>
+								</>
+							)}
+							{currentQuestion.type === "note-guess" && <>What note is shown on the fretboard?</>}
+							{currentQuestion.type === "note-guess-sound" && (
+								<>Listen to the note, then choose the correct note name.</>
+							)}
+							{currentQuestion.type === "interval" && (
+								<>What interval is between these two positions?</>
+							)}
+							{currentQuestion.type === "chord" && (
+								<>
+									Build the chord:{" "}
+									<span className="font-bold" style={{ color: "var(--gb-accent)" }}>
+										{currentQuestion.targetChord}
+									</span>
+								</>
+							)}
+						</p>
 
-					{currentQuestion.type === "interval" && (
-						<div className="flex justify-center">
+						<div
+							className="p-4 rounded-xl"
+							style={{ background: "var(--gb-bg-panel)", border: "1px solid var(--gb-border)" }}
+						>
+							{currentQuestion.type === "note-guess" ? (
+								<Fretboard
+									mode="view"
+									state={{
+										dots: [
+											{
+												position: currentQuestion.shownPosition,
+												shape: "circle",
+												color: feedback
+													? feedback.correct.length > 0
+														? "#16a34a"
+														: "#dc2626"
+													: "var(--gb-accent)",
+											},
+										],
+										lines: [],
+									}}
+									fretRange={[minFret, maxFret]}
+									showNoteNames={false}
+									showStringLabels={false}
+								/>
+							) : currentQuestion.type === "note-guess-sound" ? (
+								<div className="space-y-4">
+									<div className="rounded-xl border border-[var(--gb-border)] bg-[var(--gb-bg-elev)] p-5 text-center">
+										<p className="text-sm" style={{ color: "var(--gb-text-muted)" }}>
+											Use your ear only. Replay the prompt as many times as you need.
+										</p>
+										{soundDirectionHint && (
+											<p
+												className="mt-2 text-xs font-medium"
+												style={{ color: "var(--gb-accent-strong)" }}
+											>
+												{soundDirectionHint === "same"
+													? "Tip: this prompt is the same pitch as the previous sound prompt."
+													: `Tip: this prompt is ${soundDirectionHint} than the previous sound prompt.`}
+											</p>
+										)}
+										<div className="mx-auto mt-4 max-w-md">
+											<AudioEqualizer />
+										</div>
+										<button
+											type="button"
+											onClick={handleReplaySound}
+											style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
+											className="mt-4 rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 focus-visible:outline-none"
+										>
+											Play note
+										</button>
+									</div>
+									{feedback && (
+										<Fretboard
+											mode="view"
+											state={{
+												dots: [
+													{
+														position: currentQuestion.shownPosition,
+														shape: "circle",
+														color: feedback.correct.length > 0 ? "#16a34a" : "#dc2626",
+														label: currentQuestion.targetNote,
+													},
+												],
+												lines: [],
+											}}
+											fretRange={[minFret, maxFret]}
+											showStringLabels={false}
+										/>
+									)}
+								</div>
+							) : (
+								<Fretboard
+									mode={currentQuestion.type === "interval" ? "view" : "test"}
+									state={{ dots: [], lines: [] }}
+									fretRange={[minFret, maxFret]}
+									targetPositions={
+										currentQuestion.type === "interval" ? currentQuestion.targetPositions : []
+									}
+									selectedPositions={selectedPositions}
+									correctPositions={feedback?.correct ?? []}
+									incorrectPositions={feedback?.incorrect ?? []}
+									missedPositions={feedback?.missed ?? []}
+									onFretClick={handleFretClick}
+									showNoteNames
+									showStringLabels={false}
+								/>
+							)}
+						</div>
+
+						{currentQuestion.type === "interval" && (
+							<div className="flex justify-center">
+								<button
+									type="button"
+									onClick={handleReplaySound}
+									style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
+									className="rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 focus-visible:outline-none"
+								>
+									Replay interval
+								</button>
+							</div>
+						)}
+
+						{isNoteGuessQuestion && (
+							<div className="grid grid-cols-4 gap-2">
+								{currentQuestion.noteOptions.map((note) => {
+									const isSelected = selectedNote === note;
+									const isAnswer = feedback && note === currentQuestion.targetNote;
+									const isWrong = feedback && isSelected && note !== currentQuestion.targetNote;
+									return (
+										<button
+											key={note}
+											type="button"
+											onClick={() => handleNoteSelect(note)}
+											disabled={!!feedback}
+											style={
+												isAnswer
+													? { background: "#16a34a", color: "#fff" }
+													: isWrong
+														? { background: "#dc2626", color: "#fff" }
+														: isSelected
+															? { background: "var(--gb-accent)", color: "#fff8ee" }
+															: {
+																	background: "var(--gb-bg-panel)",
+																	color: "var(--gb-text)",
+																	borderColor: "var(--gb-border)",
+																}
+											}
+											className={`py-3 rounded-xl font-bold text-lg border transition-all focus-visible:outline-none ${feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"}`}
+										>
+											{note}
+										</button>
+									);
+								})}
+							</div>
+						)}
+
+						{currentQuestion.type === "interval" && currentQuestion.intervalOptions && (
+							<div className="grid grid-cols-2 gap-2">
+								{currentQuestion.intervalOptions.map((option) => {
+									const isSelected = selectedInterval === option;
+									const isAnswer = feedback && option === currentQuestion.targetInterval;
+									const isWrong =
+										feedback && isSelected && option !== currentQuestion.targetInterval;
+									return (
+										<button
+											key={option}
+											type="button"
+											onClick={() => handleIntervalSelect(option)}
+											disabled={!!feedback}
+											style={
+												isAnswer
+													? { background: "#16a34a", color: "#fff" }
+													: isWrong
+														? { background: "#dc2626", color: "#fff" }
+														: isSelected
+															? { background: "var(--gb-accent)", color: "#fff8ee" }
+															: {
+																	background: "var(--gb-bg-panel)",
+																	color: "var(--gb-text)",
+																	borderColor: "var(--gb-border)",
+																}
+											}
+											className={`px-4 py-2.5 rounded-xl font-medium border transition-all focus-visible:outline-none ${feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"}`}
+										>
+											{option}
+										</button>
+									);
+								})}
+							</div>
+						)}
+
+						{!feedback ? (
 							<button
 								type="button"
-								onClick={handleReplaySound}
-								style={{ background: "var(--gb-accent)", color: "#fff8ee" }}
-								className="rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 focus-visible:outline-none"
+								onClick={handleCheckAnswer}
+								disabled={!canSubmit}
+								style={
+									canSubmit
+										? {
+												background: "var(--gb-accent)",
+												color: "#fff8ee",
+												boxShadow: "0 2px 10px rgba(179,93,42,0.3)",
+											}
+										: {
+												background: "var(--gb-bg-tab)",
+												color: "var(--gb-text-muted)",
+												cursor: "not-allowed",
+											}
+								}
+								className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.99] focus-visible:outline-none"
 							>
-								Replay interval
+								Check Answer
 							</button>
-						</div>
-					)}
-
-					{isNoteGuessQuestion && (
-						<div className="grid grid-cols-4 gap-2">
-							{currentQuestion.noteOptions.map((note) => {
-								const isSelected = selectedNote === note;
-								const isAnswer = feedback && note === currentQuestion.targetNote;
-								const isWrong = feedback && isSelected && note !== currentQuestion.targetNote;
-								return (
-									<button
-										key={note}
-										type="button"
-										onClick={() => handleNoteSelect(note)}
-										disabled={!!feedback}
-										style={
-											isAnswer
-												? { background: "#16a34a", color: "#fff" }
-												: isWrong
-													? { background: "#dc2626", color: "#fff" }
-													: isSelected
-														? { background: "var(--gb-accent)", color: "#fff8ee" }
-														: {
-																background: "var(--gb-bg-panel)",
-																color: "var(--gb-text)",
-																borderColor: "var(--gb-border)",
-															}
-										}
-										className={`py-3 rounded-xl font-bold text-lg border transition-all focus-visible:outline-none ${feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"}`}
-									>
-										{note}
-									</button>
-								);
-							})}
-						</div>
-					)}
-
-					{currentQuestion.type === "interval" && currentQuestion.intervalOptions && (
-						<div className="grid grid-cols-2 gap-2">
-							{currentQuestion.intervalOptions.map((option) => {
-								const isSelected = selectedInterval === option;
-								const isAnswer = feedback && option === currentQuestion.targetInterval;
-								const isWrong = feedback && isSelected && option !== currentQuestion.targetInterval;
-								return (
-									<button
-										key={option}
-										type="button"
-										onClick={() => handleIntervalSelect(option)}
-										disabled={!!feedback}
-										style={
-											isAnswer
-												? { background: "#16a34a", color: "#fff" }
-												: isWrong
-													? { background: "#dc2626", color: "#fff" }
-													: isSelected
-														? { background: "var(--gb-accent)", color: "#fff8ee" }
-														: {
-																background: "var(--gb-bg-panel)",
-																color: "var(--gb-text)",
-																borderColor: "var(--gb-border)",
-															}
-										}
-										className={`px-4 py-2.5 rounded-xl font-medium border transition-all focus-visible:outline-none ${feedback ? "cursor-not-allowed" : "hover:opacity-90 active:scale-95"}`}
-									>
-										{option}
-									</button>
-								);
-							})}
-						</div>
-					)}
-
-					{!feedback ? (
-						<button
-							type="button"
-							onClick={handleCheckAnswer}
-							disabled={!canSubmit}
-							style={
-								canSubmit
-									? {
-											background: "var(--gb-accent)",
-											color: "#fff8ee",
-											boxShadow: "0 2px 10px rgba(179,93,42,0.3)",
-										}
-									: {
-											background: "var(--gb-bg-tab)",
-											color: "var(--gb-text-muted)",
-											cursor: "not-allowed",
-										}
-							}
-							className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.99] focus-visible:outline-none"
-						>
-							Check Answer
-						</button>
-					) : (
-						<QuizFeedback
-							isCorrect={feedback.incorrect.length === 0 && feedback.missed.length === 0}
-							message={feedback.message}
-							correctPositions={feedback.correct}
-							missedPositions={feedback.missed}
-							incorrectPositions={feedback.incorrect}
-							onContinue={handleContinue}
-						/>
-					)}
-
-					{activeTip && (
-						<div className="mt-6 pt-6 border-t border-[var(--gb-border)]">
-							<TipOverlay
-								tip={activeTip}
-								onDismiss={() => {
-									dismissTip(activeTip.id);
-									setActiveTip(null);
-								}}
+						) : (
+							<QuizFeedback
+								isCorrect={feedback.incorrect.length === 0 && feedback.missed.length === 0}
+								message={feedback.message}
+								correctPositions={feedback.correct}
+								missedPositions={feedback.missed}
+								incorrectPositions={feedback.incorrect}
+								onContinue={handleContinue}
 							/>
-						</div>
-					)}
+						)}
+
+						{activeTip && (
+							<div className="mt-6 pt-6 border-t border-[var(--gb-border)]">
+								<TipOverlay
+									tip={activeTip}
+									onDismiss={() => {
+										dismissTip(activeTip.id);
+										setActiveTip(null);
+									}}
+								/>
+							</div>
+						)}
+					</div>
 				</div>
 			)}
 		</div>

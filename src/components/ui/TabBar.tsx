@@ -29,7 +29,9 @@ export function TabBar({ tabs, className = "" }: TabBarProps) {
 								}
 							: { color: "var(--gb-text-muted)" }
 					}
-					className="flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-all"
+					className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-all duration-300 ${
+						active ? "scale-[1.02]" : "hover:bg-[var(--gb-bg-elev)] hover:text-[var(--gb-text)]"
+					}`}
 				>
 					{label}
 				</button>

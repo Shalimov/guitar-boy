@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router";
+import { NavLink, Outlet, useLocation } from "react-router";
 import { useDarkMode } from "../../hooks/useDarkMode";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { OnboardingWizard } from "./OnboardingWizard";
@@ -15,6 +15,7 @@ export function Layout() {
 	const [theme, setTheme] = useDarkMode();
 	const [isWizardOpen, setIsWizardOpen] = useState(false);
 	const githubRepoUrl = process.env.GITHUB_REPO_URL;
+	const { pathname } = useLocation();
 
 	useEffect(() => {
 		const shown = localStorage.getItem("gb_onboarding_shown");
@@ -84,7 +85,10 @@ export function Layout() {
 				</div>
 			</nav>
 
-			<main className="flex-1 mx-auto w-full max-w-7xl px-4 pb-10 pt-8 md:px-6">
+			<main
+				key={pathname}
+				className="flex-1 mx-auto w-full max-w-7xl px-4 pb-10 pt-8 md:px-6 animate-gb-fade-in animate-gb-duration-200"
+			>
 				<Outlet />
 			</main>
 		</div>

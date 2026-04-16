@@ -65,7 +65,8 @@ export function LessonPlayer({ lesson, onComplete, onExit }: LessonPlayerProps) 
 
 			{/* Step card */}
 			<div
-				className="rounded-2xl p-6"
+				key={currentStepIndex}
+				className="rounded-2xl p-6 animate-gb-slide-right animate-gb-duration-300"
 				style={{
 					background: "var(--gb-bg-elev)",
 					border: "1px solid var(--gb-border)",
@@ -75,9 +76,9 @@ export function LessonPlayer({ lesson, onComplete, onExit }: LessonPlayerProps) 
 				{currentStep.type === "explain" ? (
 					<StepExplain step={currentStep} />
 				) : currentStep.type === "verify" ? (
-					<StepVerify key={currentStepIndex} step={currentStep} onComplete={handleNext} />
+					<StepVerify step={currentStep} onComplete={handleNext} />
 				) : (
-					<StepTeachBack key={currentStepIndex} step={currentStep} onComplete={handleNext} />
+					<StepTeachBack step={currentStep} onComplete={handleNext} />
 				)}
 			</div>
 

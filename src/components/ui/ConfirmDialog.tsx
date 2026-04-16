@@ -94,15 +94,15 @@ export function ConfirmDialog({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center">
-			<div className="absolute inset-0 bg-black/50" />
+		<div className="fixed inset-0 z-50 flex items-center justify-center animate-gb-fade-in">
+			<div className="absolute inset-0 bg-black/50 animate-gb-fade-in" />
 			<div
 				ref={dialogRef}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby={DIALOG_TITLE_ID}
 				onKeyDown={handleKeyDown}
-				className="relative z-10 bg-[var(--gb-bg-elev)] border border-[var(--gb-border)] rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4"
+				className="relative z-10 bg-[var(--gb-bg-elev)] border border-[var(--gb-border)] rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 animate-gb-scale-in"
 			>
 				<h2 id={DIALOG_TITLE_ID} className="text-lg font-semibold text-[var(--gb-text)] mb-2">
 					{title}

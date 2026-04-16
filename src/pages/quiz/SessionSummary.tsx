@@ -27,7 +27,7 @@ export function SessionSummary({
 				: "Keep practicing to improve your score.";
 
 	return (
-		<div className="max-w-2xl mx-auto p-6">
+		<div className="max-w-2xl mx-auto p-6 animate-gb-zoom-in animate-gb-duration-500">
 			<div
 				className="rounded-2xl p-8 space-y-8"
 				style={{

@@ -55,17 +55,18 @@ export function LessonList({ onSelectLesson }: LessonListProps) {
 						No lessons available in this category yet.
 					</div>
 				) : (
-					filteredLessons.map((lesson) => {
+					filteredLessons.map((lesson, index) => {
 						const diffStyle = DIFFICULTY_STYLES[lesson.difficulty] ?? DIFFICULTY_STYLES.beginner;
 						return (
 							<div
 								key={lesson.id}
-								className="rounded-xl p-5 flex flex-col gap-3 transition-all hover:-translate-y-0.5"
 								style={{
 									background: "var(--gb-bg-elev)",
 									border: "1px solid var(--gb-border)",
 									boxShadow: "var(--gb-shadow-soft)",
+									animationDelay: `${index * 60}ms`,
 								}}
+								className="rounded-xl p-5 flex flex-col gap-3 transition-all hover:-translate-y-0.5 animate-gb-slide-up animate-gb-duration-300"
 							>
 								<div className="flex justify-between items-start gap-2">
 									<h3
