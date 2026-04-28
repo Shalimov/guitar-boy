@@ -24,8 +24,8 @@ export function TabBar({ tabs, className = "" }: TabBarProps) {
 						active
 							? {
 									background: "var(--gb-accent)",
-									color: "#fff8ee",
-									boxShadow: "0 2px 8px rgba(179,93,42,0.3)",
+									color: "var(--gb-bg-elev)",
+									boxShadow: "0 2px 8px rgba(52,211,153,0.3)",
 								}
 							: { color: "var(--gb-text-muted)" }
 					}

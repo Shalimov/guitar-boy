@@ -21,7 +21,7 @@ export function ThemeToggle({ theme, onThemeChange }: ThemeToggleProps) {
 					onClick={() => onThemeChange(t.value)}
 					className={`rounded-[var(--gb-radius-pill)] flex items-center justify-center h-8 w-8 text-sm font-medium transition ${
 						theme === t.value
-							? "bg-[var(--gb-accent)] text-[#fff7ef] shadow-sm"
+							? "bg-[var(--gb-accent)] text-[var(--gb-bg-elev)] shadow-sm"
 							: "text-[var(--gb-text-muted)] hover:text-[var(--gb-text)]"
 					}`}
 					title={t.label}

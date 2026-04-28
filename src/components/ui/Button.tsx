@@ -28,7 +28,7 @@ export const Button = forwardRef(function Button(
 
 	const variants = {
 		primary:
-			"border border-transparent bg-[var(--gb-accent)] text-[#fff7ef] shadow-[0_12px_24px_rgba(179,93,42,0.32)] hover:bg-[var(--gb-accent-strong)] hover:shadow-[0_14px_26px_rgba(143,69,29,0.34)]",
+			"border border-transparent bg-[var(--gb-accent)] text-[var(--gb-bg-elev)] shadow-[0_12px_24px_rgba(5,150,105,0.30)] hover:bg-[var(--gb-accent-strong)] hover:shadow-[0_14px_26px_rgba(4,120,87,0.34)]",
 		secondary:
 			"border border-[var(--gb-border)] bg-[var(--gb-bg-panel)] text-[var(--gb-text)] hover:bg-[var(--gb-bg-elev)]",
 		ghost:

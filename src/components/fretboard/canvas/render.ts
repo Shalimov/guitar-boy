@@ -62,7 +62,7 @@ function resolveDotColor(dot: MarkedDot, options: DotRenderOptions): string {
 		return "#dc2626";
 	}
 
-	return dot.color ?? options.defaultDotColor ?? "#b35d2a";
+	return dot.color ?? options.defaultDotColor ?? "#059669";
 }
 
 export function drawFretboardSurface(
@@ -70,11 +70,11 @@ export function drawFretboardSurface(
 	metrics: CanvasMetrics,
 	options: FretboardRenderOptions = {},
 ): void {
-	const backgroundColor = options.backgroundColor ?? "#fff9ef";
-	const fretColor = options.fretColor ?? "#9d8269";
-	const stringColor = options.stringColor ?? "#7a6a5a";
-	const nutColor = options.nutColor ?? "#5d4735";
-	const inlayColor = options.inlayColor ?? "#c7a689";
+	const backgroundColor = options.backgroundColor ?? "#eef0eb";
+	const fretColor = options.fretColor ?? "#8fa38a";
+	const stringColor = options.stringColor ?? "#6a7a64";
+	const nutColor = options.nutColor ?? "#4d5c48";
+	const inlayColor = options.inlayColor ?? "#a8bda4";
 
 	ctx.clearRect(0, 0, metrics.width, metrics.height);
 	ctx.fillStyle = backgroundColor;
@@ -178,7 +178,7 @@ export function drawConnectionLines(
 		ctx.moveTo(from.x, from.y);
 		ctx.lineTo(to.x, to.y);
 		ctx.lineWidth = 3;
-		ctx.strokeStyle = line.color ?? "#4a3a2c";
+		ctx.strokeStyle = line.color ?? "#2c3a28";
 		ctx.setLineDash(line.style === "dashed" ? [6, 4] : []);
 		ctx.stroke();
 	}
@@ -249,13 +249,13 @@ export function drawDots(
 
 			ctx.beginPath();
 			ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
-			ctx.fillStyle = "#1f1209";
+			ctx.fillStyle = "#1c2a14";
 			ctx.fill();
 			ctx.lineWidth = 1;
-			ctx.strokeStyle = "#fff8ef";
+			ctx.strokeStyle = "#f7f9f4";
 			ctx.stroke();
 
-			ctx.fillStyle = "#fff8ef";
+			ctx.fillStyle = "#f7f9f4";
 			ctx.font = "700 10px Manrope";
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";

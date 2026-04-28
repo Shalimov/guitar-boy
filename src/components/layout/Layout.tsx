@@ -27,10 +27,10 @@ export function Layout() {
 	return (
 		<div className="relative flex min-h-screen flex-col text-[var(--gb-text)]">
 			<OnboardingWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} />
-			<div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-				<div className="absolute -left-16 top-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(179,93,42,0.24),_transparent_70%)] blur-3xl" />
-				<div className="absolute -right-20 -top-10 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(91,62,43,0.24),_transparent_70%)] blur-3xl" />
-				<div className="absolute bottom-[-8rem] left-1/3 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(232,180,141,0.33),_transparent_70%)] blur-3xl" />
+			<div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+				<div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(52,211,153,0.15),_transparent_70%)] blur-3xl" />
+				<div className="absolute -right-24 -top-16 h-96 w-96 rounded-full bg-[radial-gradient(circle,_rgba(5,150,105,0.1),_transparent_70%)] blur-3xl" />
+				<div className="absolute bottom-[-10rem] left-1/4 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(167,243,208,0.2),_transparent_70%)] blur-3xl" />
 			</div>
 
 			<nav className="sticky top-0 z-20 border-b border-[var(--gb-border)]/80 bg-[color:var(--gb-bg-elev)]/85 backdrop-blur-md">
